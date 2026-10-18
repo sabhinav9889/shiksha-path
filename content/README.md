@@ -69,18 +69,30 @@ Lessons should have **5 to 10 practice items**.
 wrong option has a `why_wrong`** in Hindi and English. That explanation is what the student sees
 offline after a wrong answer, so keep it short and kind.
 
+## Links and pictures in lesson text
+
+- Links may point to `https://`, `http://` or `mailto:` addresses, or to other lesson pages.
+  Anything else (for example `javascript:`) is shown as plain text.
+- Pictures must be files inside this folder (`images/diagram.png`). Pictures from the internet
+  are not shown: the app works offline and must not load outside content on students' phones.
+- HTML tags typed into a lesson are shown as text, not run.
+
 ## Review status
 
 - `review: pending` – drafted, not yet checked. Left out of the real build; included in the mentor
   preview build.
 - `review: approved` – checked by a mentor. Included in the build.
 
+The same applies to `test-out.yaml` and `placement.yaml`: if they're pending, the build leaves
+them out and prints a warning.
+
 The placement test may only start students at **approved** lessons.
 
 ## Audio
 
 - Allowed types: `.mp3`, `.m4a`, `.ogg`, `.opus`, `.webm`.
-- Paths are relative to the module folder (or `placement/`), e.g. `audio/hello.mp3`.
+- Paths are relative to the module folder (or `placement/`), e.g. `audio/hello.mp3`. Always use
+  `/`, never `\`.
 - File names are **case-sensitive**: `Hello.mp3` and `hello.mp3` are different files.
 - Keep each module under about 5 MB in total.
 

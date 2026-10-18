@@ -1,5 +1,5 @@
-import { readdir } from 'node:fs/promises';
-import { basename, dirname, extname, join, relative } from 'node:path';
+import { readdir, stat } from 'node:fs/promises';
+import { extname, join, relative } from 'node:path';
 import { error, type ContentIssue } from './issues.js';
 import type { PracticeItem } from './schema/items.js';
 import type { Lesson } from './schema/lesson.js';
@@ -51,28 +51,49 @@ export function collectAudioRefs(content: Content): AudioRef[] {
   return [...content.modules.flatMap((m) => moduleAudioRefs(content.root, m)), ...fromPlacement];
 }
 
-async function existsExactCase(path: string): Promise<boolean> {
-  try {
-    return (await readdir(dirname(path))).includes(basename(path));
-  } catch {
-    return false;
+type ListDir = (dir: string) => Promise<string[]>;
+
+/** The one place an audio ref becomes a filesystem path (validation and build both use it). */
+export const audioFilePath = (baseDir: string, ref: string): string =>
+  join(baseDir, ...ref.split('/'));
+
+/**
+ * True when every segment exists with exactly this case, checked against its parent's listing,
+ * so `Audio/x.mp3` fails even on case-insensitive filesystems (macOS, Windows).
+ */
+export async function findExactPath(
+  baseDir: string,
+  segments: string[],
+  list: ListDir = (dir) => readdir(dir),
+): Promise<boolean> {
+  let current = baseDir;
+  for (const segment of segments) {
+    const names = await list(current).catch(() => [] as string[]);
+    if (!names.includes(segment)) return false;
+    current = join(current, segment);
   }
+  return true;
 }
 
-/** Relative, no `..`, allowed extension, and the file exists with exactly this case. */
-export async function checkAudioRef({ baseDir, ref, file }: AudioRef): Promise<ContentIssue[]> {
-  const parts = ref.split(/[\\/]/);
-  if (ref.startsWith('/') || /^[a-zA-Z]:/.test(ref)) {
-    return [error(file, `audio "${ref}" must be a relative path`)];
-  }
-  if (parts.includes('..')) return [error(file, `audio "${ref}" must not contain ".."`)];
+function pathProblem(ref: string): string | null {
+  if (ref.includes('\\')) return `audio "${ref}" contains "\\"; use "/" in audio paths`;
+  if (ref.startsWith('/') || /^[a-zA-Z]:/.test(ref))
+    return `audio "${ref}" must be a relative path`;
+  if (ref.split('/').includes('..')) return `audio "${ref}" must not contain ".."`;
   const ext = extname(ref).toLowerCase();
   if (!(AUDIO_EXTENSIONS as readonly string[]).includes(ext)) {
-    const allowed = AUDIO_EXTENSIONS.join(', ');
-    return [error(file, `audio "${ref}" has extension "${ext}"; allowed: ${allowed}`)];
+    return `audio "${ref}" has extension "${ext}"; allowed: ${AUDIO_EXTENSIONS.join(', ')}`;
   }
-  if (!(await existsExactCase(join(baseDir, ...parts)))) {
+  return null;
+}
+
+/** Relative, "/" only, no "..", allowed extension, exact-case path, and a regular file. */
+export async function checkAudioRef({ baseDir, ref, file }: AudioRef): Promise<ContentIssue[]> {
+  const problem = pathProblem(ref);
+  if (problem) return [error(file, problem)];
+  if (!(await findExactPath(baseDir, ref.split('/')))) {
     return [error(file, `audio "${ref}" not found (names are case-sensitive)`)];
   }
-  return [];
+  const info = await stat(audioFilePath(baseDir, ref));
+  return info.isFile() ? [] : [error(file, `audio "${ref}" is not a file`)];
 }

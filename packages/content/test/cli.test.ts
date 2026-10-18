@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -56,12 +56,13 @@ describe('runCli', () => {
     expect(existsSync(out)).toBe(false);
   });
 
-  test('removes stale files from the out dir', async () => {
+  test('removes stale files from a previous build', async () => {
     const { content, out } = await dirs();
-    await mkdir(out, { recursive: true });
+    await cli(['--content', content, '--out', out]);
     await writeFile(join(out, 'stale.json'), '{}');
     await cli(['--content', content, '--out', out]);
     expect(await readdir(out)).not.toContain('stale.json');
+    expect(await readdir(out)).toContain('manifest.json');
   });
 
   test('--preview includes pending lessons', async () => {
