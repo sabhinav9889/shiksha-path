@@ -3,3 +3,4 @@ export * from './language.js';
 export * from './ports.js';
 export * from './time.js';
 export * from './download.js';
+export * from './install.js';
