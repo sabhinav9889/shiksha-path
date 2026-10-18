@@ -2,6 +2,7 @@ import type { ErrorCode, Lang, LanguagePreference } from '@shiksha/learner-core'
 import { commonStrings } from './common.js';
 import { errorStrings } from './errors.js';
 import { homeStrings } from './home.js';
+import { learnStrings } from './learn.js';
 import { lessonsStrings } from './lessons.js';
 import { profilesStrings } from './profiles.js';
 import { shellStrings } from './shell.js';
@@ -15,6 +16,7 @@ export const STRINGS = {
   ...profilesStrings,
   ...homeStrings,
   ...lessonsStrings,
+  ...learnStrings,
 };
 
 export type StringKey = keyof typeof STRINGS;
