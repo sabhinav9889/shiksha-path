@@ -45,9 +45,13 @@ describe('commitlint', () => {
 
 describe('secretlint', () => {
   test('flags a fake AWS key', () => {
-    const id = 'AKIA' + 'Q7XZ4M2PLK9WRT3B';
-    const secret = 'kX9fT2qLmN8vR4sWzY6' + 'bH1cJ5dG7eA3pU0oIiE9q'; // 40 chars, like real keys
-    const text = `aws_access_key_id = ${id}\naws_secret_access_key = ${secret}\n`;
+    // Built at runtime so no scanner (gitleaks, secretlint) sees a key-shaped literal in this file.
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const pick = (n: number, step: number): string =>
+      Array.from({ length: n }, (_, i) => alphabet[(i * step) % alphabet.length]).join('');
+    const keyId = 'AKIA' + pick(16, 7).toUpperCase();
+    const keyValue = pick(40, 11); // 40 chars, like real AWS secret keys
+    const text = `aws_access_key_id = ${keyId}\naws_secret_access_key = ${keyValue}\n`;
     const r = secretlint('config.ini', text);
     expect(r.code).not.toBe(0);
     expect(r.out).toContain('secretlint-rule-aws');
