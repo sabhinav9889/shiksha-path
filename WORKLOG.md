@@ -5,11 +5,12 @@ Active tasks. Read this at the start of every session. Details live in `.claude/
 
 **Statuses:** `in-progress` · `blocked` · `shipped` · `on-hold`
 
-| Task                        | Status      | Assignee | Branch                       | Next step                      | Detail                                                          |
-| --------------------------- | ----------- | -------- | ---------------------------- | ------------------------------ | --------------------------------------------------------------- |
-| Plan 0 – project guardrails | in-progress | Claude   | `feature/project-guardrails` | Owner reviews and merges PR #2 | [plan](docs/superpowers/plans/2026-10-18-project-guardrails.md) |
-| Plan 1 – content system     | on-hold     | Claude   | –                            | Starts after Plan 0 is merged  | [plan](docs/superpowers/plans/2026-10-17-content-system.md)     |
+| Task                    | Status      | Assignee | Branch                   | Next step                              | Detail                                                      |
+| ----------------------- | ----------- | -------- | ------------------------ | -------------------------------------- | ----------------------------------------------------------- |
+| Plan 1 – content system | in-progress | Claude   | `feature/content-system` | Final review, then owner merges the PR | [plan](docs/superpowers/plans/2026-10-17-content-system.md) |
 
 ## Archive
 
 Shipped tasks move here with their merge date.
+
+- Plan 0 – project guardrails · merged 2026-10-18 (PR #2)

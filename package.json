@@ -17,7 +17,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
-    "prepare": "husky"
+    "prepare": "husky",
+    "content:check": "tsx packages/content/src/cli.ts --check",
+    "content:build": "tsx packages/content/src/cli.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",

@@ -1,0 +1,20 @@
+review: approved
+pass_mark: 0.8
+items:
+  - id: t1
+    type: mcq_meaning
+    prompt: { hi: "'Good morning' कब कहते हैं?", en: "When do you say 'Good morning'?" }
+    options:
+      - { id: a, text: { hi: सुबह, en: In the morning }, correct: true }
+      - id: b
+        text: { hi: रात को, en: At night }
+        why_wrong: { hi: "रात को 'Good night' कहते हैं।", en: "At night we say 'Good night'." }
+  - id: t2
+    type: fill_blank
+    prompt: { hi: खाली जगह भरें, en: Fill in the blank }
+    sentence: "Nice to ___ you."
+    answers: [meet]
+  - id: t3
+    type: word_order
+    prompt: { hi: सही क्रम में लगाएँ, en: Put the words in order }
+    words: [My, name, is, Rahul]

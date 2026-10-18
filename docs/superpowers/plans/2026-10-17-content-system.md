@@ -372,3 +372,24 @@ Behaviour: load, then validate. Print each issue as `<severity> <file>[ <path>]:
 - [ ] **Step 5: Write the sample `content/` and `content/README.md`**, then run `npm run content:build`. Expected: exit 0, `Built 2 modules, 2 lessons → dist/content`, with no errors and no warnings.
 
 - [ ] **Step 6: Commit** `feat(content): CLI, sample content and author guide`
+
+---
+
+## Deviations recorded during execution
+
+The plan above is kept as approved; these are the decisions made while building it.
+
+- **gray-matter dropped.** It's unmaintained, pulls a `js-yaml` with a known advisory, and supports
+  `---js` front-matter that executes code. Front-matter is split by a small function and parsed
+  with `yaml`. Runtime dependencies: `zod` (v4), `yaml`, `marked`.
+- **NFC test.** Nukta letters (क़, फ़…) are Unicode composition exclusions, so NFC keeps them
+  decomposed. The test now checks that precomposed and decomposed input parse to the same string.
+  `\u` escapes are written with `String.fromCodePoint` (see `docs/gotchas/unicode-escapes-become-literal.md`).
+- **Safer Markdown.** Lesson HTML escapes raw HTML and drops `javascript:`/`data:` links and images.
+- **Safer CLI.** It refuses an `--out` folder that contains the content folder; it has `--help` and
+  rejects unknown flags.
+- **Prettier** ignores `/content/` (anchored: an unanchored `content/` also matched
+  `packages/content/`). This resolves a deferred Plan 0 minor.
+- **Root `typecheck`** now covers `packages/*`, so CI type-checks product code.
+- **Extra tests** beyond the plan: option bounds and duplicates, absolute audio paths, test-out and
+  placement audio, placement track checks, lesson-level audio, pending placement, CLI safety.
