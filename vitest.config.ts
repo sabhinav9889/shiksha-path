@@ -1,8 +1,12 @@
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vitest/config';
 
 const COVERAGE_MIN = 70;
 
 export default defineConfig({
+  // Svelte components compile to client code; the browser condition picks Svelte's client build.
+  plugins: [svelte()],
+  resolve: { conditions: ['browser'] },
   test: {
     include: ['tooling/**/*.test.ts', 'packages/**/*.test.ts', 'apps/**/*.test.ts'],
     coverage: {
