@@ -1,80 +1,27 @@
 import { createHash } from 'node:crypto';
 import { Marked, type Tokens } from 'marked';
-import type { Localized } from './schema/localized.js';
+import {
+  SCHEMA_VERSION,
+  type AudioEntry,
+  type BundleLesson,
+  type ModuleBundle,
+} from './schema/bundle.js';
 import type { PracticeItem } from './schema/items.js';
 import type { Lesson } from './schema/lesson.js';
-import type { LoadedModule, PlacementSection, Track } from './schema/structure.js';
+import type { LoadedModule } from './schema/structure.js';
 
 const VERSION_HEX_CHARS = 12;
-export const SCHEMA_VERSION = 1;
 
-export interface AudioEntry {
-  path: string;
-  sha256: string;
-  bytes: number;
-}
-
-export interface BundleLesson {
-  id: string;
-  order: number;
-  topic: string;
-  level: number;
-  /** Lesson override, else the module's value. */
-  hi_ratio: number;
-  title: Localized;
-  html: { hi: string; en: string };
-  audio: { hi?: string; en?: string } | null;
-  items: PracticeItem[];
-}
-
-export interface ModuleBundle {
-  schema_version: typeof SCHEMA_VERSION;
-  id: string;
-  version: string;
-  track: string;
-  title: Localized;
-  hi_ratio: number;
-  lessons: BundleLesson[];
-  test_out: { pass_mark: number; items: PracticeItem[] } | null;
-  audio: AudioEntry[];
-}
-
-export interface PlacementBundle {
-  schema_version: typeof SCHEMA_VERSION;
-  version: string;
-  sections: PlacementSection[];
-  audio: AudioEntry[];
-}
-
-export interface ManifestPlacement {
-  file: string;
-  version: string;
-  sha256: string;
-  bytes: number;
-  audio_bytes: number;
-}
-
-export interface ManifestModule {
-  id: string;
-  track: string;
-  title: Localized;
-  order: number;
-  version: string;
-  file: string;
-  sha256: string;
-  bytes: number;
-  audio_bytes: number;
-  lessons: { id: string; order: number; title: Localized }[];
-}
-
-export interface Manifest {
-  schema_version: typeof SCHEMA_VERSION;
-  built_at: string;
-  preview: boolean;
-  tracks: Track[];
-  modules: ManifestModule[];
-  placement: ManifestPlacement | null;
-}
+export { SCHEMA_VERSION } from './schema/bundle.js';
+export type {
+  AudioEntry,
+  BundleLesson,
+  Manifest,
+  ManifestModule,
+  ManifestPlacement,
+  ModuleBundle,
+  PlacementBundle,
+} from './schema/bundle.js';
 
 /** Maps an audio reference (relative to its folder) to its published `audio/<hash>.<ext>` path. */
 export type AudioPath = (ref: string) => string;
@@ -159,11 +106,14 @@ export function rewriteItemAudio(item: PracticeItem, audioPath: AudioPath): Prac
 
 function bundleLesson(lesson: Lesson, moduleRatio: number, audioPath: AudioPath): BundleLesson {
   const { meta, body } = lesson;
-  const refs = Object.entries(meta.audio ?? {}).filter(
-    (entry): entry is [string, string] => entry[1] !== undefined,
-  );
+  const { hi, en } = meta.audio ?? {};
   const audio =
-    refs.length > 0 ? Object.fromEntries(refs.map(([l, r]) => [l, audioPath(r)])) : null;
+    hi === undefined && en === undefined
+      ? null
+      : {
+          ...(hi === undefined ? {} : { hi: audioPath(hi) }),
+          ...(en === undefined ? {} : { en: audioPath(en) }),
+        };
   return {
     id: meta.id,
     order: meta.order,
