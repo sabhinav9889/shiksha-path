@@ -1,0 +1,21 @@
+review: approved
+pass_mark: 0.8
+items:
+  - id: t1
+    type: aptitude
+    prompt: { hi: "अगली संख्या? 10, 20, 30, ?", en: "What comes next? 10, 20, 30, ?" }
+    options:
+      - { id: a, text: { hi: "40", en: "40" }, correct: true }
+      - id: b
+        text: { hi: "35", en: "35" }
+        why_wrong: { hi: "हर बार 10 जुड़ रहा है।", en: "Each step adds 10." }
+    explanation: { hi: "30 + 10 = 40", en: "30 + 10 = 40" }
+  - id: t2
+    type: aptitude
+    prompt: { hi: "अगली संख्या? 2, 6, 18, ?", en: "What comes next? 2, 6, 18, ?" }
+    options:
+      - { id: a, text: { hi: "54", en: "54" }, correct: true }
+      - id: b
+        text: { hi: "36", en: "36" }
+        why_wrong: { hi: "हर संख्या 3 गुना हो रही है।", en: "Each number is multiplied by 3." }
+    explanation: { hi: "18 × 3 = 54", en: "18 × 3 = 54" }

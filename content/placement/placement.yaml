@@ -1,0 +1,32 @@
+review: approved
+sections:
+  - track: english
+    items:
+      - id: p1
+        type: mcq_meaning
+        prompt: { hi: "'Thank you' का मतलब?", en: "What does 'Thank you' mean?" }
+        options:
+          - { id: a, text: { hi: धन्यवाद, en: Thanks }, correct: true }
+          - id: b
+            text: { hi: माफ़ कीजिए, en: Sorry }
+            why_wrong: { hi: "माफ़ी के लिए 'Sorry' कहते हैं।", en: "That is 'Sorry'." }
+      - id: p2
+        type: fill_blank
+        prompt: { hi: खाली जगह भरें, en: Fill in the blank }
+        sentence: "I ___ from Indore."
+        answers: [am]
+    start_rules:
+      - { min_score: 0, start_lesson: ef1-01-greetings }
+    suggest_english_only_at: 0.9
+  - track: aptitude
+    items:
+      - id: p3
+        type: aptitude
+        prompt: { hi: "अगली संख्या? 4, 8, 12, ?", en: "What comes next? 4, 8, 12, ?" }
+        options:
+          - { id: a, text: { hi: "16", en: "16" }, correct: true }
+          - id: b
+            text: { hi: "14", en: "14" }
+            why_wrong: { hi: "हर बार 4 जुड़ रहा है।", en: "Each step adds 4." }
+    start_rules:
+      - { min_score: 0, start_lesson: apt1-01-patterns }

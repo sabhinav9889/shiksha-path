@@ -3,4 +3,5 @@ dist
 coverage
 package-lock.json
 .superpowers
-content/**/audio
+# Lesson content is authored by people (and later AI drafts); never reformat it.
+/content/

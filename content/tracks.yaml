@@ -1,0 +1,6 @@
+- id: english
+  title: { hi: अंग्रेज़ी, en: English }
+  order: 1
+- id: aptitude
+  title: { hi: सोचने की ताक़त, en: Aptitude }
+  order: 2
