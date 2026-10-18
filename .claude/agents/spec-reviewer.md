@@ -14,7 +14,8 @@ Read-only. You never edit code or docs; you report.
 
 ## Inputs
 
-The diff (or commit range), the plan task it implements, and the spec:
+A **diff file** (you have no shell, so the caller writes `git diff <base>..<head>` to a file and
+gives you its path; if none was given, say so and stop), the plan task it implements, and the spec:
 `docs/superpowers/specs/2026-10-15-learning-platform-design.md`. Read the plan's ledger `Ruling:`
 lines if one exists — those are recorded, approved deviations.
 

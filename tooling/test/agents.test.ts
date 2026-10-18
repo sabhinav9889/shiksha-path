@@ -41,6 +41,7 @@ describe('agents', () => {
       expect(body).toContain('PASS');
       expect(body).toContain('FAIL');
       expect(body).toMatch(/never edit/i);
+      expect(body).toMatch(/diff file/i); // reviewers have no shell: the caller hands over the diff
     },
   );
 

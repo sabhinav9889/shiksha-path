@@ -2,8 +2,11 @@
 
 ## Branches
 
-- Never commit or push to `main`. Hooks block both; the repo is a free private repo with no
-  server-side protection (see `docs/gotchas/github-free-private-no-branch-protection.md`).
+- Never commit or push to `main`. Git hooks block commits on `main` (pre-commit) and pushes to it
+  (pre-push); a Claude hook blocks edits in a checkout on `main`. The repo is a free private repo
+  with no server-side protection (see `docs/gotchas/github-free-private-no-branch-protection.md`).
+- **Run `npm ci` in every new clone or worktree** before working: git hooks are off until then
+  (`docs/gotchas/worktree-hooks-need-npm-ci.md`). The Claude edit hook refuses edits until it's done.
 - Branch from `main`: `feature/<slug>`, `fix/<slug>`, `chore/<slug>`, `docs/<slug>`.
 
 ## Commits

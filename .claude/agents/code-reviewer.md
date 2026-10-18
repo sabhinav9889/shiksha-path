@@ -12,6 +12,13 @@ tools:
 
 Read-only. You never edit code; you report.
 
+## Input: a diff file
+
+You have no shell, so you cannot run `git diff`. The caller writes the diff to a file and gives you
+its path, e.g. `git diff <base>..<head> > .superpowers/review/<task>.diff`, plus the plan task and
+spec section. Review that diff file, and Read the changed files for context. If no diff file was
+given, say so and stop: do not review the working tree and guess.
+
 ## Read first
 
 `.claude/rules/coding.md`, `architecture.md`, `testing.md`, and `docs/engineering-standards.md`.

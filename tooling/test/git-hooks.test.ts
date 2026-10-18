@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -70,6 +70,52 @@ describe('secretlint', () => {
     const hindi = 'नमस्ते, मेरा नाम प्रिया है। मैं support team में नई हूँ। '.repeat(20);
     const hash = 'a3f1c9e7b2d4f6a8c0e2b4d6f8a0c2e4b6d8f0a2c4e6b8d0f2a4c6e8b0d2f4a6';
     expect(secretlint('lesson.md', `# पाठ\n\n${hindi}\n\naudio: audio/${hash}.mp3\n`).code).toBe(0);
+  });
+});
+
+describe('pre-commit blocks commits on main', () => {
+  const script = join(repoRoot, 'tooling', 'hooks', 'block-main-commit.sh');
+  function repo(commit: boolean, branch?: string): string {
+    const dir = mkdtempSync(join(tmpdir(), 'commitrepo-'));
+    const g = (...a: string[]): void => {
+      spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...a], { cwd: dir });
+    };
+    g('init', '-q', '-b', 'main');
+    if (commit) g('commit', '-q', '--allow-empty', '-m', 'init');
+    if (branch) g('checkout', '-q', '-b', branch);
+    return dir;
+  }
+  const commitCheck = (dir: string): number =>
+    spawnSync('bash', [script], { cwd: dir, encoding: 'utf8' }).status ?? -1;
+
+  test('blocks a commit on main', () => expect(commitCheck(repo(true))).toBe(1));
+  test('allows a commit on a feature branch', () =>
+    expect(commitCheck(repo(true, 'feature/x'))).toBe(0));
+  test('allows the first commit of a new repo', () => expect(commitCheck(repo(false))).toBe(0));
+  test('pre-commit runs the main-commit guard', () => {
+    expect(readFileSync(join(repoRoot, '.husky', 'pre-commit'), 'utf8')).toContain(
+      'block-main-commit.sh',
+    );
+  });
+});
+
+describe('lint-staged command', () => {
+  test('lets ESLint-ignored files (e.g. *.generated.ts) be committed', () => {
+    const rc = JSON.parse(readFileSync(join(repoRoot, '.lintstagedrc.json'), 'utf8')) as Record<
+      string,
+      string[]
+    >;
+    const eslintCmd = (rc['*.{ts,js}'] ?? []).find((c) => c.startsWith('eslint')) ?? '';
+    const args = eslintCmd
+      .split(' ')
+      .slice(1)
+      .filter((a) => a !== '--fix');
+    const r = spawnSync(
+      bin('eslint'),
+      [...args, '--stdin', '--stdin-filename', 'packages/a/src/schema.generated.ts'],
+      { cwd: repoRoot, input: 'export const x = 1;\n', encoding: 'utf8' },
+    );
+    expect(r.status, `${r.stdout}${r.stderr}`).toBe(0);
   });
 });
 

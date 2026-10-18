@@ -1,1 +1,2 @@
+bash tooling/hooks/block-main-commit.sh
 npx lint-staged

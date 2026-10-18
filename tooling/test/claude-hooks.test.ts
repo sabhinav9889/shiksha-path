@@ -21,33 +21,34 @@ function tempRepo(opts: { commit: boolean; branch?: string; detach?: boolean }):
   return dir;
 }
 
-function runHook(name: string, cwd: string, filePath = 'src/a.ts', projectDir?: string): number {
+function runHook(name: string, cwd: string, filePath?: string, projectDir?: string): number {
   const env = { ...process.env };
   delete env['CLAUDE_PROJECT_DIR'];
   if (projectDir) env['CLAUDE_PROJECT_DIR'] = projectDir;
-  const input = JSON.stringify({ tool_name: 'Edit', tool_input: { file_path: filePath } });
+  const file = filePath ?? join(cwd, 'src', 'a.ts');
+  const input = JSON.stringify({ tool_name: 'Edit', tool_input: { file_path: file } });
   return spawnSync('bash', [hook(name)], { cwd, env, input }).status ?? -1;
 }
 
 describe('block-main-edit', () => {
   test('blocks edit on main', () => {
     const dir = tempRepo({ commit: true });
-    expect(runHook('block-main-edit.sh', dir, 'src/a.ts', dir)).toBe(2);
+    expect(runHook('block-main-edit.sh', dir, undefined, dir)).toBe(2);
   });
 
   test('allows edit on feature branch', () => {
     const dir = tempRepo({ commit: true, branch: 'feature/x' });
-    expect(runHook('block-main-edit.sh', dir, 'src/a.ts', dir)).toBe(0);
+    expect(runHook('block-main-edit.sh', dir, undefined, dir)).toBe(0);
   });
 
   test('allows detached HEAD', () => {
     const dir = tempRepo({ commit: true, detach: true });
-    expect(runHook('block-main-edit.sh', dir, 'src/a.ts', dir)).toBe(0);
+    expect(runHook('block-main-edit.sh', dir, undefined, dir)).toBe(0);
   });
 
   test('allows repo with no commits', () => {
     const dir = tempRepo({ commit: false });
-    expect(runHook('block-main-edit.sh', dir, 'src/a.ts', dir)).toBe(0);
+    expect(runHook('block-main-edit.sh', dir, undefined, dir)).toBe(0);
   });
 
   test('works without CLAUDE_PROJECT_DIR', () => {
@@ -55,6 +56,41 @@ describe('block-main-edit', () => {
     const sub = join(dir, 'nested');
     mkdirSync(sub);
     expect(runHook('block-main-edit.sh', sub)).toBe(2);
+  });
+});
+
+describe("block-main-edit uses the edited file's checkout", () => {
+  test('session on main, edit inside a feature worktree → allowed', () => {
+    const main = tempRepo({ commit: true });
+    const wt = join(mkdtempSync(join(tmpdir(), 'wt-')), 'feature');
+    git(main, 'worktree', 'add', '-q', '-b', 'feature/x', wt);
+    expect(runHook('block-main-edit.sh', main, join(wt, 'src', 'a.ts'), main)).toBe(0);
+  });
+
+  test('session on main, edit outside any git repo → allowed', () => {
+    const main = tempRepo({ commit: true });
+    const outside = mkdtempSync(join(tmpdir(), 'notes-'));
+    expect(runHook('block-main-edit.sh', main, join(outside, 'memo.md'), main)).toBe(0);
+  });
+
+  test('session on a feature branch, edit inside a checkout on main → blocked', () => {
+    const feature = tempRepo({ commit: true, branch: 'feature/x' });
+    const main = tempRepo({ commit: true });
+    expect(runHook('block-main-edit.sh', feature, join(main, 'a.ts'), feature)).toBe(2);
+  });
+});
+
+describe('block-main-edit refuses checkouts without git hooks installed', () => {
+  test('tracked .husky/ without .husky/_ → blocked', () => {
+    const dir = tempRepo({ commit: true, branch: 'feature/x' });
+    mkdirSync(join(dir, '.husky'));
+    expect(runHook('block-main-edit.sh', dir, undefined, dir)).toBe(2);
+  });
+
+  test('.husky/_ present → allowed', () => {
+    const dir = tempRepo({ commit: true, branch: 'feature/x' });
+    mkdirSync(join(dir, '.husky', '_'), { recursive: true });
+    expect(runHook('block-main-edit.sh', dir, undefined, dir)).toBe(0);
   });
 });
 

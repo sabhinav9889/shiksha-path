@@ -211,3 +211,33 @@
 - [ ] **Step 3: Prove a blocking check blocks:** push a throwaway commit to the PR branch adding a fake secret fixture outside the allowlist. Expected: gitleaks fails the Security workflow. Then remove the commit (`git reset --hard HEAD~1` + `git push --force-with-lease`, on this feature branch only).
 - [ ] **Step 4: Commit** `ci: add ci and security workflows, pr template and dependabot`
 - [ ] **Step 5: Final review:** run the spec-, code- and security-reviewer agents on the whole branch, fix any FAIL, set the Plan 0 `WORKLOG.md` entry to `shipped` after the PR is merged by the owner.
+
+---
+
+## Deviations recorded during execution
+
+The plan above is kept as approved. These are the decisions made while building it (the full
+ledger lives in the git-ignored `.superpowers/` workspace; this section is the durable record).
+
+- **Task order** 1, 2, 5, 3, 4, 6: `CLAUDE.md`'s link test needs Task 5's docs. The task router
+  and the branch-protection gotcha were created earlier than listed for the same reason.
+- **ESLint 10** was installed (plan: 9), so the maintained
+  `@eslint-community/eslint-plugin-eslint-comments` replaces `eslint-plugin-eslint-comments`.
+  `explicit-module-boundary-types` replaces `explicit-function-return-type`. Type-aware rules apply
+  to real files in `packages/`, `apps/`, `tooling/`.
+- **Svelte:** the 200-line override and `*.svelte` in lint-staged wait for Plan 2's Svelte parser.
+- **typecheck** is `tsc -p tsconfig.json --noEmit` (plan: `tsc -b`); there are no project
+  references yet.
+- **Hooks:** auto-format is synchronous (plan: async) so the next read sees formatted code; hook
+  JSON is parsed with `node`. Pre-commit runs secretlint through lint-staged on staged files.
+- **CI:** commitlint checks `base.sha..HEAD` (plan: `origin/main`). CodeQL is replaced by Semgrep
+  and there is no `security-events: write`: CodeQL needs GitHub Advanced Security on private repos.
+  Actions are pinned to commit SHAs and Dependabot has a 7-day cooldown (Semgrep findings).
+  gitleaks needs `pull-requests: read`.
+- **Blocking proven on real PR runs** (PR #2): run 1, Semgrep blocked on 11 real findings and
+  gitleaks failed on a missing permission; run 2, gitleaks blocked on the fake key in a test
+  fixture (fixed, its historical fingerprint allowlisted in `.gitleaksignore`); run 3, all green.
+- **Final review fixes:** the edit guard now checks the edited file's checkout (worktrees) and
+  refuses checkouts without installed hooks; a pre-commit guard blocks commits on `main`;
+  lint-staged passes `--no-warn-ignored` so ESLint-ignored files can be committed; reviewer agents
+  take a diff file because they have no shell.

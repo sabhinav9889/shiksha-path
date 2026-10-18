@@ -32,7 +32,9 @@ Run the `architect` agent **before** writing code when the task touches any of:
 
 ## 4. Reviewers (always, before "done")
 
-`spec-reviewer` → `code-reviewer` → `security-reviewer`, on the task's diff. Any FAIL: fix, rerun
+`spec-reviewer` → `code-reviewer` → `security-reviewer`, on the task's diff. The reviewers have no
+shell: first write the diff to a file (`git diff <base>..HEAD > .superpowers/review/<task>.diff`)
+and pass each reviewer that path, the plan task and the spec section. Any FAIL: fix, rerun
 that reviewer. Paste the three results into the PR.
 
 ## Output
