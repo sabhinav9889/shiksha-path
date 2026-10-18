@@ -88,3 +88,29 @@ describe('code rules', () => {
     expect(await eslint.isPathIgnored('packages/content/src/x.ts')).toBe(false);
   });
 });
+
+describe('relaxations for tests and test helpers', () => {
+  const configFor = async (path: string): Promise<Record<string, unknown[] | string>> => {
+    const config = await eslint.calculateConfigForFile(path);
+    return config.rules as Record<string, unknown[] | string>;
+  };
+  const severity = (rule: unknown[] | string | undefined): unknown =>
+    Array.isArray(rule) ? rule[0] : rule;
+
+  test.each(['packages/learner-core/src/testing/a.ts', 'packages/learner-core/test/helpers/a.ts'])(
+    '%s: no function limit, no magic numbers, 500-line files',
+    async (path) => {
+      const rules = await configFor(path);
+      expect(severity(rules['max-lines-per-function'])).toBe(0);
+      expect(severity(rules['no-magic-numbers'])).toBe(0);
+      expect((rules['max-lines'] as [number, { max: number }])[1].max).toBe(500);
+    },
+  );
+
+  test('production source keeps all three', async () => {
+    const rules = await configFor('packages/learner-core/src/a.ts');
+    expect(severity(rules['max-lines-per-function'])).toBe(2);
+    expect(severity(rules['no-magic-numbers'])).toBe(1);
+    expect((rules['max-lines'] as [number, { max: number }])[1].max).toBe(300);
+  });
+});

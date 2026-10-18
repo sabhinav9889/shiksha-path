@@ -74,7 +74,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.test.ts', '**/*.spec.ts'],
+    files: ['**/*.test.ts', '**/*.spec.ts', '**/test/**/*.ts', '**/testing/**/*.ts'],
     rules: {
       'max-lines': [
         'error',
