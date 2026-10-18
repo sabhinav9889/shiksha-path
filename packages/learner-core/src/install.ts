@@ -9,7 +9,13 @@ import {
 } from '@shiksha/content/schema';
 import type { Fetcher, PartialStore } from './download.js';
 import { CoreError } from './errors.js';
-import { installUnit, type ContentReport, type SyncContext, type Unit } from './install-unit.js';
+import {
+  installUnit,
+  removeUnusedAudio,
+  type ContentReport,
+  type SyncContext,
+  type Unit,
+} from './install-unit.js';
 import type { BundleStorage, StorageEstimator } from './storage.js';
 
 export type { ContentReport } from './install-unit.js';
@@ -96,24 +102,6 @@ async function removeDropped(
   if (previous?.placement && !manifest.placement) await storage.removePlacement();
 }
 
-/** Delete audio that no stored bundle (and no install in progress) refers to. */
-async function collectAudio(manifest: Manifest, ctx: SyncContext): Promise<number> {
-  const referenced = new Set(ctx.protectedAudio);
-  for (const entry of manifest.modules) {
-    for (const a of (await ctx.storage.getModule(entry.id))?.bundle.audio ?? []) {
-      referenced.add(a.path);
-    }
-  }
-  for (const a of (await ctx.storage.getPlacement())?.bundle.audio ?? []) referenced.add(a.path);
-  let removed = 0;
-  for (const path of await ctx.storage.listAudio()) {
-    if (referenced.has(path)) continue;
-    await ctx.storage.removeAudio(path);
-    removed += 1;
-  }
-  return removed;
-}
-
 /**
  * Bring the phone's lesson packs up to date with the server: download only what changed, verify
  * every file, and store a bundle only once it and its audio are complete. A failure affects that
@@ -141,5 +129,10 @@ export async function syncContent(deps: SyncDeps): Promise<SyncReport> {
     ? await installUnit(await placementUnit(manifest.placement, ctx.storage), ctx)
     : null;
   if (source === 'network') await removeDropped(previous, manifest, ctx.storage);
-  return { source, modules, placement, removedAudio: await collectAudio(manifest, ctx) };
+  return {
+    source,
+    modules,
+    placement,
+    removedAudio: await removeUnusedAudio(manifest, ctx.storage, ctx.protectedAudio),
+  };
 }

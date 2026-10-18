@@ -1,4 +1,4 @@
-import type { AudioEntry } from '@shiksha/content/schema';
+import type { AudioEntry, Manifest } from '@shiksha/content/schema';
 import { downloadFile, type Fetcher, type PartialStore } from './download.js';
 import { CoreError, type ErrorCode } from './errors.js';
 import {
@@ -45,7 +45,7 @@ async function freeBytes(estimator: StorageEstimator): Promise<number | null> {
   }
 }
 
-async function requireSpace(ctx: SyncContext, neededBytes: number): Promise<void> {
+export async function requireSpace(ctx: SyncContext, neededBytes: number): Promise<void> {
   const free = await freeBytes(ctx.estimator);
   if (free === null || free >= neededBytes + STORAGE_SAFETY_MARGIN_BYTES) return;
   throw new CoreError('LOW_STORAGE', 'not enough free space on this phone', {
@@ -54,7 +54,10 @@ async function requireSpace(ctx: SyncContext, neededBytes: number): Promise<void
   });
 }
 
-async function missingAudio(entries: AudioEntry[], storage: BundleStorage): Promise<AudioEntry[]> {
+export async function missingEntries(
+  entries: AudioEntry[],
+  storage: BundleStorage,
+): Promise<AudioEntry[]> {
   const missing: AudioEntry[] = [];
   for (const entry of entries) {
     if (!(await storage.hasAudio(entry.path))) missing.push(entry);
@@ -83,7 +86,7 @@ async function fetchBundle<B extends { audio: AudioEntry[] }>(
   return bundle;
 }
 
-async function fetchAudio(entries: AudioEntry[], ctx: SyncContext): Promise<void> {
+export async function fetchAudio(entries: AudioEntry[], ctx: SyncContext): Promise<void> {
   for (const { path, sha256, bytes } of entries) {
     const data = await downloadFile(
       { url: `${ctx.baseUrl}/${path}`, sha256, bytes },
@@ -93,7 +96,7 @@ async function fetchAudio(entries: AudioEntry[], ctx: SyncContext): Promise<void
   }
 }
 
-const sumBytes = (entries: AudioEntry[]): number => entries.reduce((n, e) => n + e.bytes, 0);
+export const sumBytes = (entries: AudioEntry[]): number => entries.reduce((n, e) => n + e.bytes, 0);
 
 async function fetchNew<B extends { audio: AudioEntry[] }>(
   unit: Unit<B>,
@@ -111,12 +114,41 @@ async function run<B extends { audio: AudioEntry[] }>(
 ): Promise<ContentReport> {
   const stored = unit.stored?.version === unit.version ? unit.stored.bundle : null;
   const target = stored ?? (await fetchNew(unit, ctx));
-  const missing = ctx.audio === 'skip' ? [] : await missingAudio(target.audio, ctx.storage);
+  const missing = ctx.audio === 'skip' ? [] : await missingEntries(target.audio, ctx.storage);
   if (stored && missing.length === 0) return { id: unit.id, status: 'ready' };
   await requireSpace(ctx, (stored ? 0 : unit.file.bytes) + sumBytes(missing));
   await fetchAudio(missing, ctx);
   if (!stored) await unit.put(target);
   return { id: unit.id, status: 'installed' };
+}
+
+/** Audio paths used by the stored bundles of the manifest's modules and the placement test. */
+async function referencedAudio(
+  manifest: Manifest | null,
+  storage: BundleStorage,
+): Promise<Set<string>> {
+  const referenced = new Set<string>();
+  for (const entry of manifest?.modules ?? []) {
+    for (const a of (await storage.getModule(entry.id))?.bundle.audio ?? []) referenced.add(a.path);
+  }
+  for (const a of (await storage.getPlacement())?.bundle.audio ?? []) referenced.add(a.path);
+  return referenced;
+}
+
+/** Delete audio no stored bundle uses (and nothing in `keep` either). Returns how many files. */
+export async function removeUnusedAudio(
+  manifest: Manifest | null,
+  storage: BundleStorage,
+  keep: ReadonlySet<string> = new Set(),
+): Promise<number> {
+  const used = await referencedAudio(manifest, storage);
+  let removed = 0;
+  for (const path of await storage.listAudio()) {
+    if (used.has(path) || keep.has(path)) continue;
+    await storage.removeAudio(path);
+    removed += 1;
+  }
+  return removed;
 }
 
 /** Install or repair one module or the placement bundle. Never throws: the report says why. */
