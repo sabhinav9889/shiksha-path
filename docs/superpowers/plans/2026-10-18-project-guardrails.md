@@ -38,11 +38,13 @@
 ### Task 1: Tooling baseline with size limits
 
 **Files:**
+
 - Create: `package.json` (root, `"private": true`, `"type": "module"`, `"workspaces": ["packages/*", "apps/*"]`, scripts below), `.nvmrc` (`22`), `.editorconfig`, `.gitignore` (`node_modules`, `dist`, `coverage`, `.env*` except `.env.example`), `.prettierrc`, `.prettierignore`, `tsconfig.base.json` (`strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `module: NodeNext`), `eslint.config.js`, `vitest.config.ts` (root, `coverage.thresholds` all 70)
 - Create: `tooling/lint-fixtures/` (fixture sources used only by tests; ignored by the main lint run)
 - Test: `tooling/test/eslint-limits.test.ts`
 
 **Interfaces:**
+
 - Produces: root scripts `lint` (`eslint . --max-warnings 0`), `lint:fix`, `format` (`prettier --write .`), `format:check`, `typecheck` (`tsc -b`), `test` (`vitest run`), `test:cov` (`vitest run --coverage`). Later plans add packages under `packages/` and `apps/` that inherit these configs.
 
 `.prettierrc`: `{ "singleQuote": true, "trailingComma": "all", "tabWidth": 2, "semi": true, "printWidth": 100, "bracketSpacing": true, "arrowParens": "always", "endOfLine": "lf" }`.
@@ -74,6 +76,7 @@
 ### Task 2: Git hooks: lint-staged, secret scan, commitlint, no push to main
 
 **Files:**
+
 - Create: `.husky/pre-commit` (`npx lint-staged && npx secretlint --maskSecrets "**/*"` on staged files via lint-staged), `.husky/commit-msg` (`npx --no -- commitlint --edit "$1"`), `.husky/pre-push` (calls `tooling/hooks/block-main-push.sh`)
 - Create: `.lintstagedrc.json`: `{ "*.{ts,js,svelte}": ["eslint --fix --max-warnings 0", "prettier --write"], "*.{json,md,yml,yaml}": ["prettier --write"], "*": ["secretlint --maskSecrets"] }`
 - Create: `commitlint.config.js` (rules from Global Constraints; `footer-max-line-length` 100, `body-max-line-length` 300), `.secretlintrc.json` (`@secretlint/secretlint-rule-preset-recommend`), `.secretlintignore` (`content/**/audio/**`, `dist/**`)
@@ -81,6 +84,7 @@
 - Test: `tooling/test/git-hooks.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 scripts.
 - Produces: `npm run prepare` → `husky`. Hooks are active after `npm install`.
 
@@ -107,6 +111,7 @@
 ### Task 3: Claude Code configuration: CLAUDE.md, rules, hooks
 
 **Files:**
+
 - Create: `CLAUDE.md` (≤ 120 lines): what the product is (2 lines); **source of truth = the spec + approved plans; never invent APIs, library behaviour or requirements: check docs/code or ask**; session start = read `WORKLOG.md` and print active tasks; task routing (see `.claude/task-router.md`); quick commands table; rules index (links to `.claude/rules/*`); reviewer agents table; "done" = tests shown passing + reviewers passed + `WORKLOG.md` updated; the self-correction rule (a wrong doc gets fixed in the same PR).
 - Create: `.claude/rules/` with one short file each (≤ 80 lines, bullet form, heidi style):
   - `coding.md`: limits from Global Constraints, early returns, named constants, error codes (`ErrorCode` drives Hindi/English messages; never show raw errors), logger not console, minimal changes, "less code is better"
@@ -147,6 +152,7 @@
 ### Task 4: Reviewer and planner agents, task router
 
 **Files:**
+
 - Create: `.claude/agents/spec-reviewer.md`, `.claude/agents/code-reviewer.md`, `.claude/agents/security-reviewer.md`. All three are read-only (`tools: [Read, Grep, Glob]`, `model: opus`). Each has: purpose, when to run, a checklist, and an **output format** of `PASS` or `FAIL` plus findings `{file:line, severity: critical|high|medium|low, issue, fix}`, stating that it never edits code.
   - spec-reviewer: compares the diff with the task's plan section and the spec. Flags anything **missing, extra or invented** (APIs, fields, behaviour not in the spec or plan)
   - code-reviewer: `.claude/rules/coding.md`, `architecture.md`, `testing.md` checklists; size limits; justified disables only; tests actually assert behaviour
@@ -174,6 +180,7 @@
 ### Task 5: Engineering docs, decision records, worklog
 
 **Files:**
+
 - Create: `docs/engineering-standards.md`: the design-pattern table (what, where, why) and the "deliberately not using" list agreed in conversation; practices (code, testing, git, ADRs, performance budgets: app JS ≤ 150 KB gzip, first screen < 3 s on slow 3G, bundle ≤ 5 MiB; observability; OWASP ASVS L2 as the security target; accessibility; config); the size-limit table; "where enforced" for each rule
 - Create: `docs/decisions/README.md` (format: Context → Decision → Consequences; filenames `<topic>-<YYYY-MM-DD>-<slug>.md`) and four ADRs dated 2026-10-18: `backend-…-supabase.md`, `app-…-pwa.md`, `sync-…-offline-first-outbox.md`, `backend-…-portability-rules.md`, each summarising the spec's reasoning and alternatives rejected
 - Create: `docs/gotchas/README.md` (format: what breaks, why, fix; first entry: `github-free-private-no-branch-protection.md`)
@@ -192,6 +199,7 @@
 ### Task 6: GitHub: CI, security scanning, PR template, Dependabot
 
 **Files:**
+
 - Create: `.github/workflows/ci.yml`. On `pull_request` and `push` to `main`, runs on `ubuntu-latest` with Node from `.nvmrc`, `npm ci`, then: `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:cov` (fails under 70%), `npx commitlint --from origin/main --to HEAD` on PRs.
 - Create: `.github/workflows/security.yml`. On `pull_request`, `push` to `main` and weekly (Monday 06:00 UTC); `permissions: contents: read, security-events: write`. Jobs: `npm audit --audit-level=high` (**blocking**), `gitleaks/gitleaks-action` (full history), `aquasecurity/trivy-action` fs scan HIGH/CRITICAL `exit-code: '1'`, `github/codeql-action` (javascript-typescript). Pin actions to the current major version tags at implementation time and record them in the PR.
 - Create: `.github/pull_request_template.md`: Summary; Spec/plan section; Changes; **Impact checklist** (DB migration · RLS policy changed · new table has isolation test · AI prompt changed + eval set run · feature switch added · offline/sync behaviour changed · safeguarding touched · new dependency · personal data collected/sent); Reviewers (spec / code / security: PASS with link to report); Testing (commands + output); Screenshots (UI).

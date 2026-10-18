@@ -24,13 +24,13 @@ Each plan produces working, testable software on its own. Plans 2–6 are writte
 ## Global Constraints
 
 - All learner-facing text exists in both `hi` and `en`, non-empty (§6.7: "the build checks both are present").
-- One bundle per module, each with a version (§5.1). Size target "≤ a few MB": warn above **5 MiB** (5 × 1024 × 1024 bytes) of JSON plus audio *(builder's call)*.
+- One bundle per module, each with a version (§5.1). Size target "≤ a few MB": warn above **5 MiB** (5 × 1024 × 1024 bytes) of JSON plus audio _(builder's call)_.
 - The build excludes any lesson that is not `review: approved` (§9.4). The `--preview` flag includes `pending` content for the mentor preview build.
 - Validation covers: required fields, Hindi text present, referenced audio exists, `review: approved`, `why_wrong` present for wrong options (§12).
 - Tracks are a list in the content (`content/tracks.yaml`), never hard-coded in code (§14).
 - Practice item types: `mcq_meaning`, `fill_blank`, `word_order`, `listen_choose`, `speak_compare`, `aptitude` (§5.1). New types are added as new schemas in one union (§14).
 - Allowed audio extensions: `.mp3`, `.m4a`, `.ogg`, `.opus`, `.webm` (audio format still open, §5.4).
-- Default test-out pass mark: `0.8` *(builder's call)*.
+- Default test-out pass mark: `0.8` _(builder's call)_.
 - All text is Unicode NFC-normalised on load. Files may have a BOM and CRLF line endings.
 - TypeScript `strict: true`, ESM only, Node 22. Runtime dependencies are limited to `zod`, `yaml`, `gray-matter` and `marked`.
 
@@ -68,19 +68,22 @@ topic: greetings
 level: 1
 order: 1
 review: approved
-title: { hi: "नमस्ते कहना", en: "Saying hello" }
-audio: { hi: audio/ef1-01-hi.mp3 }      # optional; paths relative to the module folder
+title: { hi: 'नमस्ते कहना', en: 'Saying hello' }
+audio: { hi: audio/ef1-01-hi.mp3 } # optional; paths relative to the module folder
 items:
   - id: q1
     type: mcq_meaning
     prompt: { hi: "'Hello' का मतलब?", en: "What does 'Hello' mean?" }
     options:
-      - { id: a, text: { hi: "नमस्ते", en: "A greeting" }, correct: true }
-      - { id: b, text: { hi: "अलविदा", en: "Goodbye" }, why_wrong: { hi: "...", en: "..." } }
+      - { id: a, text: { hi: 'नमस्ते', en: 'A greeting' }, correct: true }
+      - { id: b, text: { hi: 'अलविदा', en: 'Goodbye' }, why_wrong: { hi: '...', en: '...' } }
 ---
+
 <!-- lang:hi -->
+
 Hindi-first lesson text (Markdown) …
 <!-- lang:en -->
+
 English-only version …
 ```
 
@@ -91,12 +94,14 @@ English-only version …
 ### Task 1: Workspace scaffold and practice-item schemas
 
 **Files:**
+
 - Requires: Plan 0 merged (root workspace, lint/format/test tooling, hooks)
 - Create: `packages/content/package.json` (name `@shiksha/content`, `"type": "module"`, scripts `test: vitest run`, `typecheck: tsc --noEmit`), `packages/content/tsconfig.json`
 - Create: `packages/content/src/schema/localized.ts`, `packages/content/src/schema/items.ts`
 - Test: `packages/content/test/items.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `localized: ZodType<Localized>`, `type Localized = { hi: string; en: string }` (both trimmed, non-empty, strict object)
   - `contentId: ZodString`, matching `/^[a-z0-9]+(-[a-z0-9]+)*$/`
@@ -106,14 +111,14 @@ English-only version …
 
 Item shapes (every item has `id: contentId`, `type`, `prompt: Localized`):
 
-| type | extra fields | rules |
-|---|---|---|
-| `mcq_meaning` | `options: ChoiceOption[]` (2–6) | exactly one `correct: true`; every other option has `why_wrong`; option ids unique |
-| `listen_choose` | `audio: string`, `options` | same as `mcq_meaning` |
-| `aptitude` | `options`, `explanation?: Localized` | same as `mcq_meaning` |
-| `fill_blank` | `sentence: string`, `answers: string[]` (≥1), `common_wrong?: { answer: string; why_wrong: Localized }[]` | `sentence` contains `___` exactly once |
-| `word_order` | `words: string[]` (≥2, correct order), `why_wrong?: Localized` | — |
-| `speak_compare` | `text: string`, `model_audio: string` | — |
+| type            | extra fields                                                                                              | rules                                                                              |
+| --------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `mcq_meaning`   | `options: ChoiceOption[]` (2–6)                                                                           | exactly one `correct: true`; every other option has `why_wrong`; option ids unique |
+| `listen_choose` | `audio: string`, `options`                                                                                | same as `mcq_meaning`                                                              |
+| `aptitude`      | `options`, `explanation?: Localized`                                                                      | same as `mcq_meaning`                                                              |
+| `fill_blank`    | `sentence: string`, `answers: string[]` (≥1), `common_wrong?: { answer: string; why_wrong: Localized }[]` | `sentence` contains `___` exactly once                                             |
+| `word_order`    | `words: string[]` (≥2, correct order), `why_wrong?: Localized`                                            | —                                                                                  |
+| `speak_compare` | `text: string`, `model_audio: string`                                                                     | —                                                                                  |
 
 - [ ] **Step 1: Add the package.** The root workspace, TypeScript, ESLint, Prettier, Vitest and hooks already exist from Plan 0 (`2026-10-18-project-guardrails.md`), so don't recreate them. Create `packages/content` extending `tsconfig.base.json` and install `zod yaml gray-matter marked` in `@shiksha/content`.
 
@@ -159,10 +164,12 @@ test('rejects uppercase id', ...);                              // id: 'Q1'
 ### Task 2: Lesson file parsing
 
 **Files:**
+
 - Create: `packages/content/src/issues.ts`, `packages/content/src/schema/lesson.ts`, `packages/content/src/parse-lesson.ts`
 - Test: `packages/content/test/parse-lesson.test.ts`
 
 **Interfaces:**
+
 - Consumes: `localized`, `contentId`, `practiceItem` (Task 1)
 - Produces:
   - `type ContentIssue = { file: string; path?: string; message: string; severity: 'error' | 'warning' }`
@@ -196,11 +203,13 @@ test('rejects uppercase id', ...);                              // id: 'Q1'
 ### Task 3: Structure schemas and content loader
 
 **Files:**
+
 - Create: `packages/content/src/schema/structure.ts`, `packages/content/src/load.ts`
 - Create: `packages/content/test/helpers/content-dir.ts`, `packages/content/test/helpers/fixture.ts`
 - Test: `packages/content/test/load.test.ts`
 
 **Interfaces:**
+
 - Consumes: `parseLessonFile`, `ContentIssue`, `practiceItem`, `localized` (Tasks 1–2)
 - Produces:
   - `type Track = { id: string; title: Localized; order: number }`
@@ -236,14 +245,17 @@ test('rejects uppercase id', ...);                              // id: 'Q1'
 ### Task 4: Cross-file validation
 
 **Files:**
+
 - Create: `packages/content/src/validate.ts`
 - Test: `packages/content/test/validate.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Content`, `ContentIssue` (Task 3)
 - Produces: `validateContent(content: Content, opts: { preview: boolean }): Promise<ContentIssue[]>`
 
 Rules (error unless marked warning):
+
 1. Lesson ids are unique across all modules. Report both files.
 2. Module ids are unique. Each module's `track` exists in `tracks.yaml`. Each lesson's `track` equals its module's `track`.
 3. Lesson `order` values are unique within a module.
@@ -281,10 +293,12 @@ Rules (error unless marked warning):
 ### Task 5: Bundle builder
 
 **Files:**
+
 - Create: `packages/content/src/bundle.ts`, `packages/content/src/build.ts`
 - Test: `packages/content/test/build.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Content`, `LoadedModule` (Task 3)
 - Produces:
   - `selectForBuild(content: Content, opts: { preview: boolean }): Content`. Drops pending lessons, sets `testOut` and `placement` to `null` if pending, and drops modules left with no lessons. With `preview` it returns everything.
@@ -295,6 +309,7 @@ Rules (error unless marked warning):
   - `type Manifest = { schema_version: 1; built_at: string; preview: boolean; tracks: Track[]; modules: { id; track; title: Localized; order; version; file: string; sha256: string; bytes: number; audio_bytes: number; lessons: { id; order; title: Localized }[] }[]; placement: { file: string; version: string; sha256: string } | null }`
 
 Output layout:
+
 - `<out>/manifest.json`
 - `<out>/modules/<id>.<version>.json`
 - `<out>/placement.<version>.json`
@@ -327,6 +342,7 @@ Output layout:
 ### Task 6: CLI, sample content and author guide
 
 **Files:**
+
 - Create: `packages/content/src/cli.ts`, `packages/content/src/index.ts` (re-exports schemas, types, `loadContent`, `validateContent`, `selectForBuild`, `writeBuild`)
 - Create: `content/` sample tree. It must pass validation: tracks `english` and `aptitude`; module `english-foundation-1` with 1 approved lesson (greetings) of 5 items and a test-out; module `aptitude-1` with 1 approved lesson of 5 puzzles and a test-out; placement with one section per track. No audio files yet; TTS arrives in Plan 5.
 - Create: `content/README.md`, the author guide: the folder layout, the lesson format above, the item table, review status, and how to run the build
@@ -334,6 +350,7 @@ Output layout:
 - Test: `packages/content/test/cli.test.ts`
 
 **Interfaces:**
+
 - Consumes: `loadContent`, `validateContent`, `selectForBuild`, `writeBuild`
 - Produces: `runCli(argv: string[], io: { log(msg: string): void; error(msg: string): void }): Promise<number>`. Flags: `--content <dir>` (default `content`), `--out <dir>` (default `dist/content`), `--preview`, `--check` (validate only, write nothing).
 
