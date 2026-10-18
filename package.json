@@ -19,7 +19,8 @@
     "test:cov": "vitest run --coverage",
     "prepare": "husky",
     "content:check": "tsx packages/content/src/cli.ts --check",
-    "content:build": "tsx packages/content/src/cli.ts"
+    "content:build": "tsx packages/content/src/cli.ts",
+    "viewer": "npm run content:build && node spikes/lesson-viewer/serve.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",

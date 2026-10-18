@@ -1,0 +1,197 @@
+/* THROWAWAY SPIKE styles. Phone-first, large touch targets. */
+:root {
+  --ink: #1b1f3b;
+  --muted: #5b6175;
+  --brand: #2f3ab2;
+  --bg: #f4f5fa;
+  --card: #ffffff;
+  --good: #146c35;
+  --good-bg: #e7f5ec;
+  --bad: #b42318;
+  --bad-bg: #fdecea;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, 'Noto Sans Devanagari', 'Mukta', sans-serif;
+  line-height: 1.5;
+}
+#app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.topbar a {
+  color: var(--brand);
+  font-weight: 700;
+  text-decoration: none;
+}
+.badge {
+  background: #fdf0dd;
+  color: #8a4b06;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 12px 0;
+}
+h1,
+h2,
+h3 {
+  margin: 0 0 8px;
+}
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+.big {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 4px 0;
+}
+.btn,
+.option,
+.chip,
+.lang button {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1.5px solid var(--brand);
+  background: var(--card);
+  color: var(--brand);
+  font: inherit;
+  font-weight: 600;
+  padding: 0 14px;
+  cursor: pointer;
+}
+.btn.primary,
+.lang button.on {
+  background: var(--brand);
+  color: #fff;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.lesson-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.lesson-list .btn {
+  text-align: left;
+}
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+.option {
+  text-align: left;
+  border-color: #c9cde0;
+  color: var(--ink);
+}
+.option.right {
+  background: var(--good-bg);
+  border-color: var(--good);
+}
+.option.wrong {
+  background: var(--bad-bg);
+  border-color: var(--bad);
+}
+.primary-text {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+.secondary-text {
+  color: var(--muted);
+  margin: 0;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 52px;
+  margin: 10px 0;
+  padding: 8px;
+  border-radius: 12px;
+  background: #eef0f8;
+}
+.chip {
+  border-color: #c9cde0;
+  color: var(--ink);
+}
+input[type='text'] {
+  min-height: 44px;
+  border: 1.5px solid #c9cde0;
+  border-radius: 10px;
+  padding: 0 10px;
+  font: inherit;
+  width: 9em;
+  margin: 0 6px;
+}
+.feedback {
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+}
+.feedback.correct {
+  background: var(--good-bg);
+  color: var(--good);
+}
+.feedback.wrong {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+.feedback.unscored {
+  background: #eef0f8;
+}
+.feedback .secondary-text {
+  color: inherit;
+  opacity: 0.8;
+}
+.lang {
+  display: flex;
+  gap: 6px;
+}
+.lang button {
+  min-height: 36px;
+  font-size: 13px;
+}
+.lesson-body {
+  font-size: 17px;
+}
+pre {
+  background: #1b1f3b;
+  color: #e8eaff;
+  padding: 12px;
+  border-radius: 10px;
+  overflow: auto;
+  font-size: 12px;
+  max-height: 320px;
+}
+.error {
+  background: var(--bad-bg);
+  color: var(--bad);
+  border-radius: 12px;
+  padding: 12px;
+}

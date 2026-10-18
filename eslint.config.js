@@ -23,6 +23,7 @@ export default tseslint.config(
       'tooling/lint-fixtures/**',
       '**/*.generated.*',
       '.superpowers/**',
+      'spikes/**', // throwaway experiments, never merged; delete with the folder
     ],
   },
   js.configs.recommended,
