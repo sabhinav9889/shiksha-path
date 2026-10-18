@@ -1,8 +1,10 @@
-import { readdir, rename, rm } from 'node:fs/promises';
-import { relative, resolve } from 'node:path';
+import { readdir, readFile, rename, rm } from 'node:fs/promises';
+import { join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
+import { z } from 'zod';
 import { selectForBuild, writeBuild, type BuildResult } from './build.js';
+import { SCHEMA_VERSION } from './bundle.js';
 import type { ContentIssue } from './issues.js';
 import { loadContent } from './load.js';
 import type { Content } from './schema/structure.js';
@@ -40,6 +42,21 @@ function report(io: CliIo, issues: ContentIssue[]): boolean {
 const counts = (c: Content): string =>
   `${c.modules.length} modules, ${c.modules.reduce((n, m) => n + m.lessons.length, 0)} lessons`;
 
+const builtManifest = z.object({
+  schema_version: z.literal(SCHEMA_VERSION),
+  modules: z.array(z.unknown()),
+});
+
+/** A previous build has OUR manifest.json: a web app's own manifest.json must not count. */
+async function isPreviousBuild(dir: string): Promise<boolean> {
+  try {
+    const data: unknown = JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf8'));
+    return builtManifest.safeParse(data).success;
+  } catch {
+    return false;
+  }
+}
+
 /** The out dir is replaced on each build: only ever replace a previous build (or nothing). */
 async function outProblem(contentDir: string, outDir: string): Promise<string | null> {
   const rel = relative(outDir, contentDir);
@@ -47,8 +64,8 @@ async function outProblem(contentDir: string, outDir: string): Promise<string | 
     return `refusing to empty ${outDir}: it contains the content folder`;
   }
   const names = await readdir(outDir).catch(() => [] as string[]);
-  if (names.length > 0 && !names.includes('manifest.json')) {
-    return `refusing to replace ${outDir}: it is not empty and has no manifest.json (not a previous build)`;
+  if (names.length > 0 && !(await isPreviousBuild(outDir))) {
+    return `refusing to replace ${outDir}: it is not empty and is not a previous build (no manifest.json from this tool)`;
   }
   return null;
 }

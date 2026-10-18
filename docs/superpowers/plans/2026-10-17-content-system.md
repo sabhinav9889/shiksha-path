@@ -408,4 +408,16 @@ The plan above is kept as approved; these are the decisions made while building 
   module order values must be unique.
 - A pending placement test or test-out now gives a warning instead of disappearing silently.
 - The CLI builds into a temporary folder and swaps it in only when the build succeeds. It refuses
-  to replace a non-empty folder that isn't a previous build (`--out docs` is refused).
+  to replace a non-empty folder unless that folder is a previous build.
+
+### Hardening after PR #4 (separate PR)
+
+Two gaps were found while re-checking PR #4 and are closed in `fix/content-hardening`:
+
+- **A previous build** was first recognised by the mere presence of a `manifest.json`, so a web
+  app's own `manifest.json` made `--out public` delete the whole app folder. Now the file must
+  parse and have `schema_version: 1` and a `modules` list (this tool's manifest).
+- **Audio symlinks** could point outside the content folder, and the build copied the target
+  (any readable file) into the public `dist/audio/`. Validation and the build now share
+  `resolveAudio`, which follows links and refuses a target that resolves outside the module or
+  `placement/` folder. The build checks it too, because `writeBuild` is exported.

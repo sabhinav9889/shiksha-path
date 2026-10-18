@@ -94,6 +94,8 @@ The placement test may only start students at **approved** lessons.
 - Paths are relative to the module folder (or `placement/`), e.g. `audio/hello.mp3`. Always use
   `/`, never `\`.
 - File names are **case-sensitive**: `Hello.mp3` and `hello.mp3` are different files.
+- Audio must be real files inside the module (or `placement/`) folder. A link (symlink) to a file
+  somewhere else is refused, so nothing outside this folder can end up in the public build.
 - Keep each module under about 5 MB in total.
 
 ## Check and build
