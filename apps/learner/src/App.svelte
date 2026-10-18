@@ -5,6 +5,7 @@
   import HomeScreen from './screens/home/HomeScreen.svelte';
   import LearnScreen from './screens/learn/LearnScreen.svelte';
   import LessonsScreen from './screens/lessons/LessonsScreen.svelte';
+  import PracticeScreen from './screens/practice/PracticeScreen.svelte';
   import ProfilesScreen from './screens/profiles/ProfilesScreen.svelte';
   import Shell from './ui/Shell.svelte';
 
@@ -34,6 +35,8 @@
       <LessonsScreen />
     {:else if route.name === 'learn'}
       <LearnScreen />
+    {:else if route.name === 'practice'}
+      <PracticeScreen />
     {:else}
       <div data-testid={`screen-${route.name}`}></div>
     {/if}
