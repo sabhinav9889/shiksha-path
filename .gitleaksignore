@@ -1,0 +1,4 @@
+# Known-fake test fixture in history (commit 5a084c3): a made-up AWS-style key used to prove
+# secretlint blocks secrets. The fixture now builds the value at runtime. Add entries here only
+# for fakes, one fingerprint each, with a reason — never for a real secret (rotate it instead).
+5a084c35fb3d99b4ee2d322a67f519480226c978:tooling/test/git-hooks.test.ts:generic-api-key:49
