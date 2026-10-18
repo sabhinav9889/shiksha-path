@@ -1,6 +1,7 @@
 import type { Manifest } from '@shiksha/content/schema';
 import type { LearnerEvent } from './events.js';
 import type { LanguagePreference } from './language.js';
+import { applyReviewAnswer, type ReviewEntry } from './review.js';
 import { istDay } from './time.js';
 
 export interface PlacementRecord {
@@ -18,6 +19,7 @@ export interface ProgressState {
   suggestEnglishOnly: boolean;
   placementSkipped: boolean;
   activeDays: ReadonlySet<string>;
+  reviewQueue: readonly ReviewEntry[];
 }
 
 export interface LessonRef {
@@ -53,7 +55,7 @@ function apply(state: Mutable, event: LearnerEvent): void {
       state.completedLessons.add(event.data.lessonId);
       break;
     case 'item_answered':
-      state.activeDays.add(istDay(event.at));
+      recordAnswer(state, event);
       break;
     case 'test_out_completed':
       if (event.data.passed) state.testedOutModules.add(event.data.moduleId);
@@ -71,6 +73,24 @@ function apply(state: Mutable, event: LearnerEvent): void {
     default:
       break; // lesson_started changes nothing derived
   }
+}
+
+function recordAnswer(
+  state: Mutable,
+  event: Extract<LearnerEvent, { type: 'item_answered' }>,
+): void {
+  const { source, itemId, outcome } = event.data;
+  const day = istDay(event.at);
+  state.activeDays.add(day);
+  if (source.kind !== 'lesson' && source.kind !== 'review') return;
+  const fromReview = source.kind === 'review';
+  state.reviewQueue = applyReviewAnswer(state.reviewQueue, {
+    lessonId: source.lessonId,
+    itemId,
+    outcome,
+    fromReview,
+    day,
+  });
 }
 
 function recordPlacement(
@@ -96,6 +116,7 @@ export function deriveProgress(events: readonly LearnerEvent[]): ProgressState {
     suggestEnglishOnly: false,
     placementSkipped: false,
     activeDays: new Set(),
+    reviewQueue: [],
   };
   for (const event of normalise(events)) apply(state, event);
   return state;
