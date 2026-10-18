@@ -13,3 +13,7 @@ and the owner merges only green PRs.
 **Fix for real:** move the repo to an NGO organisation on GitHub for Nonprofits (free Team plan) or
 upgrade to Pro, then protect `main`: 1 approval, `CI` and `Security` checks required, no force push,
 no deletion.
+
+**Also on the free plan:** CodeQL code scanning needs GitHub Advanced Security for private repos, so
+static analysis runs on Semgrep in `.github/workflows/security.yml` instead. Switch to CodeQL if the
+repo moves to a plan that includes it.
