@@ -35,7 +35,7 @@ export default tseslint.config(
   prettier,
   ...svelte.configs['flat/prettier'],
   {
-    files: ['**/*.svelte'],
+    files: ['**/*.svelte', '**/*.svelte.ts'],
     languageOptions: { parserOptions: { parser: tseslint.parser } },
   },
   {
@@ -96,6 +96,9 @@ export default tseslint.config(
   {
     files: ['**/*.svelte'],
     rules: {
+      // Svelte 5 props are `let { a } = $props()`; only the Svelte-aware rule understands that.
+      'prefer-const': 'off',
+      'svelte/prefer-const': 'error',
       'max-lines': [
         'error',
         { max: LIMITS.svelteFileLines, skipBlankLines: true, skipComments: true },

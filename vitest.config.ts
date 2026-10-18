@@ -8,6 +8,7 @@ export default defineConfig({
   plugins: [svelte()],
   resolve: { conditions: ['browser'] },
   test: {
+    setupFiles: ['apps/learner/test/setup.ts'],
     include: ['tooling/**/*.test.ts', 'packages/**/*.test.ts', 'apps/**/*.test.ts'],
     coverage: {
       provider: 'v8',
