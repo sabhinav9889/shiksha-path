@@ -17,7 +17,8 @@
 Each plan produces working, testable software on its own. Plans after this one are written when the previous one is done, so they build on what was actually built.
 
 - **Plan 2a: learner core** (this plan): no screens.
-- **Plan 2b: learner app:** PWA shell (Svelte + Vite), service worker, interface strings (hi/en), IndexedDB adapters (pass this plan's contract suites), profile and PIN screens, placement, lessons, practice, review, progress, install/update of content, offline Playwright tests, speaking-recording capture.
+- **Plan 2b: learner app:** PWA shell (Svelte + Vite), service worker, interface strings (hi/en), IndexedDB adapters (pass this plan's contract suites), profile and PIN screens, home, lessons and downloads, lesson, practice, review, test-out, offline Playwright tests (`2026-10-19-learner-app.md`).
+- **Plan 2c: learner app, part 2:** placement screens, speaking-recording capture, the "me" screen, tablet and desktop layouts.
 - **Plan 3:** backend and sync (Supabase, `/v1/sync` push and pull, Google sign-in, ID mapping, feature switches, recordings upload, backups).
 - **Plan 4:** mentor view and admin panel. **Plan 5:** AI features and content pipeline. **Plan 6:** mentor connect and community.
 
