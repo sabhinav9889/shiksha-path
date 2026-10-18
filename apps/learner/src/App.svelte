@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { appState } from './app-state.svelte.js';
   import { navigate, router, startRouter, type Route } from './router.svelte.js';
+  import ProfilesScreen from './screens/profiles/ProfilesScreen.svelte';
   import Shell from './ui/Shell.svelte';
 
   /** Without a signed-in profile the only place to be is the profile picker. */
@@ -22,6 +23,10 @@
 
 <div data-testid="app-root">
   <Shell lang={appState.lang} current={route.name} {showNav}>
-    <div data-testid={`screen-${route.name}`}></div>
+    {#if route.name === 'profiles'}
+      <ProfilesScreen />
+    {:else}
+      <div data-testid={`screen-${route.name}`}></div>
+    {/if}
   </Shell>
 </div>

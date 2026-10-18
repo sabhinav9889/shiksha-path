@@ -59,10 +59,12 @@ export async function signIn(profileId: string, pin: string): Promise<void> {
     clock: runtime.clock,
   });
   resetActivity();
-  appState.session = null;
+  // Work everything out first, then switch in one step, so nobody sees a half-signed-in state.
+  const lang = await languageOf(runtime, profile.id);
+  const session = await openIfInstalled(runtime, profile.id);
   appState.profile = { id: profile.id, name: profile.name };
-  appState.lang = await languageOf(runtime, profile.id);
-  appState.session = await openIfInstalled(runtime, profile.id);
+  appState.lang = lang;
+  appState.session = session;
 }
 
 export function signOut(): void {

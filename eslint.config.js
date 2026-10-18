@@ -97,6 +97,7 @@ export default tseslint.config(
     files: ['**/*.svelte'],
     rules: {
       // Svelte 5 props are `let { a } = $props()`; only the Svelte-aware rule understands that.
+      'no-undef': 'off', // TypeScript already checks undefined names
       'prefer-const': 'off',
       'svelte/prefer-const': 'error',
       'max-lines': [

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import App from './App.svelte';
 import { signOut } from './app-state.svelte.js';
 import { navigate } from './router.svelte.js';
@@ -20,6 +20,6 @@ describe('App', () => {
     navigate({ name: 'home' });
     render(App);
     await tick();
-    expect(screen.getByTestId('screen-profiles')).toBeTruthy();
+    await vi.waitFor(() => expect(screen.getByText('नया प्रोफ़ाइल')).toBeTruthy());
   });
 });

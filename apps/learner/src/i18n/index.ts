@@ -1,12 +1,13 @@
 import type { ErrorCode, Lang, LanguagePreference } from '@shiksha/learner-core';
 import { commonStrings } from './common.js';
 import { errorStrings } from './errors.js';
+import { profilesStrings } from './profiles.js';
 import { shellStrings } from './shell.js';
 
 export type { Lang } from '@shiksha/learner-core';
 
 /** Each screen adds its own strings file and spreads it here. */
-export const STRINGS = { ...commonStrings, ...shellStrings };
+export const STRINGS = { ...commonStrings, ...shellStrings, ...profilesStrings };
 
 export type StringKey = keyof typeof STRINGS;
 
