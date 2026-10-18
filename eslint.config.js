@@ -94,6 +94,14 @@ export default tseslint.config(
     },
   },
   {
+    // Command-line scripts: printing is their job, and they run in Node.
+    files: ['tooling/**/*.mjs'],
+    languageOptions: {
+      globals: { process: 'readonly', console: 'readonly', Buffer: 'readonly' },
+    },
+    rules: { 'no-console': 'off' },
+  },
+  {
     files: ['**/*.svelte'],
     rules: {
       // Svelte 5 props are `let { a } = $props()`; only the Svelte-aware rule understands that.

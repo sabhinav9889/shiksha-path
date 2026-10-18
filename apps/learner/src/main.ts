@@ -9,11 +9,15 @@ import '@fontsource/mukta/latin-400.css';
 import '@fontsource/mukta/latin-500.css';
 import '@fontsource/mukta/latin-600.css';
 import { mount } from 'svelte';
+import { registerSW } from 'virtual:pwa-register';
 import App from './App.svelte';
 import { appState, initApp } from './app-state.svelte.js';
 import { startAutoSync } from './runtime/auto-sync.js';
 import { createRuntime } from './runtime/runtime.js';
 import './styles/tokens.css';
+
+// New versions install in the background and apply the next time the app opens.
+registerSW({ immediate: true });
 
 const runtime = createRuntime();
 initApp(runtime);
