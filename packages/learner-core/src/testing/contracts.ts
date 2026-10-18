@@ -5,6 +5,8 @@ import type {
   PracticeItem,
 } from '@shiksha/content/schema';
 import { describe, expect, test } from 'vitest';
+import type { LearnerEvent } from '../events.js';
+import type { EventStore } from '../outbox.js';
 import type { Profile, ProfileStore } from '../profiles.js';
 import type { BundleStorage } from '../storage.js';
 
@@ -159,6 +161,62 @@ export function describeProfileStore(
       await s.delete('a');
       expect((await s.list()).map((p) => p.id)).toEqual(['b']);
       await s.delete('missing');
+    });
+  });
+}
+
+const event = (id: string, learnerId = 'a'): LearnerEvent => ({
+  id,
+  learnerId,
+  type: 'language_changed',
+  at: '2026-10-18T10:00:00.000Z',
+  data: { preference: 'en_only' },
+});
+
+/** The behaviour every EventStore adapter must have. */
+export function describeEventStore(
+  name: string,
+  factory: () => EventStore | Promise<EventStore>,
+): void {
+  describe(`EventStore contract: ${name}`, () => {
+    test('append is idempotent on the event id', async () => {
+      const s = await factory();
+      await s.append(event('e1'));
+      await s.append(event('e1'));
+      expect(await s.all('a')).toHaveLength(1);
+    });
+
+    test('all and pending keep append order and are per learner', async () => {
+      const s = await factory();
+      for (const id of ['e2', 'e1', 'e3']) await s.append(event(id));
+      await s.append(event('x1', 'b'));
+      expect((await s.all('a')).map((e) => e.id)).toEqual(['e2', 'e1', 'e3']);
+      expect((await s.pending('a', 2)).map((e) => e.id)).toEqual(['e2', 'e1']);
+      expect((await s.pending('b', 10)).map((e) => e.id)).toEqual(['x1']);
+    });
+
+    test('markSent removes events from pending but not from all', async () => {
+      const s = await factory();
+      for (const id of ['e1', 'e2', 'e3']) await s.append(event(id));
+      await s.markSent(['e1', 'e3', 'unknown']);
+      expect((await s.pending('a', 10)).map((e) => e.id)).toEqual(['e2']);
+      expect(await s.all('a')).toHaveLength(3);
+    });
+
+    test('an acknowledged event stays acknowledged if appended again', async () => {
+      const s = await factory();
+      await s.append(event('e1'));
+      await s.markSent(['e1']);
+      await s.append(event('e1'));
+      expect(await s.pending('a', 10)).toEqual([]);
+    });
+
+    test('meta values round-trip and overwrite', async () => {
+      const s = await factory();
+      expect(await s.getMeta('k')).toBeNull();
+      await s.setMeta('k', 'v1');
+      await s.setMeta('k', 'v2');
+      expect(await s.getMeta('k')).toBe('v2');
     });
   });
 }

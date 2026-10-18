@@ -6,3 +6,4 @@ export * from './download.js';
 export * from './install.js';
 export * from './storage-management.js';
 export * from './profiles.js';
+export * from './outbox.js';
