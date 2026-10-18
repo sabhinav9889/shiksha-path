@@ -193,7 +193,7 @@ Learners (ID, name, Google email or backup code, cohort, lab, language preferenc
 
 A web section of the same PWA, visible only to the **admin** role (NGO admins and the product owner). Admins see all cohorts, labs, mentors and students.
 
-**Setup:** create labs, cohorts and mentor accounts; set the org-wide AI doubt maximum (§9.1); set the safeguarding contact email (§9.1); adjust booking rules (§10.1).
+**Setup:** create labs, cohorts and mentor accounts; set the org-wide AI doubt maximum (§9.1); set the safeguarding contact email (§9.1); adjust booking rules (§10.1); branding (below).
 
 **Manage students**
 - A list of every student, with search and filters: cohort, lab, mentor, level, language preference, active / inactive, needs attention.
@@ -217,6 +217,14 @@ A web section of the same PWA, visible only to the **admin** role (NGO admins an
 - Switchable features: AI doubt solver, speaking practice, placement test, "English only" option, mentor booking, community feed. *(Builder's call: more can be added as a list in the database, with no new screens needed.)*
 - The phone fetches its switches at sign-in and on every sync, and keeps the last known values offline. Turning a feature off hides it in the app. The server also refuses that feature's requests (e.g. AI doubts, bookings), so an old copy on the phone can't use it.
 - Turning off a feature never deletes data. Turning it on again brings everything back.
+
+**Branding** *(details are builder's calls unless stated)*
+- Admins can change the **platform name** (Hindi and English), the **logo**, and the **theme**, without a new app release. This is decided.
+- **Logo:** SVG or PNG, max 500 KB. The server generates the PWA app icons (192 px, 512 px, maskable) and the favicon from it. Square images work best, and admins see a preview of the home-screen icon before saving.
+- **Theme:** a primary colour and an accent colour, chosen from a curated set of presets or entered as a custom hex value. The panel **blocks colours that fail contrast** (WCAG AA 4.5:1 for text on that colour), so the app stays readable on cheap screens in sunlight. Fonts and layout are not changeable.
+- **Live preview** of the phone home screen and the login screen before publishing; **Reset to default** is always available.
+- **How it reaches phones:** branding is a small versioned file, fetched at sign-in and on every sync like the feature switches, and cached for offline use. The installed app's name and icon (PWA manifest) update when the browser refreshes the installed app, which can take a few days on Android. The admin panel says so.
+- Every branding change is in the audit log.
 
 **Audit log:** every admin action (switch changed, student edited, moved, deactivated, deleted) is logged with who did it and when, and admins can view the log.
 
