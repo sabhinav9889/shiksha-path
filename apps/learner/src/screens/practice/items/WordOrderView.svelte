@@ -84,6 +84,7 @@
 
   .tray button,
   .bank button {
+    min-width: 44px; /* a one-letter word such as "I" must still be easy to tap */
     min-height: 48px;
     padding: 0 16px;
     border: 2px solid var(--color-line);

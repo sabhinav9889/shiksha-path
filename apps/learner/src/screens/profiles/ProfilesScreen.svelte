@@ -207,9 +207,11 @@
 
   .prompt {
     margin: 0;
+    max-width: 100%;
     font-size: 16px;
     font-weight: 600;
     text-align: center;
+    overflow-wrap: anywhere; /* a long name has no spaces to break at */
   }
 
   .note {
