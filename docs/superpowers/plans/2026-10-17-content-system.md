@@ -91,7 +91,7 @@ English-only version …
 ### Task 1: Workspace scaffold and practice-item schemas
 
 **Files:**
-- Create: `package.json`, `tsconfig.base.json`, `.gitignore` (`node_modules`, `dist`), `.nvmrc` (`22`)
+- Requires: Plan 0 merged (root workspace, lint/format/test tooling, hooks)
 - Create: `packages/content/package.json` (name `@shiksha/content`, `"type": "module"`, scripts `test: vitest run`, `typecheck: tsc --noEmit`), `packages/content/tsconfig.json`
 - Create: `packages/content/src/schema/localized.ts`, `packages/content/src/schema/items.ts`
 - Test: `packages/content/test/items.test.ts`
@@ -115,7 +115,7 @@ Item shapes (every item has `id: contentId`, `type`, `prompt: Localized`):
 | `word_order` | `words: string[]` (≥2, correct order), `why_wrong?: Localized` | — |
 | `speak_compare` | `text: string`, `model_audio: string` | — |
 
-- [ ] **Step 1: Scaffold the workspace.** Root `package.json` has `"private": true`, `"workspaces": ["packages/*"]`, scripts `test: npm test -ws`, `typecheck: npm run typecheck -ws`. Install `zod yaml gray-matter marked` in `@shiksha/content` and `typescript vitest tsx @types/node` as root dev dependencies.
+- [ ] **Step 1: Add the package.** The root workspace, TypeScript, ESLint, Prettier, Vitest and hooks already exist from Plan 0 (`2026-10-18-project-guardrails.md`), so don't recreate them. Create `packages/content` extending `tsconfig.base.json` and install `zod yaml gray-matter marked` in `@shiksha/content`.
 
 - [ ] **Step 2: Write the failing tests** in `test/items.test.ts`:
 
@@ -152,7 +152,7 @@ test('rejects uppercase id', ...);                              // id: 'Q1'
 
 - [ ] **Step 5: Run** `npm test -w @shiksha/content && npm run typecheck`. Expected: all PASS, no type errors.
 
-- [ ] **Step 6: Commit** `feat(content): workspace scaffold and practice-item schemas`
+- [ ] **Step 6: Commit** `feat(content): add package and practice-item schemas`
 
 ---
 
