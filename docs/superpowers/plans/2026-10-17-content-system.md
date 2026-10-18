@@ -393,3 +393,19 @@ The plan above is kept as approved; these are the decisions made while building 
 - **Root `typecheck`** now covers `packages/*`, so CI type-checks product code.
 - **Extra tests** beyond the plan: option bounds and duplicates, absolute audio paths, test-out and
   placement audio, placement track checks, lesson-level audio, pending placement, CLI safety.
+
+### Follow-up after the final review (merged early as PR #3; fixes in a follow-up PR)
+
+- **Critical:** the `javascript:` filter could be bypassed with HTML entities
+  (`java&#115;cript:`). Links now use an allowlist (`http`, `https`, `mailto`, relative, `#`),
+  checked after decoding entities and removing control characters. Images must be local.
+- BOM/CRLF is now handled in every YAML file, not just lessons.
+- Audio paths: `\` is rejected, each path segment's case is checked (macOS/Windows), the target
+  must be a regular file, and validation and build share one path resolver.
+- The placement bundle lists its audio (`path`, `sha256`, `bytes`); the manifest's placement
+  entry has `bytes` and `audio_bytes`, so the app can verify it like a module.
+- Item ids must be unique within each test-out and across the placement test. Track ids and
+  module order values must be unique.
+- A pending placement test or test-out now gives a warning instead of disappearing silently.
+- The CLI builds into a temporary folder and swaps it in only when the build succeeds. It refuses
+  to replace a non-empty folder that isn't a previous build (`--out docs` is refused).

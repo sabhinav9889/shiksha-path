@@ -1,8 +1,8 @@
-import { rm } from 'node:fs/promises';
+import { readdir, rename, rm } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
-import { selectForBuild, writeBuild } from './build.js';
+import { selectForBuild, writeBuild, type BuildResult } from './build.js';
 import type { ContentIssue } from './issues.js';
 import { loadContent } from './load.js';
 import type { Content } from './schema/structure.js';
@@ -40,10 +40,36 @@ function report(io: CliIo, issues: ContentIssue[]): boolean {
 const counts = (c: Content): string =>
   `${c.modules.length} modules, ${c.modules.reduce((n, m) => n + m.lessons.length, 0)} lessons`;
 
-/** The out dir is deleted before each build: never let it contain the content itself. */
-function unsafeOut(contentDir: string, outDir: string): boolean {
+/** The out dir is replaced on each build: only ever replace a previous build (or nothing). */
+async function outProblem(contentDir: string, outDir: string): Promise<string | null> {
   const rel = relative(outDir, contentDir);
-  return rel === '' || !rel.startsWith('..');
+  if (rel === '' || !rel.startsWith('..')) {
+    return `refusing to empty ${outDir}: it contains the content folder`;
+  }
+  const names = await readdir(outDir).catch(() => [] as string[]);
+  if (names.length > 0 && !names.includes('manifest.json')) {
+    return `refusing to replace ${outDir}: it is not empty and has no manifest.json (not a previous build)`;
+  }
+  return null;
+}
+
+/** Build into a temporary sibling folder and swap it in only if the whole build succeeded. */
+async function buildAtomically(
+  selected: Content,
+  outDir: string,
+  preview: boolean,
+): Promise<BuildResult> {
+  const tmp = `${outDir}.tmp-${process.pid}`;
+  await rm(tmp, { recursive: true, force: true });
+  try {
+    const result = await writeBuild(selected, tmp, { preview, now: new Date() });
+    await rm(outDir, { recursive: true, force: true });
+    await rename(tmp, outDir);
+    return result;
+  } catch (e) {
+    await rm(tmp, { recursive: true, force: true });
+    throw e;
+  }
 }
 
 type ParsedArgs = ReturnType<typeof parseArgs<{ options: typeof OPTIONS }>>;
@@ -76,12 +102,19 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
     io.log(`Content OK: ${counts(selected)}`);
     return 0;
   }
-  if (unsafeOut(contentDir, outDir)) {
-    io.error(`refusing to empty ${outDir}: it contains the content folder`);
+  const problem = await outProblem(contentDir, outDir);
+  if (problem) {
+    io.error(problem);
     return 1;
   }
-  await rm(outDir, { recursive: true, force: true });
-  const built = await writeBuild(selected, outDir, { preview, now: new Date() });
+  let built: BuildResult;
+  try {
+    built = await buildAtomically(selected, outDir, preview);
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : String(e);
+    io.error(`build failed: ${reason}\nthe previous build in ${outDir} is unchanged`);
+    return 1;
+  }
   report(io, built.issues);
   io.log(`Built ${counts(selected)} → ${outDir}`);
   return 0;

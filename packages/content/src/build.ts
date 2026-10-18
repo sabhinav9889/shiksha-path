@@ -9,11 +9,12 @@ import {
   type AudioEntry,
   type Manifest,
   type ManifestModule,
+  type ManifestPlacement,
   type PlacementBundle,
 } from './bundle.js';
 import { warning, type ContentIssue } from './issues.js';
 import type { Content, LoadedModule } from './schema/structure.js';
-import { collectAudioRefs } from './validate-audio.js';
+import { audioFilePath, collectAudioRefs } from './validate-audio.js';
 
 const HASH_NAME_CHARS = 16;
 const KIB = 1024;
@@ -45,7 +46,7 @@ export function selectForBuild(content: Content, opts: { preview: boolean }): Co
 async function readAudio(content: Content): Promise<Map<string, AudioFile>> {
   const files = new Map<string, AudioFile>();
   for (const { baseDir, ref } of collectAudioRefs(content)) {
-    const data = await readFile(join(baseDir, ...ref.split('/')));
+    const data = await readFile(audioFilePath(baseDir, ref));
     const hash = sha256(data);
     const path = `audio/${hash.slice(0, HASH_NAME_CHARS)}${extname(ref).toLowerCase()}`;
     files.set(audioKey(baseDir, ref), { path, sha256: hash, bytes: data.length, data });
@@ -57,20 +58,23 @@ function pathFor(audio: Map<string, AudioFile>, baseDir: string) {
   return (ref: string): string => audio.get(audioKey(baseDir, ref))?.path ?? ref;
 }
 
-function moduleAudio(audio: Map<string, AudioFile>, mod: LoadedModule): AudioEntry[] {
-  const own = [...audio].filter(([key]) => key.startsWith(`${mod.dir}\u0000`)).map(([, a]) => a);
+/** Unique audio entries stored under `dir` (a module folder or `placement/`), sorted by path. */
+function audioUnder(audio: Map<string, AudioFile>, dir: string): AudioEntry[] {
+  const own = [...audio].filter(([key]) => key.startsWith(`${dir}\u0000`)).map(([, a]) => a);
   const unique = new Map(
     own.map((a) => [a.path, { path: a.path, sha256: a.sha256, bytes: a.bytes }]),
   );
-  return [...unique.values()].sort((a, b) => a.path.localeCompare(b.path));
+  return [...unique.values()].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }
+
+const totalBytes = (entries: AudioEntry[]): number => entries.reduce((sum, a) => sum + a.bytes, 0);
 
 async function writeModule(
   out: string,
   mod: LoadedModule,
   audio: Map<string, AudioFile>,
 ): Promise<ManifestModule> {
-  const entries = moduleAudio(audio, mod);
+  const entries = audioUnder(audio, mod.dir);
   const { value, json } = withVersion(moduleBundleDraft(mod, pathFor(audio, mod.dir), entries));
   const file = `modules/${value.id}.${value.version}.json`;
   await writeFile(join(out, file), json);
@@ -83,7 +87,7 @@ async function writeModule(
     file,
     sha256: sha256(json),
     bytes: Buffer.byteLength(json),
-    audio_bytes: entries.reduce((sum, a) => sum + a.bytes, 0),
+    audio_bytes: totalBytes(entries),
     lessons: mod.lessons.map((l) => ({ id: l.meta.id, order: l.meta.order, title: l.meta.title })),
   };
 }
@@ -92,18 +96,30 @@ async function writePlacement(
   out: string,
   content: Content,
   audio: Map<string, AudioFile>,
-): Promise<Manifest['placement']> {
+): Promise<ManifestPlacement | null> {
   if (!content.placement) return null;
   const audioPath = pathFor(audio, content.placementDir);
   const sections = content.placement.sections.map((s) => ({
     ...s,
     items: s.items.map((i) => rewriteItemAudio(i, audioPath)),
   }));
-  const draft: PlacementBundle = { schema_version: SCHEMA_VERSION, version: '', sections };
+  const entries = audioUnder(audio, content.placementDir);
+  const draft: PlacementBundle = {
+    schema_version: SCHEMA_VERSION,
+    version: '',
+    sections,
+    audio: entries,
+  };
   const { value, json } = withVersion(draft);
   const file = `placement.${value.version}.json`;
   await writeFile(join(out, file), json);
-  return { file, version: value.version, sha256: sha256(json) };
+  return {
+    file,
+    version: value.version,
+    sha256: sha256(json),
+    bytes: Buffer.byteLength(json),
+    audio_bytes: totalBytes(entries),
+  };
 }
 
 function sizeWarnings(modules: ManifestModule[]): ContentIssue[] {

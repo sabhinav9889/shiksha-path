@@ -43,6 +43,15 @@ export interface PlacementBundle {
   schema_version: typeof SCHEMA_VERSION;
   version: string;
   sections: PlacementSection[];
+  audio: AudioEntry[];
+}
+
+export interface ManifestPlacement {
+  file: string;
+  version: string;
+  sha256: string;
+  bytes: number;
+  audio_bytes: number;
 }
 
 export interface ManifestModule {
@@ -64,7 +73,7 @@ export interface Manifest {
   preview: boolean;
   tracks: Track[];
   modules: ManifestModule[];
-  placement: { file: string; version: string; sha256: string } | null;
+  placement: ManifestPlacement | null;
 }
 
 /** Maps an audio reference (relative to its folder) to its published `audio/<hash>.<ext>` path. */
@@ -78,18 +87,65 @@ export const bundleVersion = (json: string): string => sha256(json).slice(0, VER
 
 const escapeHtml = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const UNSAFE_URL = /^\s*(javascript|data|vbscript):/i;
 
-/** Lesson Markdown → HTML. Raw HTML is escaped and script URLs dropped: lesson text is data. */
+const NAMED_ENTITIES: Record<string, string> = {
+  colon: ':',
+  tab: '\t',
+  newline: '\n',
+  sol: '/',
+  period: '.',
+  amp: '&',
+  lpar: '(',
+  rpar: ')',
+};
+const SPACE = 0x20;
+const DEL = 0x7f;
+const LAST_C1_CONTROL = 0x9f;
+const isControlOrSpace = (ch: string): boolean => {
+  const code = ch.codePointAt(0) ?? 0;
+  return code <= SPACE || (code >= DEL && code <= LAST_C1_CONTROL);
+};
+const SCHEME = /^([a-z][a-z0-9+.-]*):/i;
+const LINK_SCHEMES = new Set(['http', 'https', 'mailto']);
+
+/** Decode the entities a browser would decode in an attribute, then drop control/space chars. */
+function normalizeUrl(href: string): string {
+  const decoded = href
+    .replace(/&#x([0-9a-f]+);?/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);?/g, (_, dec: string) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&([a-z]+);?/gi, (m, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? m);
+  return [...decoded]
+    .filter((ch) => !isControlOrSpace(ch))
+    .join('')
+    .toLowerCase();
+}
+
+/** Links: allowlist of schemes (http, https, mailto) or scheme-less (relative, #anchor). */
+export function isSafeLink(href: string): boolean {
+  const url = normalizeUrl(href);
+  const scheme = SCHEME.exec(url)?.[1];
+  if (scheme !== undefined) return LINK_SCHEMES.has(scheme);
+  // An unknown entity left in the URL could still hide a scheme: reject that combination.
+  const hiddenScheme = url.includes('&') && url.includes(':');
+  return !hiddenScheme;
+}
+
+/** Images: local, relative paths only (no remote trackers, no protocol-relative URLs). */
+export function isSafeImage(href: string): boolean {
+  const url = normalizeUrl(href);
+  return SCHEME.exec(url) === null && !url.startsWith('//') && !url.includes(':');
+}
+
+/** Lesson Markdown → HTML. Raw HTML is escaped and URLs are allowlisted: lesson text is data. */
 const markdown = new Marked({
   async: false,
   renderer: {
     html: ({ text }: Tokens.HTML | Tokens.Tag): string => escapeHtml(text),
     link(token: Tokens.Link): string | false {
-      return UNSAFE_URL.test(token.href) ? this.parser.parseInline(token.tokens) : false;
+      return isSafeLink(token.href) ? false : this.parser.parseInline(token.tokens);
     },
     image: ({ href, text }: Tokens.Image): string | false =>
-      UNSAFE_URL.test(href) ? escapeHtml(text) : false,
+      isSafeImage(href) ? false : escapeHtml(text),
   },
 });
 

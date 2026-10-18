@@ -106,6 +106,53 @@ function lessonWarnings(content: Content, preview: boolean): ContentIssue[] {
   });
 }
 
+function duplicates(values: string[]): string[] {
+  return [...new Set(values.filter((v, i) => values.indexOf(v) !== i))];
+}
+
+/** Item ids are how the app records answers: unique per test-out and across the placement test. */
+function uniqueQuizItemIds(content: Content): ContentIssue[] {
+  const fromTestOuts = content.modules.flatMap((m) =>
+    duplicates((m.testOut?.items ?? []).map((i) => i.id)).map((id) =>
+      error(`modules/${m.meta.id}/test-out.yaml`, `item id ${id} is used more than once`),
+    ),
+  );
+  const placementIds = (content.placement?.sections ?? []).flatMap((s) => s.items.map((i) => i.id));
+  const fromPlacement = duplicates(placementIds).map((id) =>
+    error(PLACEMENT_FILE, `item id ${id} is used more than once in the placement test`),
+  );
+  return [...fromTestOuts, ...fromPlacement];
+}
+
+/** Track ids and module order values are unique. */
+function uniqueTracksAndModuleOrders(content: Content): ContentIssue[] {
+  const tracks = duplicates(content.tracks.map((t) => t.id)).map((id) =>
+    error('tracks.yaml', `track id ${id} is used more than once`),
+  );
+  const orders = content.modules
+    .filter((m, i) => content.modules.findIndex((o) => o.meta.order === m.meta.order) !== i)
+    .map((m) => error(moduleFile(m), `order ${m.meta.order} is used by another module`, 'order'));
+  return [...tracks, ...orders];
+}
+
+/** A pending placement test or test-out is left out of a normal build: say so. */
+function pendingQuizWarnings(content: Content, preview: boolean): ContentIssue[] {
+  if (preview) return [];
+  const testOuts = content.modules
+    .filter((m) => m.testOut?.review === 'pending')
+    .map((m) =>
+      warning(
+        `modules/${m.meta.id}/test-out.yaml`,
+        'test-out excluded from build (review: pending)',
+      ),
+    );
+  const placement =
+    content.placement?.review === 'pending'
+      ? [warning(PLACEMENT_FILE, 'placement test excluded from build (review: pending)')]
+      : [];
+  return [...testOuts, ...placement];
+}
+
 /** Cross-file checks on a loaded content tree. */
 export async function validateContent(
   content: Content,
@@ -119,6 +166,9 @@ export async function validateContent(
     ...uniqueOrders(content),
     ...audio.flat(),
     ...sections.flatMap((s) => placementSection(content, s, opts.preview)),
+    ...uniqueQuizItemIds(content),
+    ...uniqueTracksAndModuleOrders(content),
     ...lessonWarnings(content, opts.preview),
+    ...pendingQuizWarnings(content, opts.preview),
   ];
 }

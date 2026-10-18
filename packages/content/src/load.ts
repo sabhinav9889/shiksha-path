@@ -12,7 +12,7 @@ import {
   type Content,
   type LoadedModule,
 } from './schema/structure.js';
-import { nfc } from './text.js';
+import { nfc, normalizeSource } from './text.js';
 
 type Issues = ContentIssue[];
 
@@ -46,7 +46,7 @@ async function readYamlFile<T>(
     issues.push(error(rel, `missing ${rel}`));
     return null;
   }
-  const data = parseYamlSafe(rel, text);
+  const data = parseYamlSafe(rel, normalizeSource(text));
   if (!data.ok) {
     issues.push(...data.issues);
     return null;
