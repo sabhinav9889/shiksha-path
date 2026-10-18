@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { appState } from './app-state.svelte.js';
   import { navigate, router, startRouter, type Route } from './router.svelte.js';
+  import HomeScreen from './screens/home/HomeScreen.svelte';
   import ProfilesScreen from './screens/profiles/ProfilesScreen.svelte';
   import Shell from './ui/Shell.svelte';
 
@@ -25,6 +26,8 @@
   <Shell lang={appState.lang} current={route.name} {showNav}>
     {#if route.name === 'profiles'}
       <ProfilesScreen />
+    {:else if route.name === 'home'}
+      <HomeScreen />
     {:else}
       <div data-testid={`screen-${route.name}`}></div>
     {/if}
