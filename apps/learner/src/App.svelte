@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { appState } from './app-state.svelte.js';
   import { navigate, router, startRouter, type Route } from './router.svelte.js';
+  import FinishScreen from './screens/finish/FinishScreen.svelte';
   import HomeScreen from './screens/home/HomeScreen.svelte';
   import LearnScreen from './screens/learn/LearnScreen.svelte';
   import LessonsScreen from './screens/lessons/LessonsScreen.svelte';
@@ -37,8 +38,8 @@
       <LearnScreen />
     {:else if route.name === 'practice'}
       <PracticeScreen />
-    {:else}
-      <div data-testid={`screen-${route.name}`}></div>
+    {:else if route.name === 'finish'}
+      <FinishScreen />
     {/if}
   </Shell>
 </div>
