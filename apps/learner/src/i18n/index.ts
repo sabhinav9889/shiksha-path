@@ -2,13 +2,20 @@ import type { ErrorCode, Lang, LanguagePreference } from '@shiksha/learner-core'
 import { commonStrings } from './common.js';
 import { errorStrings } from './errors.js';
 import { homeStrings } from './home.js';
+import { lessonsStrings } from './lessons.js';
 import { profilesStrings } from './profiles.js';
 import { shellStrings } from './shell.js';
 
 export type { Lang } from '@shiksha/learner-core';
 
 /** Each screen adds its own strings file and spreads it here. */
-export const STRINGS = { ...commonStrings, ...shellStrings, ...profilesStrings, ...homeStrings };
+export const STRINGS = {
+  ...commonStrings,
+  ...shellStrings,
+  ...profilesStrings,
+  ...homeStrings,
+  ...lessonsStrings,
+};
 
 export type StringKey = keyof typeof STRINGS;
 
@@ -39,4 +46,20 @@ export function errorMessage(
 /** English-only learners get an English interface; everyone else a Hindi one. */
 export function uiLang(pref: LanguagePreference): Lang {
   return pref === 'en_only' ? 'en' : 'hi';
+}
+
+const BYTES_PER_MB = 1_048_576;
+const megabytes = (bytes: number): string => (bytes / BYTES_PER_MB).toFixed(1);
+
+/** The plain message for a failure; "not enough space" also says how much is needed and free. */
+export function failureMessage(
+  code: ErrorCode,
+  lang: Lang,
+  details?: Record<string, unknown>,
+): string {
+  const base = errorMessage(code, lang, details);
+  const needed = details?.neededBytes;
+  const free = details?.freeBytes;
+  if (code !== 'LOW_STORAGE' || typeof needed !== 'number' || typeof free !== 'number') return base;
+  return `${base} ${t('lessons.space', lang, { needed: megabytes(needed), free: megabytes(free) })}`;
 }

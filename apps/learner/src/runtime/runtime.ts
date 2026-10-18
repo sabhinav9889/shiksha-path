@@ -10,6 +10,7 @@ import {
   type Ids,
   type PartialStore,
   type ProfileStore,
+  type StorageEstimator,
 } from '@shiksha/learner-core';
 import { ShikshaDb } from '../storage/db.js';
 import { browserStorageEstimator } from '../storage/estimator.js';
@@ -44,6 +45,7 @@ interface RuntimeOptions {
   fetchFn?: typeof fetch;
   clock?: Clock;
   ids?: Ids;
+  estimator?: StorageEstimator;
 }
 
 /** Wires the browser adapters to the core's ports. One per app (tests make their own). */
@@ -60,7 +62,7 @@ export function createRuntime(opts: RuntimeOptions = {}): Runtime {
     fetcher: createFetcher(opts.fetchFn),
     storage,
     partials,
-    estimator: browserStorageEstimator(),
+    estimator: opts.estimator ?? browserStorageEstimator(),
     prefs,
   });
   return {

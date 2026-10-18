@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { createProfile, type Profile } from '@shiksha/learner-core';
+import { createProfile, type Profile, type StorageEstimator } from '@shiksha/learner-core';
 import {
   makeContentFixture,
   type ContentFixture,
@@ -27,13 +27,16 @@ function serverFetch(server: ServedBuild): typeof fetch {
 }
 
 /** A fresh database, the fixture lesson packs served locally, and (optionally) installed. */
-export async function makeEnv(opts: { install?: boolean } = {}): Promise<TestEnv> {
+export async function makeEnv(
+  opts: { install?: boolean; estimator?: StorageEstimator } = {},
+): Promise<TestEnv> {
   const fixture = await makeContentFixture();
   const server = serveBuild(fixture.outDir);
   const runtime = createRuntime({
     dbName: `app-test-${counter++}`,
     contentBaseUrl: server.baseUrl,
     fetchFn: serverFetch(server),
+    ...(opts.estimator ? { estimator: opts.estimator } : {}),
   });
   if (opts.install ?? true) await runtime.content.sync();
   const addProfile = (name: string, pin = '1234'): Promise<Profile> =>

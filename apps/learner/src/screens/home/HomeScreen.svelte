@@ -3,7 +3,7 @@
   import { CoreError } from '@shiksha/learner-core';
   import { activity } from '../../activity.svelte.js';
   import { appState, refreshSession } from '../../app-state.svelte.js';
-  import { errorMessage, t } from '../../i18n/index.js';
+  import { errorMessage, failureMessage, t } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
   import DownloadCard from './DownloadCard.svelte';
   import { loadHome, type HomeData } from './home-data.js';
@@ -55,7 +55,7 @@
     await refresh();
     const failed = result.value.modules.find((m) => m.status === 'failed');
     if (data?.state === 'download' && failed?.error) {
-      error = errorMessage(failed.error, lang, failed.details);
+      error = failureMessage(failed.error, lang, failed.details);
     }
   }
 

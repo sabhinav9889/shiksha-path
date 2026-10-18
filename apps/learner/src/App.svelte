@@ -3,6 +3,7 @@
   import { appState } from './app-state.svelte.js';
   import { navigate, router, startRouter, type Route } from './router.svelte.js';
   import HomeScreen from './screens/home/HomeScreen.svelte';
+  import LessonsScreen from './screens/lessons/LessonsScreen.svelte';
   import ProfilesScreen from './screens/profiles/ProfilesScreen.svelte';
   import Shell from './ui/Shell.svelte';
 
@@ -28,6 +29,8 @@
       <ProfilesScreen />
     {:else if route.name === 'home'}
       <HomeScreen />
+    {:else if route.name === 'lessons'}
+      <LessonsScreen />
     {:else}
       <div data-testid={`screen-${route.name}`}></div>
     {/if}
