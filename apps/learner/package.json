@@ -8,5 +8,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@shiksha/content": "^0.1.0",
+    "@shiksha/learner-core": "^0.1.0",
+    "dexie": "^4.4.6"
   }
 }
