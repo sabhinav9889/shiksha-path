@@ -57,7 +57,11 @@ async function readAudio(content: Content): Promise<Map<string, AudioFile>> {
 }
 
 function pathFor(audio: Map<string, AudioFile>, baseDir: string) {
-  return (ref: string): string => audio.get(audioKey(baseDir, ref))?.path ?? ref;
+  return (ref: string): string => {
+    const found = audio.get(audioKey(baseDir, ref));
+    if (!found) throw new Error(`audio "${ref}" was not collected for ${baseDir}`);
+    return found.path;
+  };
 }
 
 /** Unique audio entries stored under `dir` (a module folder or `placement/`), sorted by path. */

@@ -1,0 +1,222 @@
+import type {
+  Manifest,
+  ModuleBundle,
+  PlacementBundle,
+  PracticeItem,
+} from '@shiksha/content/schema';
+import { describe, expect, test } from 'vitest';
+import type { LearnerEvent } from '../events.js';
+import type { EventStore } from '../outbox.js';
+import type { Profile, ProfileStore } from '../profiles.js';
+import type { BundleStorage } from '../storage.js';
+
+const L = { hi: 'क', en: 'a' };
+const AUDIO = 'audio/0123456789abcdef.mp3';
+const HASH = 'a'.repeat(64);
+const wordItem: PracticeItem = { id: 'q1', type: 'word_order', prompt: L, words: ['a', 'b'] };
+
+const moduleBundle = (version: string): ModuleBundle => ({
+  schema_version: 1,
+  id: 'm1',
+  version,
+  track: 'english',
+  title: L,
+  hi_ratio: 0.5,
+  lessons: [
+    {
+      id: 'l1',
+      order: 1,
+      topic: 't',
+      level: 1,
+      hi_ratio: 0.5,
+      title: L,
+      html: { hi: '<p>क</p>', en: '<p>a</p>' },
+      audio: null,
+      items: [wordItem],
+    },
+  ],
+  test_out: null,
+  audio: [{ path: AUDIO, sha256: HASH, bytes: 3 }],
+});
+
+const placementBundle = (version: string): PlacementBundle => ({
+  schema_version: 1,
+  version,
+  sections: [
+    {
+      track: 'english',
+      items: [wordItem],
+      start_rules: [{ min_score: 0, start_lesson: 'l1' }],
+    },
+  ],
+  audio: [],
+});
+
+const manifest: Manifest = {
+  schema_version: 1,
+  built_at: '2026-10-18T10:00:00.000Z',
+  preview: false,
+  tracks: [{ id: 'english', title: L, order: 1 }],
+  modules: [],
+  placement: null,
+};
+
+/** The behaviour every BundleStorage adapter (memory, IndexedDB, …) must have. */
+export function describeBundleStorage(
+  name: string,
+  factory: () => BundleStorage | Promise<BundleStorage>,
+): void {
+  describe(`BundleStorage contract: ${name}`, () => {
+    test('starts empty', async () => {
+      const s = await factory();
+      expect(await s.getManifest()).toBeNull();
+      expect(await s.getModule('m1')).toBeNull();
+      expect(await s.getPlacement()).toBeNull();
+      expect(await s.listAudio()).toEqual([]);
+    });
+
+    test('round-trips the manifest', async () => {
+      const s = await factory();
+      await s.putManifest(manifest);
+      expect(await s.getManifest()).toEqual(manifest);
+    });
+
+    test('stores, replaces and removes a module', async () => {
+      const s = await factory();
+      await s.putModule('m1', 'aaaaaaaaaaaa', moduleBundle('aaaaaaaaaaaa'));
+      expect((await s.getModule('m1'))?.version).toBe('aaaaaaaaaaaa');
+      await s.putModule('m1', 'bbbbbbbbbbbb', moduleBundle('bbbbbbbbbbbb'));
+      expect(await s.getModule('m1')).toEqual({
+        version: 'bbbbbbbbbbbb',
+        bundle: moduleBundle('bbbbbbbbbbbb'),
+      });
+      await s.removeModule('m1');
+      expect(await s.getModule('m1')).toBeNull();
+    });
+
+    test('stores and removes the placement bundle', async () => {
+      const s = await factory();
+      await s.putPlacement('aaaaaaaaaaaa', placementBundle('aaaaaaaaaaaa'));
+      expect((await s.getPlacement())?.bundle).toEqual(placementBundle('aaaaaaaaaaaa'));
+      await s.removePlacement();
+      expect(await s.getPlacement()).toBeNull();
+    });
+
+    test('stores audio by path: has, get, list, remove', async () => {
+      const s = await factory();
+      expect(await s.hasAudio(AUDIO)).toBe(false);
+      await s.putAudio(AUDIO, Uint8Array.of(1, 2, 3));
+      expect(await s.hasAudio(AUDIO)).toBe(true);
+      expect(await s.getAudio(AUDIO)).toEqual(Uint8Array.of(1, 2, 3));
+      expect(await s.listAudio()).toEqual([AUDIO]);
+      await s.removeAudio(AUDIO);
+      expect(await s.hasAudio(AUDIO)).toBe(false);
+      expect(await s.getAudio(AUDIO)).toBeNull();
+      expect(await s.listAudio()).toEqual([]);
+    });
+  });
+}
+
+const profile = (id: string, createdAt: string): Profile => ({
+  id,
+  name: 'Priya',
+  pin: { salt: 'c2FsdA==', hash: 'aGFzaA==', iterations: 1000 },
+  failedAttempts: 0,
+  lockedUntil: null,
+  createdAt,
+});
+
+/** The behaviour every ProfileStore adapter must have. */
+export function describeProfileStore(
+  name: string,
+  factory: () => ProfileStore | Promise<ProfileStore>,
+): void {
+  describe(`ProfileStore contract: ${name}`, () => {
+    test('starts empty and returns null for an unknown id', async () => {
+      const s = await factory();
+      expect(await s.list()).toEqual([]);
+      expect(await s.get('x')).toBeNull();
+    });
+
+    test('round-trips a profile and lists in creation order', async () => {
+      const s = await factory();
+      await s.put(profile('b', '2026-10-18T11:00:00.000Z'));
+      await s.put(profile('a', '2026-10-18T10:00:00.000Z'));
+      expect(await s.get('a')).toEqual(profile('a', '2026-10-18T10:00:00.000Z'));
+      expect((await s.list()).map((p) => p.id)).toEqual(['a', 'b']);
+    });
+
+    test('put with an existing id replaces it', async () => {
+      const s = await factory();
+      await s.put(profile('a', '2026-10-18T10:00:00.000Z'));
+      await s.put({ ...profile('a', '2026-10-18T10:00:00.000Z'), failedAttempts: 3 });
+      expect((await s.get('a'))?.failedAttempts).toBe(3);
+      expect(await s.list()).toHaveLength(1);
+    });
+
+    test('delete removes only that profile', async () => {
+      const s = await factory();
+      await s.put(profile('a', '2026-10-18T10:00:00.000Z'));
+      await s.put(profile('b', '2026-10-18T11:00:00.000Z'));
+      await s.delete('a');
+      expect((await s.list()).map((p) => p.id)).toEqual(['b']);
+      await s.delete('missing');
+    });
+  });
+}
+
+const event = (id: string, learnerId = 'a'): LearnerEvent => ({
+  id,
+  learnerId,
+  type: 'language_changed',
+  at: '2026-10-18T10:00:00.000Z',
+  data: { preference: 'en_only' },
+});
+
+/** The behaviour every EventStore adapter must have. */
+export function describeEventStore(
+  name: string,
+  factory: () => EventStore | Promise<EventStore>,
+): void {
+  describe(`EventStore contract: ${name}`, () => {
+    test('append is idempotent on the event id', async () => {
+      const s = await factory();
+      await s.append(event('e1'));
+      await s.append(event('e1'));
+      expect(await s.all('a')).toHaveLength(1);
+    });
+
+    test('all and pending keep append order and are per learner', async () => {
+      const s = await factory();
+      for (const id of ['e2', 'e1', 'e3']) await s.append(event(id));
+      await s.append(event('x1', 'b'));
+      expect((await s.all('a')).map((e) => e.id)).toEqual(['e2', 'e1', 'e3']);
+      expect((await s.pending('a', 2)).map((e) => e.id)).toEqual(['e2', 'e1']);
+      expect((await s.pending('b', 10)).map((e) => e.id)).toEqual(['x1']);
+    });
+
+    test('markSent removes events from pending but not from all', async () => {
+      const s = await factory();
+      for (const id of ['e1', 'e2', 'e3']) await s.append(event(id));
+      await s.markSent(['e1', 'e3', 'unknown']);
+      expect((await s.pending('a', 10)).map((e) => e.id)).toEqual(['e2']);
+      expect(await s.all('a')).toHaveLength(3);
+    });
+
+    test('an acknowledged event stays acknowledged if appended again', async () => {
+      const s = await factory();
+      await s.append(event('e1'));
+      await s.markSent(['e1']);
+      await s.append(event('e1'));
+      expect(await s.pending('a', 10)).toEqual([]);
+    });
+
+    test('meta values round-trip and overwrite', async () => {
+      const s = await factory();
+      expect(await s.getMeta('k')).toBeNull();
+      await s.setMeta('k', 'v1');
+      await s.setMeta('k', 'v2');
+      expect(await s.getMeta('k')).toBe('v2');
+    });
+  });
+}
