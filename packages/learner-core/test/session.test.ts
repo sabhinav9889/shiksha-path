@@ -166,3 +166,57 @@ describe('test-outs', () => {
     expect(await codeOf(session.startTestOut(APT))).toBe('MODULE_NOT_READY');
   });
 });
+
+describe('review fixes: wrong clock, bad events, partial updates', () => {
+  test('I1: answers stamped by a wrong future clock neither add a streak day nor hide a real review', async () => {
+    env.clock.set('2026-12-25T10:00:00Z');
+    const session = await env.open();
+    await playRun(session, (await session.startLesson('ef1-01')).run, [2]);
+    env.clock.set('2026-10-19T10:00:00Z');
+    expect(session.streak()).toEqual({ current: 0, activeToday: false });
+    await playRun(session, (await session.startLesson('ef1-01')).run, [2]);
+    expect(session.streak()).toEqual({ current: 1, activeToday: true });
+    env.clock.advanceMs(ONE_DAY_MS);
+    expect(session.reviewDue().map((e) => e.itemId)).toEqual(['q3']);
+  });
+
+  test('I3: a malformed event of a known type and an unknown type do not stop the session opening', async () => {
+    const bad = createEvent(env, LEARNER, 'placement_completed', {
+      sections: [],
+      englishOnlySuggested: false,
+    });
+    const malformed = { ...bad, data: { future: true } } as unknown as typeof bad;
+    const unknown = { ...bad, id: '00000000-0000-4000-8000-0000000000aa', type: 'from_future' };
+    await env.events.append(malformed);
+    await env.events.append(unknown as unknown as typeof bad);
+    const session = await env.open();
+    expect(session.needsPlacement()).toBe(true);
+    expect(session.todayLesson()?.lessonId).toBe('ef1-01');
+  });
+
+  test("I4: today's lesson is never one the phone cannot open", async () => {
+    const stored = await env.storage.getModule(EN);
+    if (!stored) throw new Error('fixture module missing');
+    const lessons = stored.bundle.lessons.filter((l) => l.id !== 'ef1-02');
+    await env.storage.putModule(EN, stored.version, { ...stored.bundle, lessons });
+    const session = await env.open();
+    await playRun(session, (await session.startLesson('ef1-01')).run);
+    await session.finishLesson(await playRun(session, (await session.startLesson('ef1-01')).run));
+    const today = session.todayLesson();
+    expect(today?.lessonId).toBe('ef1-03');
+    await expect(session.startLesson(today?.lessonId ?? '')).resolves.toBeDefined();
+  });
+
+  test('I7: reviewDue does not count an item that no longer exists', async () => {
+    const first = await env.open();
+    await playRun(first, (await first.startLesson('ef1-01')).run, [2]);
+    const stored = await env.storage.getModule(EN);
+    if (!stored) throw new Error('fixture module missing');
+    const lessons = stored.bundle.lessons.map((l) =>
+      l.id === 'ef1-01' ? { ...l, items: l.items.filter((i) => i.id !== 'q3') } : l,
+    );
+    await env.storage.putModule(EN, stored.version, { ...stored.bundle, lessons });
+    env.clock.advanceMs(ONE_DAY_MS);
+    expect((await env.open()).reviewDue()).toEqual([]);
+  });
+});

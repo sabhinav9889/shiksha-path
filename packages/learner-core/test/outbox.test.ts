@@ -173,3 +173,20 @@ describe('restoring on a second device', () => {
     expect(deriveProgress(await fresh.all('a'))).toEqual(deriveProgress(await store.all('a')));
   });
 });
+
+describe('events the server refuses', () => {
+  test('I5: a rejected event is set aside so the rest still counts as synced', async () => {
+    const events = await fill('a', 3);
+    const rejectOne: SyncTransport = {
+      push: (_l, batch) =>
+        Promise.resolve({
+          accepted: batch.filter((e) => e.id !== events[1]?.id).map((e) => e.id),
+          rejected: [events[1]?.id ?? ''],
+        }),
+    };
+    const result = await flush(rejectOne);
+    expect(result).toEqual({ ok: true, sent: 2, remaining: 0, nextAttemptInMs: null });
+    expect(await store.getMeta('lastSyncedAt:a')).toBe(clock.now().toISOString());
+    expect(await store.all('a')).toHaveLength(3); // never deleted locally
+  });
+});

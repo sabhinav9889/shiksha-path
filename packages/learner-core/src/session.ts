@@ -1,7 +1,13 @@
 import type { BundleLesson, Manifest } from '@shiksha/content/schema';
 import { evaluateTestOut } from './evaluate.js';
 import { CoreError } from './errors.js';
-import { createEvent, type EventData, type EventType, type LearnerEvent } from './events.js';
+import {
+  createEvent,
+  parseEvents,
+  type EventData,
+  type EventType,
+  type LearnerEvent,
+} from './events.js';
 import { languageView, type LanguagePreference, type LanguageView } from './language.js';
 import type { EventStore } from './outbox.js';
 import type { Clock, Ids } from './ports.js';
@@ -31,6 +37,28 @@ import type { BundleStorage } from './storage.js';
 import { streak } from './streak.js';
 import { istDay } from './time.js';
 
+interface StoredContent {
+  /** Lessons that can be opened from the stored bundles. */
+  lessons: ReadonlySet<string>;
+  /** `lessonId/itemId` of every stored practice item. */
+  items: ReadonlySet<string>;
+}
+
+async function readStoredContent(
+  manifest: Manifest,
+  storage: BundleStorage,
+): Promise<StoredContent> {
+  const lessons = new Set<string>();
+  const items = new Set<string>();
+  for (const entry of manifest.modules) {
+    for (const lesson of (await storage.getModule(entry.id))?.bundle.lessons ?? []) {
+      lessons.add(lesson.id);
+      for (const item of lesson.items) items.add(`${lesson.id}/${item.id}`);
+    }
+  }
+  return { lessons, items };
+}
+
 export interface SessionDeps {
   learnerId: string;
   storage: BundleStorage;
@@ -48,19 +76,21 @@ export class LearnerSession {
     private readonly deps: SessionDeps,
     private readonly manifest: Manifest,
     private log: LearnerEvent[],
-    private state: ProgressState,
+    private readonly stored: StoredContent,
   ) {}
 
   static async open(deps: SessionDeps): Promise<LearnerSession> {
     const manifest = await deps.storage.getManifest();
     if (!manifest)
       throw new CoreError('MANIFEST_UNAVAILABLE', 'no lessons are saved on this phone');
-    const log = await deps.events.all(deps.learnerId);
-    return new LearnerSession(deps, manifest, log, deriveProgress(log));
+    // Newer apps may write shapes this one does not know: keep what is valid, never fail to open.
+    const { events: log } = parseEvents(await deps.events.all(deps.learnerId));
+    return new LearnerSession(deps, manifest, log, await readStoredContent(manifest, deps.storage));
   }
 
+  /** Derived from the log on every read, so a corrected phone clock takes effect at once. */
   get progress(): ProgressState {
-    return this.state;
+    return deriveProgress(this.log, { today: this.today() });
   }
 
   private today(): string {
@@ -71,27 +101,29 @@ export class LearnerSession {
     const event = createEvent(this.deps, this.deps.learnerId, type, data);
     await this.deps.events.append(event);
     this.log = [...this.log, event];
-    this.state = deriveProgress(this.log);
   }
 
   todayLesson(): LessonRef | null {
-    return todayLesson(this.manifest, this.state);
+    return todayLesson(this.manifest, this.progress, this.stored.lessons);
   }
 
   trackProgress(track: string): { done: number; total: number } {
-    return trackProgress(this.manifest, this.state, track);
+    return trackProgress(this.manifest, this.progress, track);
   }
 
   streak(): { current: number; activeToday: boolean } {
-    return streak(this.state.activeDays, this.today());
+    return streak(this.progress.activeDays, this.today());
   }
 
   reviewDue(): ReviewEntry[] {
-    return dueReviews(this.state.reviewQueue, this.today());
+    const known = this.progress.reviewQueue.filter((e) =>
+      this.stored.items.has(`${e.lessonId}/${e.itemId}`),
+    );
+    return dueReviews(known, this.today());
   }
 
   needsPlacement(): boolean {
-    return needsPlacement(this.state);
+    return needsPlacement(this.progress);
   }
 
   async startLesson(
@@ -101,7 +133,7 @@ export class LearnerSession {
     await this.record('lesson_started', { lessonId, moduleVersion: version });
     const source = { kind: 'lesson', lessonId } as const;
     const run = startQuiz(lesson.items.map((item) => ({ source, item })));
-    return { lesson, run, view: languageView(lesson.hi_ratio, this.state.language) };
+    return { lesson, run, view: languageView(lesson.hi_ratio, this.progress.language) };
   }
 
   async answer(run: QuizRun, answer: Answer): Promise<{ run: QuizRun; result: ItemResult }> {
@@ -130,7 +162,7 @@ export class LearnerSession {
 
   async startReview(): Promise<QuizRun | null> {
     const { storage } = this.deps;
-    return reviewRun(this.manifest, storage, this.state.reviewQueue, this.today());
+    return reviewRun(this.manifest, storage, this.progress.reviewQueue, this.today());
   }
 
   async startTestOut(moduleId: string): Promise<{ run: QuizRun; passMark: number }> {

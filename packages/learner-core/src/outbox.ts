@@ -20,7 +20,11 @@ export interface EventStore {
 }
 
 export interface SyncTransport {
-  push(learnerId: string, events: LearnerEvent[]): Promise<{ accepted: string[] }>;
+  /** `rejected` ids are refused for good (they stay in the local log but are never re-sent). */
+  push(
+    learnerId: string,
+    events: LearnerEvent[],
+  ): Promise<{ accepted: string[]; rejected?: string[] }>;
 }
 
 export interface FlushResult {
@@ -57,11 +61,12 @@ async function drain(
   for (;;) {
     const batch = await deps.store.pending(learnerId, OUTBOX_BATCH_SIZE);
     if (batch.length === 0) return;
-    const { accepted } = await deps.transport.push(learnerId, batch);
+    const { accepted, rejected = [] } = await deps.transport.push(learnerId, batch);
     const batchIds = new Set(batch.map((e) => e.id));
     const confirmed = accepted.filter((id) => batchIds.has(id));
-    if (confirmed.length === 0) throw new Error('the server accepted nothing');
-    await deps.store.markSent(confirmed);
+    const refused = rejected.filter((id) => batchIds.has(id));
+    if (confirmed.length + refused.length === 0) throw new Error('the server accepted nothing');
+    await deps.store.markSent([...confirmed, ...refused]);
     progress.sent += confirmed.length;
   }
 }

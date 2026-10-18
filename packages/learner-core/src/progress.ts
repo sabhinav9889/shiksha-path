@@ -49,13 +49,13 @@ type Mutable = {
         : ProgressState[K];
 };
 
-function apply(state: Mutable, event: LearnerEvent): void {
+function apply(state: Mutable, event: LearnerEvent, today: string | undefined): void {
   switch (event.type) {
     case 'lesson_completed':
       state.completedLessons.add(event.data.lessonId);
       break;
     case 'item_answered':
-      recordAnswer(state, event);
+      recordAnswer(state, event, today);
       break;
     case 'test_out_completed':
       if (event.data.passed) state.testedOutModules.add(event.data.moduleId);
@@ -78,9 +78,13 @@ function apply(state: Mutable, event: LearnerEvent): void {
 function recordAnswer(
   state: Mutable,
   event: Extract<LearnerEvent, { type: 'item_answered' }>,
+  today: string | undefined,
 ): void {
   const { source, itemId, outcome } = event.data;
   const day = istDay(event.at);
+  // Stamped after "today": the phone clock was wrong. Ignore it until that day really arrives, so
+  // it cannot add a phantom streak day or overwrite a real answer's review date.
+  if (today !== undefined && day > today) return;
   state.activeDays.add(day);
   if (source.kind !== 'lesson' && source.kind !== 'review') return;
   const fromReview = source.kind === 'review';
@@ -106,7 +110,10 @@ function recordPlacement(
 }
 
 /** Replay the append-only log into the learner's current state. */
-export function deriveProgress(events: readonly LearnerEvent[]): ProgressState {
+export function deriveProgress(
+  events: readonly LearnerEvent[],
+  opts: { today?: string } = {},
+): ProgressState {
   const state: Mutable = {
     completedLessons: new Set(),
     testedOutModules: new Set(),
@@ -118,7 +125,7 @@ export function deriveProgress(events: readonly LearnerEvent[]): ProgressState {
     activeDays: new Set(),
     reviewQueue: [],
   };
-  for (const event of normalise(events)) apply(state, event);
+  for (const event of normalise(events)) apply(state, event, opts.today);
   return state;
 }
 
@@ -153,11 +160,17 @@ export function isLessonDone(manifest: Manifest, state: ProgressState, lessonId:
 }
 
 /** The next lesson: tracks in order, so testing out of English lands the learner on aptitude. */
-export function todayLesson(manifest: Manifest, state: ProgressState): LessonRef | null {
+export function todayLesson(
+  manifest: Manifest,
+  state: ProgressState,
+  playable?: ReadonlySet<string>,
+): LessonRef | null {
   const tracks = [...manifest.tracks].sort((a, b) => a.order - b.order);
   for (const track of tracks) {
     const order = lessonOrder(manifest, track.id);
-    const next = order.find((ref, i) => !isDone(order, state, ref, i));
+    const next = order.find(
+      (ref, i) => !isDone(order, state, ref, i) && (playable?.has(ref.lessonId) ?? true),
+    );
     if (next) return next;
   }
   return null;

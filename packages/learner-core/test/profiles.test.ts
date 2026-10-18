@@ -156,3 +156,14 @@ describe('verifyPin', () => {
     expect(await store.get(id)).toEqual(before);
   });
 });
+
+describe('a lock made under a wrong clock', () => {
+  test('I2: a lock set while the clock was far in the future does not outlast the longest lock', async () => {
+    const { id } = await make();
+    clock.set('2030-01-01T00:00:00Z');
+    for (let i = 0; i < 5; i += 1) await failure(verify(id, '0000'));
+    clock.set('2026-10-18T10:00:00Z');
+    const error = await failure(verify(id, '4821'));
+    expect(error).toBeUndefined();
+  });
+});

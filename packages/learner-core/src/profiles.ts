@@ -87,6 +87,13 @@ export async function createProfile(
 const lockSeconds = (failedAttempts: number): number =>
   Math.min(LOCK_BASE_SECONDS * 2 ** (failedAttempts - WRONG_BEFORE_LOCK), LOCK_MAX_SECONDS);
 
+/** A lock longer than the longest possible one was set under a wrong clock: ignore it. */
+function isLocked(profile: Profile, now: Date): profile is Profile & { lockedUntil: string } {
+  if (profile.lockedUntil === null) return false;
+  const remainingMs = new Date(profile.lockedUntil).getTime() - now.getTime();
+  return remainingMs > 0 && remainingMs <= LOCK_MAX_SECONDS * MS_PER_SECOND;
+}
+
 const secondsUntil = (until: string, now: Date): number =>
   Math.ceil((new Date(until).getTime() - now.getTime()) / MS_PER_SECOND);
 
@@ -120,7 +127,7 @@ export async function verifyPin(
   const profile = await deps.store.get(profileId);
   if (!profile) throw new CoreError('PROFILE_NOT_FOUND', 'no such profile on this phone');
   const now = deps.clock.now();
-  if (profile.lockedUntil !== null && new Date(profile.lockedUntil) > now) {
+  if (isLocked(profile, now)) {
     const retryAfterSec = secondsUntil(profile.lockedUntil, now);
     throw new CoreError('PIN_LOCKED', 'too many wrong PINs', { retryAfterSec });
   }
