@@ -5,6 +5,7 @@ import type {
   PracticeItem,
 } from '@shiksha/content/schema';
 import { describe, expect, test } from 'vitest';
+import type { Profile, ProfileStore } from '../profiles.js';
 import type { BundleStorage } from '../storage.js';
 
 const L = { hi: 'क', en: 'a' };
@@ -110,6 +111,54 @@ export function describeBundleStorage(
       expect(await s.hasAudio(AUDIO)).toBe(false);
       expect(await s.getAudio(AUDIO)).toBeNull();
       expect(await s.listAudio()).toEqual([]);
+    });
+  });
+}
+
+const profile = (id: string, createdAt: string): Profile => ({
+  id,
+  name: 'Priya',
+  pin: { salt: 'c2FsdA==', hash: 'aGFzaA==', iterations: 1000 },
+  failedAttempts: 0,
+  lockedUntil: null,
+  createdAt,
+});
+
+/** The behaviour every ProfileStore adapter must have. */
+export function describeProfileStore(
+  name: string,
+  factory: () => ProfileStore | Promise<ProfileStore>,
+): void {
+  describe(`ProfileStore contract: ${name}`, () => {
+    test('starts empty and returns null for an unknown id', async () => {
+      const s = await factory();
+      expect(await s.list()).toEqual([]);
+      expect(await s.get('x')).toBeNull();
+    });
+
+    test('round-trips a profile and lists in creation order', async () => {
+      const s = await factory();
+      await s.put(profile('b', '2026-10-18T11:00:00.000Z'));
+      await s.put(profile('a', '2026-10-18T10:00:00.000Z'));
+      expect(await s.get('a')).toEqual(profile('a', '2026-10-18T10:00:00.000Z'));
+      expect((await s.list()).map((p) => p.id)).toEqual(['a', 'b']);
+    });
+
+    test('put with an existing id replaces it', async () => {
+      const s = await factory();
+      await s.put(profile('a', '2026-10-18T10:00:00.000Z'));
+      await s.put({ ...profile('a', '2026-10-18T10:00:00.000Z'), failedAttempts: 3 });
+      expect((await s.get('a'))?.failedAttempts).toBe(3);
+      expect(await s.list()).toHaveLength(1);
+    });
+
+    test('delete removes only that profile', async () => {
+      const s = await factory();
+      await s.put(profile('a', '2026-10-18T10:00:00.000Z'));
+      await s.put(profile('b', '2026-10-18T11:00:00.000Z'));
+      await s.delete('a');
+      expect((await s.list()).map((p) => p.id)).toEqual(['b']);
+      await s.delete('missing');
     });
   });
 }
