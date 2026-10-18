@@ -6,7 +6,14 @@ import { scriptedFetcher } from '../src/testing/scripted-fetcher.js';
 
 const URL = 'https://cdn.example/audio/a.mp3';
 const SIZE = 600_000;
-const bytesOf = (size: number): Uint8Array => Uint8Array.from({ length: size }, (_, i) => i % 251);
+const PATTERN = Uint8Array.from({ length: 251 }, (_, i) => i);
+
+/** Deterministic bytes, filled by blocks: a per-byte callback is too slow under coverage. */
+function bytesOf(size: number): Uint8Array {
+  const out = new Uint8Array(size);
+  for (let at = 0; at < size; at += PATTERN.length) out.set(PATTERN.subarray(0, size - at), at);
+  return out;
+}
 
 async function specFor(data: Uint8Array): Promise<FileSpec> {
   return { url: URL, sha256: await sha256Hex(data), bytes: data.length };
