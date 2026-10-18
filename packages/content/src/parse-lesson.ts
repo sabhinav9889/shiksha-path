@@ -14,7 +14,7 @@ export function splitFrontMatter(source: string): { yaml: string; body: string }
   return { yaml: match[1] ?? '', body: source.slice(match[0].length) };
 }
 
-function parseYamlSafe(file: string, text: string): ParseResult<unknown> {
+export function parseYamlSafe(file: string, text: string): ParseResult<unknown> {
   try {
     return { ok: true, value: parseYaml(text) as unknown };
   } catch (e) {
