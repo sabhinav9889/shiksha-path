@@ -1,5 +1,5 @@
-import { readdir, stat } from 'node:fs/promises';
-import { extname, join, relative } from 'node:path';
+import { readdir, realpath, stat } from 'node:fs/promises';
+import { extname, join, relative, sep } from 'node:path';
 import { error, type ContentIssue } from './issues.js';
 import type { PracticeItem } from './schema/items.js';
 import type { Lesson } from './schema/lesson.js';
@@ -87,13 +87,32 @@ function pathProblem(ref: string): string | null {
   return null;
 }
 
-/** Relative, "/" only, no "..", allowed extension, exact-case path, and a regular file. */
+export type AudioResolution = { ok: true; path: string } | { ok: false; reason: string };
+
+/**
+ * The real file behind an audio reference. Symlinks are followed, and a target that resolves
+ * outside `baseDir` is refused: otherwise a committed link could publish any readable file
+ * (a key, an .env) as "audio" in the public build. Validation and the build both use this.
+ */
+export async function resolveAudio(baseDir: string, ref: string): Promise<AudioResolution> {
+  const base = await realpath(baseDir).catch(() => baseDir);
+  const target = await realpath(audioFilePath(baseDir, ref)).catch(() => null);
+  if (target === null) return { ok: false, reason: `audio "${ref}" cannot be read (broken link?)` };
+  if (!target.startsWith(base + sep)) {
+    return { ok: false, reason: `audio "${ref}" resolves outside its folder (symlink?)` };
+  }
+  return { ok: true, path: target };
+}
+
+/** Relative, "/" only, no "..", allowed extension, exact-case path, inside its folder, a file. */
 export async function checkAudioRef({ baseDir, ref, file }: AudioRef): Promise<ContentIssue[]> {
   const problem = pathProblem(ref);
   if (problem) return [error(file, problem)];
   if (!(await findExactPath(baseDir, ref.split('/')))) {
     return [error(file, `audio "${ref}" not found (names are case-sensitive)`)];
   }
-  const info = await stat(audioFilePath(baseDir, ref));
+  const resolved = await resolveAudio(baseDir, ref);
+  if (!resolved.ok) return [error(file, resolved.reason)];
+  const info = await stat(resolved.path);
   return info.isFile() ? [] : [error(file, `audio "${ref}" is not a file`)];
 }

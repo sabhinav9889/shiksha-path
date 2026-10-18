@@ -14,7 +14,7 @@ import {
 } from './bundle.js';
 import { warning, type ContentIssue } from './issues.js';
 import type { Content, LoadedModule } from './schema/structure.js';
-import { audioFilePath, collectAudioRefs } from './validate-audio.js';
+import { collectAudioRefs, resolveAudio } from './validate-audio.js';
 
 const HASH_NAME_CHARS = 16;
 const KIB = 1024;
@@ -46,7 +46,9 @@ export function selectForBuild(content: Content, opts: { preview: boolean }): Co
 async function readAudio(content: Content): Promise<Map<string, AudioFile>> {
   const files = new Map<string, AudioFile>();
   for (const { baseDir, ref } of collectAudioRefs(content)) {
-    const data = await readFile(audioFilePath(baseDir, ref));
+    const resolved = await resolveAudio(baseDir, ref);
+    if (!resolved.ok) throw new Error(resolved.reason);
+    const data = await readFile(resolved.path);
     const hash = sha256(data);
     const path = `audio/${hash.slice(0, HASH_NAME_CHARS)}${extname(ref).toLowerCase()}`;
     files.set(audioKey(baseDir, ref), { path, sha256: hash, bytes: data.length, data });
