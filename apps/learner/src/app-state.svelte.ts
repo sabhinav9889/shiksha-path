@@ -74,10 +74,18 @@ export function signOut(): void {
   appState.lang = 'hi';
 }
 
-/** Pick up newly installed content, but never swap the session under a lesson in progress. */
+/**
+ * Pick up newly installed content. It reads storage for a while, so afterwards it checks that the
+ * same learner is still signed in and no lesson started meanwhile; otherwise the result is dropped
+ * (it could belong to someone else, or swap the session under a running lesson).
+ */
 export async function refreshSession(): Promise<void> {
   const { runtime, profile } = appState;
   if (!runtime || !profile || activity.current) return;
-  appState.session = await openIfInstalled(runtime, profile.id);
-  appState.lang = await languageOf(runtime, profile.id);
+  const learnerId = profile.id;
+  const session = await openIfInstalled(runtime, learnerId);
+  const lang = await languageOf(runtime, learnerId);
+  if (appState.profile?.id !== learnerId || activity.current) return;
+  appState.session = session;
+  appState.lang = lang;
 }

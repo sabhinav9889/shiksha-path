@@ -242,3 +242,42 @@ describe('other kinds of run', () => {
     expect(activity.finish?.testOut?.passed).toBe(passed);
   });
 });
+
+describe('when saving fails', () => {
+  function failNextSave(): void {
+    const events = env.runtime.events;
+    const real = events.append.bind(events);
+    let failed = false;
+    events.append = (event) => {
+      if (failed) return real(event);
+      failed = true;
+      return Promise.reject(new Error('storage full'));
+    };
+  }
+
+  test('a failed answer shows a plain message and the item can be answered again', async () => {
+    await openCustomRun((i) => i === 4);
+    await vi.waitFor(() => button(/नमस्ते/));
+    failNextSave();
+    await fireEvent.click(button(/नमस्ते/));
+    await vi.waitFor(() => expect(screen.getByRole('alert').textContent).toContain('कुछ गड़बड़'));
+    expect(button(/नमस्ते/).disabled).toBe(false);
+    await fireEvent.click(button(/नमस्ते/));
+    await vi.waitFor(() => screen.getByRole('status'));
+    expect((await log()).filter((e) => e.type === 'item_answered')).toHaveLength(1);
+  });
+
+  test('a failed finish keeps the last item on screen and offers to try again', async () => {
+    await openCustomRun((i) => i === 4);
+    await vi.waitFor(() => button(/नमस्ते/));
+    await fireEvent.click(button(/नमस्ते/));
+    await vi.waitFor(() => button('आगे'));
+    failNextSave();
+    await fireEvent.click(button('आगे'));
+    await vi.waitFor(() => expect(screen.getByRole('alert').textContent).toContain('कुछ गड़बड़'));
+    expect(screen.getByRole('button', { name: /नमस्ते/ })).toBeTruthy(); // not a blank screen
+    await fireEvent.click(button('फिर कोशिश करें'));
+    await vi.waitFor(() => expect(router.current.name).toBe('finish'));
+    expect((await log()).filter((e) => e.type === 'lesson_completed')).toHaveLength(1);
+  });
+});

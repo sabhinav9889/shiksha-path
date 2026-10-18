@@ -18,6 +18,18 @@ test('a learner can install, go offline, learn, and come back to their progress'
   await signIn(page, 'प्रिया', '1234');
   await expect(page.getByText('पाठ 1', { exact: true })).toBeVisible();
 
+  // A reload in the middle of the lesson text, then in the middle of practice, loses only the run.
+  await page.getByRole('button', { name: 'शुरू करें' }).click();
+  await expect(page.getByRole('button', { name: 'अभ्यास करें' })).toBeVisible();
+  await page.reload();
+  await signIn(page, 'प्रिया', '1234');
+  await page.getByRole('button', { name: 'शुरू करें' }).click();
+  await page.getByRole('button', { name: 'अभ्यास करें' }).click();
+  await expect(page.getByTestId('bank')).toBeVisible();
+  await page.reload();
+  await signIn(page, 'प्रिया', '1234');
+  await expect(page.getByText('पाठ 1', { exact: true })).toBeVisible(); // not finished: still lesson 1
+
   // Learn: today's lesson, the practice, one deliberate mistake.
   await page.getByRole('button', { name: 'शुरू करें' }).click();
   await page.getByRole('button', { name: 'अभ्यास करें' }).click();

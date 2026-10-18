@@ -15,5 +15,6 @@ export const practiceStrings = {
   'practice.leaveTitle': { hi: 'पाठ बीच में छोड़ें?', en: 'Leave the lesson now?' },
   'practice.leave': { hi: 'छोड़ें', en: 'Leave' },
   'practice.stay': { hi: 'जारी रखें', en: 'Keep going' },
+  'practice.retry': { hi: 'फिर कोशिश करें', en: 'Try again' },
   'practice.count': { hi: '{current} / {total}', en: '{current} / {total}' },
 } satisfies Record<string, Localized>;

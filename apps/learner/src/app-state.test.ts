@@ -95,3 +95,48 @@ describe('a shared phone', () => {
     expect(appState.session).toBe(before);
   });
 });
+
+describe('a slow refresh', () => {
+  function gatedOpen(env: Awaited<ReturnType<typeof makeEnv>>, slowId: string) {
+    // Through appState: Svelte's proxy has already cached the original function.
+    const runtime = appState.runtime as typeof env.runtime;
+    const real = runtime.openSession.bind(runtime);
+    let release = (): void => undefined;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    runtime.openSession = async (id) => {
+      if (id === slowId) await gate;
+      return real(id);
+    };
+    return () => release();
+  }
+
+  test('is dropped when a different learner signed in meanwhile', async () => {
+    const env = await makeEnv();
+    initApp(env.runtime);
+    const [a, b] = [await env.addProfile('A'), await env.addProfile('B')];
+    await signIn(a.id, '1234');
+    const release = gatedOpen(env, a.id);
+    const refreshing = refreshSession(); // A's refresh is stuck opening A's session
+    await signIn(b.id, '1234');
+    const sessionB = appState.session;
+    release();
+    await refreshing;
+    expect(appState.profile?.id).toBe(b.id);
+    expect(appState.session).toBe(sessionB);
+  });
+
+  test('is dropped when a lesson started meanwhile', async () => {
+    const env = await makeEnv();
+    initApp(env.runtime);
+    const a = await env.addProfile('A');
+    await signIn(a.id, '1234');
+    const before = appState.session;
+    const release = gatedOpen(env, a.id);
+    const refreshing = refreshSession();
+    const started = await before?.startLesson('ef1-01');
+    activity.current = { kind: 'lesson', ...(started as NonNullable<typeof started>) };
+    release();
+    await refreshing;
+    expect(appState.session).toBe(before);
+  });
+});

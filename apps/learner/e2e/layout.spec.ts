@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createProfile, playLesson } from './helpers.js';
+import { createProfile, enterPin, playLesson } from './helpers.js';
 
 const MIN_TAP = 44;
 const LONG_NAME = 'अ'.repeat(40);
@@ -52,4 +52,36 @@ test('every screen fits a 360 px phone with a 40-character Hindi name', async ({
   await page.goto('/#/profiles');
   await expect(page.getByText('कौन पढ़ रहा है?')).toBeVisible();
   await assertFits(page, 'profile picker');
+});
+
+test('the feedback sheet, the leave dialog and the PIN lock message fit too', async ({ page }) => {
+  await page.goto('/');
+  await createProfile(page, LONG_NAME, '1234');
+  await expect(page.getByRole('button', { name: 'शुरू करें' })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('button', { name: 'शुरू करें' }).click();
+  await page.getByRole('button', { name: 'अभ्यास करें' }).click();
+
+  for (const word of ['am', 'I', 'Priya']) {
+    await page.locator(`[data-testid="bank"] button[data-word="${word}"]`).click();
+  }
+  await page.getByRole('button', { name: 'जाँचें', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('गलत क्यों है?');
+  await assertFits(page, 'wrong-answer feedback');
+  await expect(page.getByRole('button', { name: 'आगे', exact: true })).toBeInViewport();
+
+  await page.getByRole('button', { name: 'आगे', exact: true }).click();
+  await page.getByRole('button', { name: 'बंद करें' }).click();
+  await expect(page.getByRole('alertdialog')).toBeVisible();
+  await assertFits(page, 'leave dialog');
+  await expect(page.getByRole('button', { name: 'छोड़ें' })).toBeInViewport();
+  await page.getByRole('button', { name: 'छोड़ें' }).click();
+
+  await page.goto('/#/profiles');
+  await page.getByRole('button', { name: LONG_NAME, exact: true }).click();
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    await enterPin(page, '0000');
+    await expect(page.getByRole('alert')).toBeVisible();
+  }
+  await expect(page.getByRole('alert')).toContainText('सेकंड');
+  await assertFits(page, 'locked PIN pad');
 });

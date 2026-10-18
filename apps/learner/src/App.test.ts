@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import App from './App.svelte';
-import { signOut } from './app-state.svelte.js';
+import { activity } from './activity.svelte.js';
+import { appState, signOut } from './app-state.svelte.js';
 import { navigate } from './router.svelte.js';
 
 beforeEach(() => {
@@ -21,5 +22,27 @@ describe('App', () => {
     render(App);
     await tick();
     await vi.waitFor(() => expect(screen.getByText('नया प्रोफ़ाइल')).toBeTruthy());
+  });
+});
+
+describe('leaving a run without finishing it', () => {
+  const stub = { kind: 'review', run: { entries: [], answered: [] } } as never;
+
+  test('browser Back or a nav tab clears the run that was in progress', async () => {
+    appState.profile = { id: 'p', name: 'प्रिया' };
+    activity.current = stub;
+    navigate({ name: 'home' });
+    render(App);
+    await tick();
+    expect(activity.current).toBeNull();
+  });
+
+  test('moving between the lesson, practice and finish screens keeps it', async () => {
+    appState.profile = { id: 'p', name: 'प्रिया' };
+    activity.current = stub;
+    navigate({ name: 'practice' });
+    render(App);
+    await tick();
+    expect(activity.current).not.toBeNull();
   });
 });

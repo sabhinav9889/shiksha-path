@@ -4,7 +4,7 @@ import { fixedClock } from '@shiksha/learner-core/testing';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { makeEnv, type TestEnv } from '../../../test/helpers/installed-runtime.js';
-import { activity } from '../../activity.svelte.js';
+import { activity, resetActivity } from '../../activity.svelte.js';
 import { appState, initApp, signIn, signOut } from '../../app-state.svelte.js';
 import { navigate, router } from '../../router.svelte.js';
 import HomeScreen from './HomeScreen.svelte';
@@ -170,5 +170,36 @@ describe('SyncChip', () => {
   test('never synced shows the saved-on-phone line too', () => {
     render(SyncChip, { lastSyncedAt: null, pending: 0, now, lang: 'en' });
     expect(screen.getByText('Saved on phone · uploads when internet is back')).toBeTruthy();
+  });
+});
+
+describe('content that changed while a lesson was open (Review Focus 5)', () => {
+  test('the next time home opens it shows the new content, not the old', async () => {
+    const profile = await env.addProfile('प्रिया');
+    const now = env.runtime.clock.now().toISOString();
+    await addEvents(profile.id, now, (deps) =>
+      ['ef1-01', 'ef1-02'].map((lessonId) =>
+        createEvent(deps, profile.id, 'lesson_completed', { lessonId, correct: 5, scored: 5 }),
+      ),
+    );
+    await signIn(profile.id, '1234');
+    const started = await appState.session?.startLesson('ef1-03');
+    activity.current = { kind: 'lesson', ...(started as NonNullable<typeof started>) };
+
+    // a newer build drops English lesson 3 and a sync installs it while the lesson is open
+    await env.fixture.rebuild((files) => {
+      delete files['modules/english-foundation-1/lessons/03.md'];
+      const placement = 'placement/placement.yaml'; // its start rules may not name a missing lesson
+      files[placement] = String(files[placement]).replace(
+        'start_lesson: ef1-03',
+        'start_lesson: ef1-02',
+      );
+    });
+    expect((await env.runtime.content.sync()).ok).toBe(true);
+
+    resetActivity(); // the lesson ended (or the learner went Back)
+    render(HomeScreen);
+    await vi.waitFor(() => expect(screen.getByText('पाठ 1')).toBeTruthy()); // aptitude lesson 1
+    expect(document.body.textContent).not.toContain('ef1-03');
   });
 });

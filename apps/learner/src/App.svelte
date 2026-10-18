@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { activity, resetActivity } from './activity.svelte.js';
   import { appState } from './app-state.svelte.js';
   import { navigate, router, startRouter, type Route } from './router.svelte.js';
   import FinishScreen from './screens/finish/FinishScreen.svelte';
@@ -17,6 +18,12 @@
 
   $effect(() => {
     if (route !== router.current) navigate(route);
+  });
+
+  /** Browser Back, a nav tab or a reload away from a run ends it, so no stale run lingers. */
+  const RUN_SCREENS: Route['name'][] = ['learn', 'practice', 'finish'];
+  $effect(() => {
+    if (activity.current && !RUN_SCREENS.includes(route.name)) resetActivity();
   });
 
   onMount(startRouter);

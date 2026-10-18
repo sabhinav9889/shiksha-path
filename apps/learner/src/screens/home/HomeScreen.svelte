@@ -31,7 +31,7 @@
   onMount(() => {
     const content = appState.runtime?.content;
     busy = content?.busy ?? false;
-    void load();
+    void refresh(); // a sync may have finished while another screen was open
     return content?.subscribe(() => {
       busy = content.busy;
       if (!busy) void refresh();

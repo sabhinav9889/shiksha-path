@@ -8,6 +8,7 @@
   import { t } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
   import Icon from '../../ui/Icon.svelte';
+  import LeaveSheet from './LeaveSheet.svelte';
   import FeedbackSheet from './FeedbackSheet.svelte';
   import { finishActivity } from './flow.js';
   import { ITEM_VIEWS } from './items/registry.js';
@@ -22,11 +23,18 @@
   let result = $state<ItemResult | null>(null);
   let answering = $state(false);
   let leaving = $state(false);
+  let finishing = $state(false);
+  let error = $state('');
+  let failedStep = $state<'answer' | 'finish' | null>(null);
+  let attempt = $state(0); // a new number rebuilds the item view, unlocking it after a failed save
 
   const ui = $derived(appState.lang);
   const itemLang = $derived(activity.current?.kind === 'lesson' ? activity.current.view.primary : ui);
   const total = $derived(run?.entries.length ?? 0);
-  const index = $derived(run ? (result ? run.answered.length - 1 : run.answered.length) : 0);
+  /** Stays on the last item while a finished run is being saved: never a blank screen. */
+  const index = $derived(
+    run ? Math.min(result ? run.answered.length - 1 : run.answered.length, total - 1) : 0,
+  );
   const entry = $derived(run?.entries[index]);
   const View = $derived(
     entry ? (ITEM_VIEWS[entry.item.type] as unknown as Component<ViewProps<PracticeItem>>) : null,
@@ -48,26 +56,47 @@
   });
 
   async function proceed(): Promise<void> {
-    if (run && run.answered.length >= run.entries.length) await finishActivity();
+    if (!run || run.answered.length < run.entries.length) return;
+    finishing = true;
+    try {
+      await finishActivity();
+    } catch {
+      error = t('profiles.generalError', ui);
+      failedStep = 'finish';
+      finishing = false;
+    }
   }
 
   async function answer(given: Answer): Promise<void> {
-    if (!appState.session || !run || answering || result) return;
+    if (!appState.session || !run || answering || result || finishing) return;
     answering = true;
+    error = '';
+    failedStep = null;
     try {
       const out = await appState.session.answer(run, given);
       run = out.run;
       if (activity.current) activity.current = { ...activity.current, run: out.run } as never;
       if (out.result.outcome === 'unscored') await proceed();
       else result = out.result;
+    } catch {
+      error = t('profiles.generalError', ui); // saving failed: nothing was recorded, so try again
+      failedStep = 'answer';
+      attempt += 1;
     } finally {
       answering = false;
     }
   }
 
   async function next(): Promise<void> {
-    if (!result) return;
+    if (!result || finishing) return;
     result = null;
+    error = '';
+    await proceed();
+  }
+
+  async function retryFinish(): Promise<void> {
+    error = '';
+    failedStep = null;
     await proceed();
   }
 
@@ -88,30 +117,33 @@
     </header>
 
     <div class="item">
-      {#key index}
+      {#key `${index}-${attempt}`}
         <View
           item={entry.item}
           lang={itemLang}
           storage={appState.runtime!.storage}
           seed={`${entry.item.id}-${index}`}
-          locked={answering || result !== null}
+          locked={answering || finishing || result !== null}
           onanswer={answer}
         />
       {/key}
     </div>
+
+    {#if error}
+      <div class="problem" role="alert">
+        <p>{error}</p>
+        {#if failedStep === 'finish'}
+          <button type="button" onclick={retryFinish}>{t('practice.retry', ui)}</button>
+        {/if}
+      </div>
+    {/if}
 
     {#if result}
       <FeedbackSheet {result} item={entry.item} lang={itemLang} onnext={next} />
     {/if}
 
     {#if leaving}
-      <div class="leave" role="alertdialog" aria-label={t('practice.leaveTitle', ui)}>
-        <p>{t('practice.leaveTitle', ui)}</p>
-        <div class="row">
-          <button type="button" class="danger" onclick={leave}>{t('practice.leave', ui)}</button>
-          <button type="button" onclick={() => (leaving = false)}>{t('practice.stay', ui)}</button>
-        </div>
-      </div>
+      <LeaveSheet lang={ui} onleave={leave} onstay={() => (leaving = false)} />
     {/if}
   </section>
 {/if}
@@ -168,39 +200,23 @@
     padding: 12px 20px;
   }
 
-  .leave {
-    position: fixed;
-    inset: auto 0 0;
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 20px;
-    border-radius: var(--radius-l) var(--radius-l) 0 0;
-    background: var(--color-card);
-    box-shadow: 0 -4px 24px rgb(0 0 0 / 20%);
-  }
-
-  .leave p {
-    margin: 0 0 12px;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  .row {
-    display: flex;
-    gap: 10px;
-  }
-
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border: 1.5px solid var(--color-line);
-    border-radius: 14px;
-    background: var(--color-card);
-    font-weight: 600;
-  }
-
-  .row .danger {
-    border-color: var(--color-wrong);
+  .problem {
+    padding: 12px 20px;
+    background: var(--color-wrong-bg);
     color: var(--color-wrong);
+  }
+
+  .problem p {
+    margin: 0 0 8px;
+  }
+
+  .problem button {
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1.5px solid var(--color-wrong);
+    border-radius: 12px;
+    background: var(--color-card);
+    color: var(--color-wrong);
+    font-weight: 600;
   }
 </style>
