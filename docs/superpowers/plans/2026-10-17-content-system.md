@@ -15,7 +15,7 @@
 Each plan produces working, testable software on its own. Plans 2–6 are written when the previous one is done, so they can use what was actually built.
 
 1. **Content system** (this plan): format, validation, bundles.
-2. **Learner app, offline core:** PWA shell, hi/en interface, local profiles and PIN, bundle download and verify, player for all item types, `why_wrong`, review queue, streak, test-out, placement, language preference, local outbox. No backend.
+2. **Learner app, offline core** _(split later into 2a learner core and 2b learner app; see `2026-10-18-learner-core.md`)_: PWA shell, hi/en interface, local profiles and PIN, bundle download and verify, player for all item types, `why_wrong`, review queue, streak, test-out, placement, language preference, local outbox. No backend.
 3. **Backend and sync:** Supabase migrations, `packages/core` API modules (§5.5), `/v1/sync` push and pull, Google sign-in and backup codes, ID mapping, feature switches (resolve and enforce), recordings upload, backups.
 4. **Mentor view and admin panel** (§8, §8.1).
 5. **AI features:** doubt solver with limits and safeguarding, weekly summaries, cost log, and the content pipeline (drafting, TTS, preview build).
