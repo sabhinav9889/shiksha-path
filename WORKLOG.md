@@ -5,9 +5,9 @@ Active tasks. Read this at the start of every session. Details live in `.claude/
 
 **Statuses:** `in-progress` · `blocked` · `shipped` · `on-hold`
 
-| Task                  | Status      | Assignee | Branch                | Next step                                                     | Detail                                                   |
-| --------------------- | ----------- | -------- | --------------------- | ------------------------------------------------------------- | -------------------------------------------------------- |
-| Plan 2b – learner app | in-progress | Claude   | `feature/learner-app` | Owner merges PR #8 (plan), then reviews and merges the app PR | [plan](docs/superpowers/plans/2026-10-19-learner-app.md) |
+| Task                          | Status  | Assignee | Branch                       | Next step                                                      | Detail                                                     |
+| ----------------------------- | ------- | -------- | ---------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------- |
+| Plan 2c – learner app, part 2 | on-hold | Claude   | `docs/plan-2c-learner-app-2` | Owner reviews the plan PR; execution starts after it is merged | [plan](docs/superpowers/plans/2026-10-19-learner-app-2.md) |
 
 ## Archive
 
@@ -17,3 +17,4 @@ Shipped tasks move here with their merge date.
 - Plan 1 – content system · merged 2026-10-18 (PR #3, review fixes PR #4)
 - Plan 1 follow-up – content hardening · merged 2026-10-18 (PR #5)
 - Plan 2a – learner core · merged 2026-10-19 (PR #7)
+- Plan 2b – learner app · merged 2026-10-19 (PR #8 plan, PR #9 app)
