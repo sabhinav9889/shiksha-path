@@ -48,3 +48,18 @@ export function resetActivity(): void {
   activity.finish = null;
   activity.placementResult = null;
 }
+
+/** Audio the current run may still play: the lesson's own audio and its items' audio. */
+export function audioInUse(): ReadonlySet<string> {
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- a one-off answer, never observed
+  const paths = new Set<string>();
+  if (!current) return paths;
+  if (current.kind === 'lesson') {
+    for (const path of Object.values(current.lesson.audio ?? {})) if (path) paths.add(path);
+  }
+  for (const { item } of current.run.entries) {
+    if (item.type === 'listen_choose') paths.add(item.audio);
+    if (item.type === 'speak_compare') paths.add(item.model_audio);
+  }
+  return paths;
+}

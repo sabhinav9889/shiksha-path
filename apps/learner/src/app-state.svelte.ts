@@ -7,7 +7,7 @@ import {
   type LanguagePreference,
   type LearnerSession,
 } from '@shiksha/learner-core';
-import { resetActivity, activity } from './activity.svelte.js';
+import { activity, audioInUse, resetActivity } from './activity.svelte.js';
 import { uiLang, type Lang } from './i18n/index.js';
 import type { Runtime } from './runtime/runtime.js';
 
@@ -26,7 +26,11 @@ export const appState = $state<AppState>({
   lang: 'hi',
 });
 
+/** The content version the open session was built from; -1 when there is none. */
+let openedAtVersion = -1;
+
 export function initApp(runtime: Runtime): void {
+  runtime.content.keepAudio = audioInUse; // a sync never deletes audio a run on screen uses
   appState.runtime = runtime;
 }
 
@@ -62,11 +66,13 @@ export async function signIn(profileId: string, pin: string): Promise<void> {
   });
   resetActivity();
   // Work everything out first, then switch in one step, so nobody sees a half-signed-in state.
+  const version = runtime.content.version;
   const lang = await languageOf(runtime, profile.id);
   const session = await openIfInstalled(runtime, profile.id);
   appState.profile = { id: profile.id, name: profile.name };
   appState.lang = lang;
   appState.session = session;
+  openedAtVersion = session ? version : -1;
 }
 
 export function signOut(): void {
@@ -74,6 +80,7 @@ export function signOut(): void {
   appState.profile = null;
   appState.session = null;
   appState.lang = 'hi';
+  openedAtVersion = -1;
 }
 
 /**
@@ -84,12 +91,17 @@ export function signOut(): void {
 export async function refreshSession(): Promise<void> {
   const { runtime, profile } = appState;
   if (!runtime || !profile || activity.current) return;
+  // Nothing on the phone changed since this session was opened: reopening would only re-read
+  // every bundle (slow on a cheap phone). Every learner action goes through the session itself.
+  const version = runtime.content.version;
+  if (appState.session && version === openedAtVersion) return;
   const learnerId = profile.id;
   const session = await openIfInstalled(runtime, learnerId);
   const lang = await languageOf(runtime, learnerId);
   if (appState.profile?.id !== learnerId || activity.current) return;
   appState.session = session;
   appState.lang = lang;
+  openedAtVersion = session ? version : -1;
 }
 
 /**

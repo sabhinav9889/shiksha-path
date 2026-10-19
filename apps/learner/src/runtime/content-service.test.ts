@@ -102,3 +102,18 @@ describe('ContentService', () => {
     expect(seen).toEqual([true, false]);
   });
 });
+
+describe("keeping the open lesson's audio and counting changes", () => {
+  test('version goes up when stored content changes, not when a sync finds nothing new', async () => {
+    const service = makeService();
+    expect(service.version).toBe(0);
+    await service.sync();
+    const afterInstall = service.version;
+    expect(afterInstall).toBeGreaterThan(0);
+    server.reset();
+    await service.sync();
+    expect(service.version).toBe(afterInstall);
+    await service.remove(EN);
+    expect(service.version).toBeGreaterThan(afterInstall);
+  });
+});
