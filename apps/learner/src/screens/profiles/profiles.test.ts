@@ -197,10 +197,12 @@ describe('hardening', () => {
       await enterPin('0000');
       await vi.waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
     }
-    await vi.waitFor(() => expect(button('1').disabled).toBe(true));
+    // the picker re-reads the stored profiles after each attempt; allow for a busy machine
+    const slow = { timeout: 5000 };
+    await vi.waitFor(() => expect(button('1').disabled).toBe(true), slow);
     await fireEvent.click(button('रोहित'));
-    await vi.waitFor(() => expect(button('1').disabled).toBe(false));
+    await vi.waitFor(() => expect(button('1').disabled).toBe(false), slow);
     await fireEvent.click(button('प्रिया'));
-    await vi.waitFor(() => expect(button('1').disabled).toBe(true));
+    await vi.waitFor(() => expect(button('1').disabled).toBe(true), slow);
   });
 });

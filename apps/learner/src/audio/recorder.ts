@@ -114,6 +114,26 @@ async function result(take: Take): Promise<RecordingResult> {
   return { mime: take.recorder.mimeType || take.mime, bytes, durationMs };
 }
 
+/** Open the microphone and start recording, unless the learner cancelled meanwhile. */
+async function openTake(
+  mic: Pick<MediaDevices, 'getUserMedia'>,
+  Recorder: typeof MediaRecorder,
+  attempt: { cancelled: boolean },
+  now: () => number,
+): Promise<Take> {
+  const stream = await openMicrophone(mic);
+  if (attempt.cancelled) {
+    release(stream); // the learner left before the microphone opened
+    throw new RecorderError('failed');
+  }
+  try {
+    return begin(stream, Recorder, now);
+  } catch {
+    release(stream);
+    throw new RecorderError('failed');
+  }
+}
+
 function defaultDevices(): Pick<MediaDevices, 'getUserMedia'> | undefined {
   return typeof navigator === 'undefined' ? undefined : navigator.mediaDevices;
 }
@@ -128,23 +148,28 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
   const setTimer = deps.setTimer ?? setTimeout;
   const now = deps.now ?? Date.now;
   let take: Take | null = null;
+  /** A start waiting for the microphone; a second tap shares it, and cancel marks it. */
+  let pending: { promise: Promise<void>; cancelled: boolean } | null = null;
 
   const isSupported = (): boolean => Boolean(devices?.getUserMedia && Ctor);
 
-  async function start(): Promise<void> {
-    if (!devices?.getUserMedia || !Ctor) throw new RecorderError('unsupported');
-    if (take) return;
-    const stream = await openMicrophone(devices);
-    try {
-      take = begin(stream, Ctor, now);
-    } catch {
-      release(stream);
-      throw new RecorderError('failed');
-    }
-    const current = take;
-    setTimer(() => {
-      if (take === current) end(current, now);
-    }, MAX_RECORDING_MS);
+  function start(): Promise<void> {
+    if (!devices?.getUserMedia || !Ctor) return Promise.reject(new RecorderError('unsupported'));
+    if (take) return Promise.resolve();
+    if (pending) return pending.promise; // never two microphone streams
+    const attempt = { cancelled: false, promise: Promise.resolve() };
+    attempt.promise = openTake(devices, Ctor, attempt, now)
+      .then((opened) => {
+        take = opened;
+        setTimer(() => {
+          if (take === opened) end(opened, now);
+        }, MAX_RECORDING_MS);
+      })
+      .finally(() => {
+        if (pending === attempt) pending = null;
+      });
+    pending = attempt;
+    return attempt.promise;
   }
 
   async function stop(): Promise<RecordingResult> {
@@ -156,6 +181,7 @@ export function createRecorder(deps: RecorderDeps = {}): Recorder {
   }
 
   function cancel(): void {
+    if (pending) pending.cancelled = true;
     if (take) end(take, now);
     take = null;
   }

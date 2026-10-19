@@ -36,8 +36,8 @@ export interface SyncDeps {
   estimator: StorageEstimator;
   audio?: 'with' | 'skip';
   skipModules?: ReadonlySet<string>;
-  /** Audio the cleanup must not delete (for example the lesson open on screen). */
-  keepAudio?: ReadonlySet<string>;
+  /** Audio the cleanup must not delete (the lesson on screen); asked when the cleanup runs. */
+  keepAudio?: () => ReadonlySet<string>;
 }
 
 const HTTP_OK = 200;
@@ -138,7 +138,8 @@ export async function syncContent(deps: SyncDeps): Promise<SyncReport> {
     removedAudio: await removeUnusedAudio(
       manifest,
       ctx.storage,
-      new Set([...ctx.protectedAudio, ...(deps.keepAudio ?? [])]),
+      // asked at the end, not the start: a lesson may have opened while this sync ran
+      new Set([...ctx.protectedAudio, ...(deps.keepAudio?.() ?? [])]),
     ),
   };
 }

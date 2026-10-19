@@ -176,3 +176,73 @@ describe('when recording is not possible the learner can always carry on', () =>
     expect(onanswer).toHaveBeenCalledWith({ kind: 'spoken' });
   });
 });
+
+describe('review fixes', () => {
+  function slowRecorder() {
+    let open = (): void => undefined;
+    const gate = new Promise<void>((resolve) => (open = resolve));
+    const recorder = {
+      isSupported: () => true,
+      start: vi.fn(() => gate),
+      stop: vi.fn(() => Promise.resolve(RESULT)),
+      cancel: vi.fn(),
+    } satisfies Recorder;
+    return { recorder, open };
+  }
+
+  test('a double tap on record while the microphone opens starts it once', async () => {
+    const { recorder, open } = slowRecorder();
+    renderView(recorder);
+    await fireEvent.click(button('रिकॉर्ड करें'));
+    await fireEvent.click(button('रिकॉर्ड करें'));
+    open();
+    await vi.waitFor(() => button('रोकें'));
+    expect(recorder.start).toHaveBeenCalledTimes(1);
+  });
+
+  test('leaving while the microphone opens cancels it and never saves anything', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    const { recorder, open } = slowRecorder();
+    const { onrecord, view } = renderView(recorder);
+    await fireEvent.click(button('रिकॉर्ड करें'));
+    view.unmount();
+    open();
+    await vi.advanceTimersByTimeAsync(31_000);
+    expect(recorder.cancel).toHaveBeenCalled();
+    expect(onrecord).not.toHaveBeenCalled();
+  });
+
+  test('next while the microphone opens cancels it', async () => {
+    const { recorder, open } = slowRecorder();
+    const { onanswer } = renderView(recorder);
+    await fireEvent.click(button('रिकॉर्ड करें'));
+    await fireEvent.click(button('आगे'));
+    open();
+    await vi.waitFor(() => expect(recorder.cancel).toHaveBeenCalled());
+    expect(onanswer).toHaveBeenCalledTimes(1);
+  });
+
+  test('hearing the recording still works after recording again during playback', async () => {
+    renderView(fakeRecorder());
+    await fireEvent.click(button('रिकॉर्ड करें'));
+    await fireEvent.click(await vi.waitFor(() => button('रोकें')));
+    await fireEvent.click(await vi.waitFor(() => button('मेरी रिकॉर्डिंग सुनें')));
+    await vi.waitFor(() => expect(createUrl).toHaveBeenCalledTimes(1));
+    await fireEvent.click(button('फिर से रिकॉर्ड करें')); // while it is still playing
+    await fireEvent.click(await vi.waitFor(() => button('रोकें')));
+    expect(revokeUrl).toHaveBeenCalledTimes(1);
+    await fireEvent.click(await vi.waitFor(() => button('मेरी रिकॉर्डिंग सुनें')));
+    await vi.waitFor(() => expect(createUrl).toHaveBeenCalledTimes(2));
+  });
+
+  test('a playback that fails frees its URL and can be tried again', async () => {
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockRejectedValue(new Error('no audio output'));
+    renderView(fakeRecorder());
+    await fireEvent.click(button('रिकॉर्ड करें'));
+    await fireEvent.click(await vi.waitFor(() => button('रोकें')));
+    await fireEvent.click(await vi.waitFor(() => button('मेरी रिकॉर्डिंग सुनें')));
+    await vi.waitFor(() => expect(revokeUrl).toHaveBeenCalledTimes(1));
+    await fireEvent.click(button('मेरी रिकॉर्डिंग सुनें'));
+    await vi.waitFor(() => expect(createUrl).toHaveBeenCalledTimes(2));
+  });
+});

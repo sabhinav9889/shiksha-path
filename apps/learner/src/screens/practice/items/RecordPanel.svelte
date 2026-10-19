@@ -4,7 +4,7 @@
   import { recordingObjectUrl } from '../../../audio/recording-source.js';
   import { t, type Lang } from '../../../i18n/index.js';
 
-  type Phase = 'idle' | 'recording' | 'saving' | 'recorded' | 'denied' | 'unsupported' | 'failed';
+  type Phase = 'idle' | 'starting' | 'recording' | 'saving' | 'recorded' | 'denied' | 'unsupported' | 'failed';
 
   const MS_PER_SECOND = 1000;
   const FULL_SECONDS = MAX_RECORDING_MS / MS_PER_SECOND;
@@ -27,6 +27,7 @@
   let release: (() => void) | null = null;
   let timer: ReturnType<typeof setInterval> | undefined;
   let sent = false;
+  let destroyed = false;
 
   const MESSAGES = { denied: 'speak.denied', unsupported: 'speak.unsupported', failed: 'speak.failed' } as const;
   const message = $derived(phase in MESSAGES ? MESSAGES[phase as keyof typeof MESSAGES] : null);
@@ -36,13 +37,27 @@
     timer = undefined;
   }
 
+  const BUSY: Phase[] = ['starting', 'recording', 'saving'];
+  const gone = (): boolean => destroyed || sent;
+
+  function failedToStart(error: unknown): void {
+    if (gone()) return;
+    const kind = error instanceof RecorderError ? error.kind : 'failed';
+    phase = kind === 'denied' || kind === 'unsupported' ? kind : 'failed';
+  }
+
   async function record(): Promise<void> {
-    if (!recorder || locked || phase === 'recording' || phase === 'saving') return;
+    if (!recorder || locked || gone() || BUSY.includes(phase)) return;
+    freePlayback(); // a recording that was playing is about to be replaced
+    phase = 'starting';
     try {
       await recorder.start();
     } catch (error) {
-      const kind = error instanceof RecorderError ? error.kind : 'failed';
-      phase = kind === 'denied' || kind === 'unsupported' ? kind : 'failed';
+      failedToStart(error);
+      return;
+    }
+    if (gone()) {
+      recorder.cancel(); // the learner left while the microphone was opening
       return;
     }
     phase = 'recording';
@@ -80,12 +95,16 @@
     release = source.revoke;
     src = source.url;
     await tick();
-    await audio?.play();
+    try {
+      await audio?.play();
+    } catch {
+      freePlayback(); // nothing played: let the next tap try again
+    }
   }
 
   function next(): void {
     if (locked || sent) return;
-    if (phase === 'recording') {
+    if (phase === 'recording' || phase === 'starting') {
       stopTimer();
       recorder?.cancel();
     }
@@ -94,8 +113,9 @@
   }
 
   onDestroy(() => {
+    destroyed = true;
     stopTimer();
-    if (phase === 'recording') recorder?.cancel();
+    if (phase === 'recording' || phase === 'starting') recorder?.cancel();
     freePlayback();
   });
 </script>
@@ -119,8 +139,10 @@
     {#if src}
       <audio bind:this={audio} {src} onended={freePlayback} preload="none"></audio>
     {/if}
-  {:else if phase === 'idle' || phase === 'failed'}
-    <button type="button" class="record" disabled={locked} onclick={record}>{t('speak.record', lang)}</button>
+  {:else if phase === 'idle' || phase === 'failed' || phase === 'starting'}
+    <button type="button" class="record" disabled={locked || phase === 'starting'} onclick={record}>
+      {t('speak.record', lang)}
+    </button>
   {/if}
 
   <button type="button" class="next" disabled={locked || phase === 'saving'} onclick={next}>

@@ -329,7 +329,7 @@ describe('keepAudio', () => {
     await fixture.rebuild((files) => {
       files['modules/english-foundation-1/audio/intro.mp3'] = new TextEncoder().encode('new-intro');
     });
-    const report = await sync({ keepAudio: new Set(before) });
+    const report = await sync({ keepAudio: () => new Set(before) });
     expect(report.removedAudio).toBe(0);
     for (const path of before) expect(await storage.hasAudio(path)).toBe(true);
     const later = await sync();

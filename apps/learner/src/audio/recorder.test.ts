@@ -51,17 +51,18 @@ function fakeRecorderClass(
   return { ctor: FakeRecorder as unknown as typeof MediaRecorder, created };
 }
 
-function fakeDevices(opts: { error?: string } = {}) {
+function fakeDevices(opts: { error?: string; gate?: Promise<void> } = {}) {
   const tracks: { stop: ReturnType<typeof vi.fn> }[] = [];
   let calls = 0;
   const mediaDevices = {
-    getUserMedia: (): Promise<MediaStream> => {
+    getUserMedia: async (): Promise<MediaStream> => {
       calls += 1;
+      await opts.gate;
       if (opts.error)
         return Promise.reject(Object.assign(new Error(opts.error), { name: opts.error }));
       const track = { stop: vi.fn() };
       tracks.push(track);
-      return Promise.resolve({ getTracks: () => [track] } as unknown as MediaStream);
+      return { getTracks: () => [track] } as unknown as MediaStream;
     },
   };
   return { mediaDevices, tracks, calls: () => calls };
@@ -226,6 +227,45 @@ describe('createRecorder', () => {
       recorderCtor: ctor,
     });
     await recorder.start();
+    expect(await failureOf(recorder.stop())).toBe('failed');
+  });
+});
+
+describe('while the microphone is still opening', () => {
+  const gated = () => {
+    let open = (): void => undefined;
+    const gate = new Promise<void>((resolve) => (open = resolve));
+    return { gate, open };
+  };
+
+  test('a second start waits for the first and opens only one stream', async () => {
+    const { gate, open } = gated();
+    const devices = fakeDevices({ gate });
+    const recorder = createRecorder({
+      mediaDevices: devices.mediaDevices,
+      recorderCtor: fakeRecorderClass().ctor,
+    });
+    const first = recorder.start();
+    const second = recorder.start();
+    open();
+    await Promise.all([first, second]);
+    expect(devices.calls()).toBe(1);
+    recorder.cancel();
+    expect(devices.tracks.every((t) => t.stop.mock.calls.length > 0)).toBe(true);
+  });
+
+  test('cancel before the stream arrives releases it as soon as it does', async () => {
+    const { gate, open } = gated();
+    const devices = fakeDevices({ gate });
+    const recorder = createRecorder({
+      mediaDevices: devices.mediaDevices,
+      recorderCtor: fakeRecorderClass().ctor,
+    });
+    const starting = recorder.start();
+    recorder.cancel();
+    open();
+    expect(await failureOf(starting)).toBe('failed');
+    expect(devices.tracks[0]?.stop).toHaveBeenCalled();
     expect(await failureOf(recorder.stop())).toBe('failed');
   });
 });

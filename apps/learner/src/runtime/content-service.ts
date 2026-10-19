@@ -81,7 +81,11 @@ export class ContentService {
 
   private async doSync(): Promise<SyncReport> {
     const skipModules = await this.deps.prefs.removedModules();
-    const report = await syncContent({ ...this.deps, skipModules, keepAudio: this.keepAudio() });
+    const report = await syncContent({
+      ...this.deps,
+      skipModules,
+      keepAudio: () => this.keepAudio(),
+    });
     const installed = [...report.modules, report.placement].some((r) => r?.status === 'installed');
     if (installed || report.removedAudio > 0) this.changes += 1;
     return report;
