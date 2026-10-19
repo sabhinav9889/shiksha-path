@@ -7,6 +7,7 @@
   import HomeScreen from './screens/home/HomeScreen.svelte';
   import LearnScreen from './screens/learn/LearnScreen.svelte';
   import LessonsScreen from './screens/lessons/LessonsScreen.svelte';
+  import PlacementResult from './screens/placement/PlacementResult.svelte';
   import PlacementScreen from './screens/placement/PlacementScreen.svelte';
   import PracticeScreen from './screens/practice/PracticeScreen.svelte';
   import ProfilesScreen from './screens/profiles/ProfilesScreen.svelte';
@@ -56,6 +57,8 @@
       <FinishScreen />
     {:else if route.name === 'placement'}
       <PlacementScreen />
+    {:else if route.name === 'placement-result'}
+      <PlacementResult />
     {/if}
   </Shell>
 </div>

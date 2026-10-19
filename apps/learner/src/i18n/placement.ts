@@ -18,4 +18,16 @@ export const placementStrings = {
   },
   'placement.skipYes': { hi: 'हाँ, छोड़ें', en: 'Yes, skip' },
   'placement.skipNo': { hi: 'टेस्ट दूँगा', en: 'I will take it' },
+  'placementResult.title': { hi: 'आपका नतीजा', en: 'Your result' },
+  'placementResult.score': { hi: '{track}: {percent}%', en: '{track}: {percent}%' },
+  'placementResult.start': {
+    hi: 'आप "{lesson}" से शुरू करेंगे',
+    en: 'You will start at "{lesson}"',
+  },
+  'placementResult.suggest': {
+    hi: 'आपकी English अच्छी है। क्या सब कुछ English में पढ़ना चाहेंगे?',
+    en: 'Your English is good. Would you like everything in English?',
+  },
+  'placementResult.yes': { hi: 'हाँ, सिर्फ़ English', en: 'Yes, English only' },
+  'placementResult.no': { hi: 'नहीं, हिंदी + English', en: 'No, Hindi + English' },
 } satisfies Record<string, Localized>;

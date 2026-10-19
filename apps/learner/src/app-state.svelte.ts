@@ -1,8 +1,10 @@
 import {
   CoreError,
+  createEvent,
   deriveProgress,
   parseEvents,
   verifyPin,
+  type LanguagePreference,
   type LearnerSession,
 } from '@shiksha/learner-core';
 import { resetActivity, activity } from './activity.svelte.js';
@@ -88,4 +90,19 @@ export async function refreshSession(): Promise<void> {
   if (appState.profile?.id !== learnerId || activity.current) return;
   appState.session = session;
   appState.lang = lang;
+}
+
+/**
+ * Change the learner's language (spec §6.7). It is recorded as an event, through the session when
+ * there is one so progress sees it, and the interface switches at once.
+ */
+export async function setLanguagePreference(preference: LanguagePreference): Promise<void> {
+  const { runtime, profile, session } = appState;
+  if (!runtime || !profile) return;
+  if (session) await session.setLanguage(preference);
+  else
+    await runtime.events.append(
+      createEvent(runtime, profile.id, 'language_changed', { preference }),
+    );
+  if (appState.profile?.id === profile.id) appState.lang = uiLang(preference);
 }
