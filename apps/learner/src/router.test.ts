@@ -11,6 +11,7 @@ const ROUTES: Route[] = [
   { name: 'finish' },
   { name: 'placement' },
   { name: 'placement-result' },
+  { name: 'me' },
 ];
 
 describe('parseRoute', () => {

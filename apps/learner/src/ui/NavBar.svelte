@@ -8,6 +8,7 @@
   const tabs = [
     { route: { name: 'home' } as Route, icon: 'home', label: 'nav.home' },
     { route: { name: 'lessons' } as Route, icon: 'book', label: 'nav.lessons' },
+    { route: { name: 'me' } as Route, icon: 'user', label: 'nav.me' },
   ] as const;
 </script>
 
@@ -27,7 +28,7 @@
 <style>
   nav {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     background: var(--color-card);
     border-top: 1px solid var(--color-line);
     padding: 6px 4px 10px;

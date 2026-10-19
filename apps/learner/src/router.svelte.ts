@@ -6,7 +6,8 @@ export type Route =
   | { name: 'practice' }
   | { name: 'finish' }
   | { name: 'placement' }
-  | { name: 'placement-result' };
+  | { name: 'placement-result' }
+  | { name: 'me' };
 
 const HOME: Route = { name: 'home' };
 const LESSON_ID = /^[a-z0-9-]+$/;
@@ -18,6 +19,7 @@ const SIMPLE_ROUTES = [
   'finish',
   'placement',
   'placement-result',
+  'me',
 ] as const;
 
 /** Unknown, empty or malformed hashes go home; a lesson id must be a plain slug. */

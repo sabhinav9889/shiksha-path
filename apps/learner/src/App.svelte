@@ -7,6 +7,7 @@
   import HomeScreen from './screens/home/HomeScreen.svelte';
   import LearnScreen from './screens/learn/LearnScreen.svelte';
   import LessonsScreen from './screens/lessons/LessonsScreen.svelte';
+  import MeScreen from './screens/me/MeScreen.svelte';
   import PlacementResult from './screens/placement/PlacementResult.svelte';
   import PlacementScreen from './screens/placement/PlacementScreen.svelte';
   import PracticeScreen from './screens/practice/PracticeScreen.svelte';
@@ -37,7 +38,7 @@
   onMount(startRouter);
 
   const showNav = $derived(
-    appState.profile !== null && (route.name === 'home' || route.name === 'lessons'),
+    appState.profile !== null && ['home', 'lessons', 'me'].includes(route.name),
   );
 </script>
 
@@ -59,6 +60,8 @@
       <PlacementScreen />
     {:else if route.name === 'placement-result'}
       <PlacementResult />
+    {:else if route.name === 'me'}
+      <MeScreen />
     {/if}
   </Shell>
 </div>

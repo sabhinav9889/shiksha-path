@@ -34,11 +34,12 @@ export interface LessonsData {
   modules: ModuleView[];
 }
 
-async function stateOf(
+/** How a module stands on this phone (also used by the "me" screen). */
+export async function stateOf(
   runtime: Runtime,
   id: string,
   manifest: Parameters<typeof isModuleReady>[1],
-) {
+): Promise<ModuleState> {
   if (await isModuleReady(id, manifest, runtime.storage)) return 'ready';
   if (await isModulePlayable(id, runtime.storage)) return 'playable';
   return (await runtime.prefs.removedModules()).has(id)
