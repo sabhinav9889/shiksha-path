@@ -12,6 +12,7 @@ import {
   type ProfileStore,
   type StorageEstimator,
 } from '@shiksha/learner-core';
+import { createRecorder, type Recorder } from '../audio/recorder.js';
 import { ShikshaDb } from '../storage/db.js';
 import { browserStorageEstimator } from '../storage/estimator.js';
 import { IdbBundleStorage } from '../storage/idb-bundle-storage.js';
@@ -32,6 +33,8 @@ export interface Runtime {
   events: EventStore;
   profiles: ProfileStore;
   recordings: RecordingStore;
+  /** The microphone; tests replace it with a fake. */
+  recorder: Recorder;
   partials: PartialStore;
   clock: Clock;
   ids: Ids;
@@ -73,6 +76,7 @@ export function createRuntime(opts: RuntimeOptions = {}): Runtime {
     events,
     profiles: new IdbProfileStore(db),
     recordings: new IdbRecordingStore(db),
+    recorder: createRecorder(),
     partials,
     clock,
     ids,

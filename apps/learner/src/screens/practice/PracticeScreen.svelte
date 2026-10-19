@@ -10,7 +10,7 @@
   import Icon from '../../ui/Icon.svelte';
   import LeaveSheet from './LeaveSheet.svelte';
   import FeedbackSheet from './FeedbackSheet.svelte';
-  import { finishActivity } from './flow.js';
+  import { finishActivity, saveRecording } from './flow.js';
   import { ITEM_VIEWS } from './items/registry.js';
   import type { ViewProps } from './items/types.js';
 
@@ -125,6 +125,8 @@
           seed={`${entry.item.id}-${index}`}
           locked={answering || finishing || result !== null}
           onanswer={answer}
+          recorder={appState.runtime?.recorder}
+          onrecord={(recording) => saveRecording(entry, recording)}
         />
       {/key}
     </div>

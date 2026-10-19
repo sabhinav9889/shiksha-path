@@ -7,6 +7,7 @@ import { learnStrings } from './learn.js';
 import { lessonsStrings } from './lessons.js';
 import { practiceStrings } from './practice.js';
 import { profilesStrings } from './profiles.js';
+import { speakingStrings } from './speaking.js';
 import { shellStrings } from './shell.js';
 
 export type { Lang } from '@shiksha/learner-core';
@@ -21,6 +22,7 @@ export const STRINGS = {
   ...learnStrings,
   ...practiceStrings,
   ...finishStrings,
+  ...speakingStrings,
 };
 
 export type StringKey = keyof typeof STRINGS;
