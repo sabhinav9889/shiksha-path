@@ -1,31 +1,8 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { createProfile, enterPin, playLesson } from './helpers.js';
+import { assertFits } from './more-helpers.js';
 
-const MIN_TAP = 44;
 const LONG_NAME = 'अ'.repeat(40);
-
-/** No sideways scrolling, and every visible button and link is big enough to tap. */
-async function assertFits(page: Page, screen: string): Promise<void> {
-  const problems = await page.evaluate((min) => {
-    const found: string[] = [];
-    const root = document.documentElement;
-    if (root.scrollWidth > root.clientWidth) {
-      found.push(`scrolls sideways (${root.scrollWidth} > ${root.clientWidth})`);
-    }
-    for (const element of document.querySelectorAll('button, a')) {
-      const box = element.getBoundingClientRect();
-      if (box.width === 0 || box.height === 0) continue;
-      if (box.width < min || box.height < min) {
-        const label = (element.textContent ?? '').trim().slice(0, 24);
-        found.push(
-          `${element.tagName} "${label}" is ${Math.round(box.width)}x${Math.round(box.height)}`,
-        );
-      }
-    }
-    return found;
-  }, MIN_TAP);
-  expect(problems, `${screen} at 360px`).toEqual([]);
-}
 
 test('every screen fits a 360 px phone with a 40-character Hindi name', async ({ page }) => {
   await page.goto('/');
