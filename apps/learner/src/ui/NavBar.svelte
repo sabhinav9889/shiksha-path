@@ -13,6 +13,7 @@
 </script>
 
 <nav aria-label={t('nav.label', lang)}>
+  <span class="brand">{t('app.name', lang)}</span>
   {#each tabs as tab (tab.label)}
     <a
       href={routeHref(tab.route)}
@@ -34,6 +35,10 @@
     padding: 6px 4px 10px;
   }
 
+  .brand {
+    display: none;
+  }
+
   a {
     display: flex;
     flex-direction: column;
@@ -41,6 +46,7 @@
     justify-content: center;
     gap: 2px;
     min-height: 52px;
+    border-radius: 14px;
     color: var(--color-muted);
     font-size: 12px;
     text-decoration: none;
@@ -49,5 +55,56 @@
   a.active {
     color: var(--color-primary);
     font-weight: 600;
+  }
+
+  @media (min-width: 768px) {
+    nav {
+      position: sticky;
+      top: 0;
+      flex-shrink: 0;
+      width: 96px;
+      height: 100dvh;
+      grid-template-columns: none;
+      align-content: start;
+      gap: 6px;
+      padding: 20px 8px;
+      border-top: none;
+      border-right: 1px solid var(--color-line);
+    }
+
+    a {
+      min-height: 64px;
+      font-size: 13px;
+    }
+
+    a.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    nav {
+      width: 220px;
+      padding: 22px 14px;
+    }
+
+    .brand {
+      display: block;
+      padding: 0 12px 16px;
+      color: var(--color-primary);
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    a {
+      flex-direction: row;
+      justify-content: flex-start;
+      gap: 10px;
+      min-height: 48px;
+      padding: 0 14px;
+      font-size: 16px;
+    }
   }
 </style>

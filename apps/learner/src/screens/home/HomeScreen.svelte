@@ -104,7 +104,9 @@
     </header>
 
     {#if data.state !== 'download'}
-      <StatCards {lang} streak={data.streak} tracks={data.tracks} />
+      <div class="stats">
+        <StatCards {lang} streak={data.streak} tracks={data.tracks} />
+      </div>
     {/if}
 
     {#if data.state === 'download'}
@@ -196,5 +198,18 @@
   .error {
     margin: 0;
     color: var(--color-wrong);
+  }
+
+  .stats {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  @media (min-width: 768px) {
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
   }
 </style>

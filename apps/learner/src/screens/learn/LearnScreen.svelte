@@ -79,6 +79,9 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
     padding: 12px 16px 24px;
   }
 

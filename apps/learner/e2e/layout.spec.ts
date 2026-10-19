@@ -31,7 +31,9 @@ test('every screen fits a 360 px phone with a 40-character Hindi name', async ({
   await page.goto('/');
   await assertFits(page, 'create profile');
   await createProfile(page, LONG_NAME, '1234');
-  await expect(page.getByRole('button', { name: 'शुरू करें' })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('button', { name: 'शुरू करें', exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
   await assertFits(page, 'home');
 
   await page.getByRole('link', { name: 'पाठ', exact: true }).click();
@@ -57,8 +59,10 @@ test('every screen fits a 360 px phone with a 40-character Hindi name', async ({
 test('the feedback sheet, the leave dialog and the PIN lock message fit too', async ({ page }) => {
   await page.goto('/');
   await createProfile(page, LONG_NAME, '1234');
-  await expect(page.getByRole('button', { name: 'शुरू करें' })).toBeVisible({ timeout: 30_000 });
-  await page.getByRole('button', { name: 'शुरू करें' }).click();
+  await expect(page.getByRole('button', { name: 'शुरू करें', exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
+  await page.getByRole('button', { name: 'शुरू करें', exact: true }).click();
   await page.getByRole('button', { name: 'अभ्यास करें' }).click();
 
   for (const word of ['am', 'I', 'Priya']) {

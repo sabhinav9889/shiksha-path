@@ -16,7 +16,7 @@
     .leave {
     position: fixed;
     inset: auto 0 0;
-    max-width: 480px;
+    max-width: 640px;
     margin: 0 auto;
     padding: 20px;
     border-radius: var(--radius-l) var(--radius-l) 0 0;

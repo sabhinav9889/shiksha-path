@@ -130,20 +130,22 @@
           </button>
         {/each}
       </div>
-      {#each shown as module (module.id)}
-        <ModuleCard
-          {lang}
-          {module}
-          busy={busy || working}
-          error={errors[module.id] ?? ''}
-          onlesson={startLesson}
-          ontestout={() => startTestOut(module.id)}
-          ondownload={download}
-          onremove={() => remove(module.id)}
-          onrestore={() => restore(module.id)}
-          onaudio={() => fetchAudio(module.id)}
-        />
-      {/each}
+      <div class="modules">
+        {#each shown as module (module.id)}
+          <ModuleCard
+            {lang}
+            {module}
+            busy={busy || working}
+            error={errors[module.id] ?? ''}
+            onlesson={startLesson}
+            ontestout={() => startTestOut(module.id)}
+            ondownload={download}
+            onremove={() => remove(module.id)}
+            onrestore={() => restore(module.id)}
+            onaudio={() => fetchAudio(module.id)}
+          />
+        {/each}
+      </div>
       {#if general}
         <p class="error" role="alert">{general}</p>
       {/if}
@@ -194,5 +196,19 @@
   .error {
     margin: 0;
     color: var(--color-wrong);
+  }
+
+  .modules {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  @media (min-width: 1024px) {
+    .modules {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
   }
 </style>

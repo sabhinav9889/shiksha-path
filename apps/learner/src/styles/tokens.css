@@ -16,6 +16,10 @@
   --radius-m: 16px;
   --radius-l: 20px;
   --tap-min: 44px;
+  /* Layout breakpoints (media queries cannot read variables, so the CSS repeats these values):
+     a 96 px icon rail from the tablet width, a 220 px labelled sidebar from the laptop width. */
+  --bp-tablet: 768px;
+  --bp-laptop: 1024px;
   --font-body: 'Mukta', system-ui, sans-serif;
   --font-heading: 'Baloo 2', 'Mukta', system-ui, sans-serif;
 }

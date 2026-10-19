@@ -97,6 +97,9 @@
     display: flex;
     flex-direction: column;
     gap: 18px;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
     min-height: 100dvh;
     padding: 28px 20px 22px;
     background: var(--color-card);
