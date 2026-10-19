@@ -75,7 +75,7 @@
     try {
       const out = await appState.session.answer(run, given);
       run = out.run;
-      if (activity.current) activity.current = { ...activity.current, run: out.run } as never;
+      if (activity.current) activity.current = { ...activity.current, run: out.run };
       if (out.result.outcome === 'unscored') await proceed();
       else result = out.result;
     } catch {

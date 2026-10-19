@@ -84,7 +84,8 @@
 
   const remove = (id: string): Promise<void> =>
     guarded(id, async () => {
-      await appState.runtime?.content.remove(id);
+      const result = await appState.runtime?.content.remove(id);
+      if (result && !result.ok) errors[id] = errorMessage(result.error, lang);
       await refresh();
     });
 

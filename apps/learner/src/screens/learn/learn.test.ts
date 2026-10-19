@@ -131,3 +131,46 @@ describe('lesson audio', () => {
     await vi.waitFor(() => button('पाठ सुनें'), { timeout: 5000 });
   });
 });
+
+describe('hardening', () => {
+  test('two quick taps, or leaving while the audio loads, never leave an audio URL behind', async () => {
+    const { MemoryBundleStorage: Store } = await import('@shiksha/learner-core/testing');
+    const AudioButton = (await import('./AudioButton.svelte')).default;
+    const storage = new Store();
+    const path = 'audio/0123456789abcdef.mp3';
+    await storage.putAudio(path, Uint8Array.of(1, 2, 3));
+    const real = storage.getAudio.bind(storage);
+    let open = (): void => undefined;
+    let gate = new Promise<void>((resolve) => (open = resolve));
+    storage.getAudio = async (p) => {
+      await gate;
+      return real(p);
+    };
+    const first = render(AudioButton, { storage, path, label: 'सुनें' });
+    const play = await vi.waitFor(() => screen.getByRole('button', { name: 'सुनें' }));
+    await fireEvent.click(play);
+    await fireEvent.click(play);
+    open();
+    await vi.waitFor(() => expect(createUrl.mock.calls.length).toBeGreaterThan(0));
+    first.unmount();
+    expect(revokeUrl.mock.calls.length).toBe(createUrl.mock.calls.length);
+
+    gate = new Promise<void>((resolve) => (open = resolve));
+    const second = render(AudioButton, { storage, path, label: 'सुनें' });
+    await fireEvent.click(await vi.waitFor(() => screen.getByRole('button', { name: 'सुनें' })));
+    second.unmount(); // gone before the audio finished loading
+    open();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(revokeUrl.mock.calls.length).toBe(createUrl.mock.calls.length);
+  });
+
+  test('an audio download that fails says so', async () => {
+    for (const p of await env.runtime.storage.listAudio()) await env.runtime.storage.removeAudio(p);
+    env.runtime.content.fetchAudio = () => Promise.resolve({ ok: false, error: 'DOWNLOAD_FAILED' });
+    await openLesson();
+    await fireEvent.click(await vi.waitFor(() => button('ऑडियो डाउनलोड करें')));
+    await vi.waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toContain('ऑडियो डाउनलोड नहीं हुआ'),
+    );
+  });
+});

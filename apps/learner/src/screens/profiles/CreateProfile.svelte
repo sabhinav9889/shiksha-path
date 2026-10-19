@@ -4,6 +4,7 @@
     createEvent,
     createProfile,
     type LanguagePreference,
+    type Profile,
   } from '@shiksha/learner-core';
   import { appState, signIn } from '../../app-state.svelte.js';
   import { errorMessage, t, type Lang } from '../../i18n/index.js';
@@ -25,6 +26,8 @@
   let firstPin = $state('');
   let error = $state('');
   let busy = $state(false);
+  /** Kept so a retry after a half-finished creation reuses it instead of making a second one. */
+  let created: Profile | null = null;
 
   function choosePin(pin: string): void {
     firstPin = pin;
@@ -35,10 +38,13 @@
   async function create(pin: string): Promise<void> {
     const runtime = appState.runtime;
     if (!runtime) return;
-    const profile = await createProfile(
-      { name, pin },
-      { store: runtime.profiles, ids: runtime.ids, clock: runtime.clock },
-    );
+    const profile =
+      created ??
+      (await createProfile(
+        { name, pin },
+        { store: runtime.profiles, ids: runtime.ids, clock: runtime.clock },
+      ));
+    created = profile;
     if (existingCount === 0) await requestPersistence();
     await runtime.events.append(createEvent(runtime, profile.id, 'language_changed', { preference }));
     await signIn(profile.id, pin);

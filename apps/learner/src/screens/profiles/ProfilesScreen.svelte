@@ -5,16 +5,11 @@
   import { errorMessage, t } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
   import CreateProfile from './CreateProfile.svelte';
+  import { COLOURS, TRUNCATE } from './avatar.js';
   import PinPad from './PinPad.svelte';
 
   const MS_PER_SECOND = 1000;
   const LONGEST_LOCK_SECONDS = 900;
-  const TRUNCATE =
-    'min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
-  const COLOURS = [
-    ['#d9dcff', '#1f2780'],
-    ['#fdf0dd', '#8a4b06'],
-  ];
 
   let profiles = $state<Profile[] | null>(null);
   let selectedId = $state<string | null>(null);
@@ -64,8 +59,13 @@
       navigate({ name: 'home' });
     } catch (failure) {
       if (!(failure instanceof CoreError)) error = t('profiles.generalError', lang);
-      else if (failure.code === 'PIN_LOCKED') lockSeconds = Number(failure.details?.retryAfterSec ?? 0);
+      else if (failure.code === 'PIN_LOCKED') {
+        lockSeconds = Number(failure.details?.retryAfterSec ?? 0);
+      }
       else error = errorMessage(failure.code, lang, failure.details);
+      // the attempt changed the stored profile (attempts, lock): read it again so switching
+      // to another profile and back still shows the lock
+      profiles = (await appState.runtime?.profiles.list()) ?? profiles;
     } finally {
       busy = false;
     }

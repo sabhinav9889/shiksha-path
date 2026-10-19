@@ -21,6 +21,9 @@
   let src = $state<string | null>(null);
   let audio = $state<HTMLAudioElement>();
   let release: (() => void) | null = null;
+  let loading = false;
+  let destroyed = false;
+  let failed = $state(false);
 
   $effect(() => {
     const wanted = path;
@@ -39,9 +42,19 @@
   }
 
   async function play(): Promise<void> {
-    if (!path) return;
+    if (!path || loading) return; // a second tap while loading would orphan a URL
     free();
-    const source = await audioObjectUrl(storage, path);
+    loading = true;
+    let source: Awaited<ReturnType<typeof audioObjectUrl>>;
+    try {
+      source = await audioObjectUrl(storage, path);
+    } finally {
+      loading = false;
+    }
+    if (destroyed) {
+      source?.revoke(); // the learner left while it loaded
+      return;
+    }
     if (!source) {
       available = false;
       return;
@@ -53,11 +66,22 @@
   }
 
   async function fetchMissing(): Promise<void> {
-    await onmissing?.();
-    available = path ? await storage.hasAudio(path) : false;
+    if (loading) return;
+    loading = true;
+    failed = false;
+    try {
+      await onmissing?.();
+      available = path ? await storage.hasAudio(path) : false;
+      failed = available === false;
+    } finally {
+      loading = false;
+    }
   }
 
-  onDestroy(free);
+  onDestroy(() => {
+    destroyed = true;
+    free();
+  });
 </script>
 
 {#if path && available === true}
@@ -71,6 +95,9 @@
   <button type="button" class="link" onclick={fetchMissing}>
     {t('lessons.audio', appState.lang)}
   </button>
+  {#if failed}
+    <p class="failed" role="alert">{t('lessons.audioFailed', appState.lang)}</p>
+  {/if}
 {/if}
 
 <style>
@@ -92,5 +119,11 @@
     color: var(--color-primary);
     font-size: 14px;
     font-weight: 600;
+  }
+
+  .failed {
+    margin: 0;
+    color: var(--color-wrong);
+    font-size: 14px;
   }
 </style>

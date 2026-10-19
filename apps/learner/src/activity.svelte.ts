@@ -16,15 +16,32 @@ export interface FinishInfo {
   lessonTitle?: Localized;
 }
 
-export const activity = $state<{
-  current: Activity | null;
-  finish: FinishInfo | null;
-  placementResult: PlacementRecord | null;
-}>({
-  current: null,
-  finish: null,
-  placementResult: null,
-});
+// Plain values, not deep reactive state: runs and results travel into the core and IndexedDB,
+// which must receive the objects themselves, never Svelte proxies of them.
+let current = $state.raw<Activity | null>(null);
+let finish = $state.raw<FinishInfo | null>(null);
+let placementResult = $state.raw<PlacementRecord | null>(null);
+
+export const activity = {
+  get current(): Activity | null {
+    return current;
+  },
+  set current(value: Activity | null) {
+    current = value;
+  },
+  get finish(): FinishInfo | null {
+    return finish;
+  },
+  set finish(value: FinishInfo | null) {
+    finish = value;
+  },
+  get placementResult(): PlacementRecord | null {
+    return placementResult;
+  },
+  set placementResult(value: PlacementRecord | null) {
+    placementResult = value;
+  },
+};
 
 export function resetActivity(): void {
   activity.current = null;

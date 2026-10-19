@@ -238,3 +238,26 @@ describe('the placement card', () => {
     expect(screen.queryByText('शुरुआती टेस्ट दें')).toBeNull();
   });
 });
+
+describe('hardening', () => {
+  test('a review with nothing left to show says so', async () => {
+    const profile = await env.addProfile('प्रिया');
+    await addEvents(profile.id, '2026-10-10T10:00:00Z', (deps) => [
+      createEvent(deps, profile.id, 'item_answered', {
+        source: { kind: 'lesson', lessonId: 'ef1-01' },
+        itemId: 'q1',
+        outcome: 'wrong',
+      }),
+    ]);
+    await signIn(profile.id, '1234');
+    render(HomeScreen);
+    await vi.waitFor(() => screen.getByText('दोहराने के लिए 1 सवाल'));
+    const session = appState.session;
+    if (!session) throw new Error('no session');
+    session.startReview = () => Promise.resolve(null); // the item vanished meanwhile
+    await fireEvent.click(screen.getByText('दोहराने के लिए 1 सवाल'));
+    await vi.waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toContain('अभी दोहराने के लिए कुछ नहीं'),
+    );
+  });
+});

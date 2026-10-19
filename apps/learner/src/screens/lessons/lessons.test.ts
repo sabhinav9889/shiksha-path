@@ -148,3 +148,15 @@ describe('freeing space', () => {
     expect(screen.queryByRole('button', { name: 'जगह खाली करें' })).toBeNull();
   });
 });
+
+describe('hardening', () => {
+  test('a removal that fails says so instead of doing nothing', async () => {
+    env.runtime.content.remove = () => Promise.resolve({ ok: false, error: 'DOWNLOAD_FAILED' });
+    await open(['ef1-01', 'ef1-02', 'ef1-03']);
+    await fireEvent.click(await vi.waitFor(() => button('जगह खाली करें')));
+    await fireEvent.click(button('हटाएँ'));
+    await vi.waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toContain('डाउनलोड पूरा नहीं'),
+    );
+  });
+});

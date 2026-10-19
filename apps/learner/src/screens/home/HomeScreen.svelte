@@ -80,7 +80,10 @@
     working = true;
     try {
       const run = await appState.session.startReview();
-      if (!run) return;
+      if (!run) {
+        error = t('home.reviewNothing', lang); // the due items are no longer in the lessons
+        return;
+      }
       activity.current = { kind: 'review', run };
       navigate({ name: 'practice' });
     } catch (failure) {

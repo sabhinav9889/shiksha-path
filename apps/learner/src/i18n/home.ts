@@ -20,4 +20,8 @@ export const homeStrings = {
     hi: 'बहुत बढ़िया। दोहराने वाले सवाल यहाँ दिखेंगे।',
     en: 'Great work. Review questions will show up here.',
   },
+  'home.reviewNothing': {
+    hi: 'अभी दोहराने के लिए कुछ नहीं है।',
+    en: 'There is nothing to review right now.',
+  },
 } satisfies Record<string, Localized>;
