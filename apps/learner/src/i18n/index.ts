@@ -5,6 +5,7 @@ import { finishStrings } from './finish.js';
 import { homeStrings } from './home.js';
 import { learnStrings } from './learn.js';
 import { lessonsStrings } from './lessons.js';
+import { placementStrings } from './placement.js';
 import { practiceStrings } from './practice.js';
 import { profilesStrings } from './profiles.js';
 import { speakingStrings } from './speaking.js';
@@ -23,6 +24,7 @@ export const STRINGS = {
   ...practiceStrings,
   ...finishStrings,
   ...speakingStrings,
+  ...placementStrings,
 };
 
 export type StringKey = keyof typeof STRINGS;

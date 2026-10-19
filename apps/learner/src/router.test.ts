@@ -9,6 +9,8 @@ const ROUTES: Route[] = [
   { name: 'learn', lessonId: 'ef1-01' },
   { name: 'practice' },
   { name: 'finish' },
+  { name: 'placement' },
+  { name: 'placement-result' },
 ];
 
 describe('parseRoute', () => {

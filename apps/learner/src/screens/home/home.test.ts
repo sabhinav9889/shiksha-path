@@ -203,3 +203,38 @@ describe('content that changed while a lesson was open (Review Focus 5)', () => 
     expect(document.body.textContent).not.toContain('ef1-03');
   });
 });
+
+describe('the placement card', () => {
+  test('a new learner is offered the starting test, which opens it', async () => {
+    await openHome();
+    await vi.waitFor(() => expect(screen.getByText('शुरुआती टेस्ट दें')).toBeTruthy());
+    await fireEvent.click(screen.getByText('शुरुआती टेस्ट दें'));
+    await vi.waitFor(() => expect(router.current.name).toBe('placement'));
+  });
+
+  test.each([
+    ['skipped', 'placement_skipped', {}],
+    [
+      'completed',
+      'placement_completed',
+      {
+        sections: [{ track: 'english', score: 0.5, startLesson: 'ef1-01' }],
+        englishOnlySuggested: false,
+      },
+    ],
+  ] as const)('is not shown once the test was %s', async (_label, type, data) => {
+    const profile = await env.addProfile('प्रिया');
+    await env.runtime.events.append(createEvent(env.runtime, profile.id, type, data as never));
+    await signIn(profile.id, '1234');
+    render(HomeScreen);
+    await vi.waitFor(() => screen.getByText('पाठ 1'));
+    expect(screen.queryByText('शुरुआती टेस्ट दें')).toBeNull();
+  });
+
+  test('is not shown when the phone has no placement test', async () => {
+    await env.runtime.storage.removePlacement();
+    await openHome();
+    await vi.waitFor(() => screen.getByText('पाठ 1'));
+    expect(screen.queryByText('शुरुआती टेस्ट दें')).toBeNull();
+  });
+});

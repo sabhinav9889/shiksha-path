@@ -5,7 +5,9 @@
   import { appState, refreshSession } from '../../app-state.svelte.js';
   import { errorMessage, failureMessage, t } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
+  import { startPlacementRun } from '../placement/placement-flow.js';
   import DownloadCard from './DownloadCard.svelte';
+  import PlacementCard from './PlacementCard.svelte';
   import { loadHome, type HomeData } from './home-data.js';
   import StatCards from './StatCards.svelte';
   import SyncChip from './SyncChip.svelte';
@@ -120,6 +122,10 @@
         <h2>{t('home.allDone', lang)}</h2>
         <p>{t('home.allDoneBody', lang)}</p>
       </section>
+    {/if}
+
+    {#if data.placement}
+      <PlacementCard {lang} onstart={() => void startPlacementRun()} />
     {/if}
 
     {#if data.reviewDue > 0}

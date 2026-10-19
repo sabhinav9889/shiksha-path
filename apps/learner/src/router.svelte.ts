@@ -4,11 +4,21 @@ export type Route =
   | { name: 'lessons' }
   | { name: 'learn'; lessonId: string }
   | { name: 'practice' }
-  | { name: 'finish' };
+  | { name: 'finish' }
+  | { name: 'placement' }
+  | { name: 'placement-result' };
 
 const HOME: Route = { name: 'home' };
 const LESSON_ID = /^[a-z0-9-]+$/;
-const SIMPLE_ROUTES = ['profiles', 'home', 'lessons', 'practice', 'finish'] as const;
+const SIMPLE_ROUTES = [
+  'profiles',
+  'home',
+  'lessons',
+  'practice',
+  'finish',
+  'placement',
+  'placement-result',
+] as const;
 
 /** Unknown, empty or malformed hashes go home; a lesson id must be a plain slug. */
 export function parseRoute(hash: string): Route {
