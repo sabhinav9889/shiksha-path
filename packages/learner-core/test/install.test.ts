@@ -321,3 +321,18 @@ describe('audio and readiness', () => {
     expect(await storage.getModule(APT)).toBeNull();
   });
 });
+
+describe('keepAudio', () => {
+  test('audio listed in keepAudio survives a cleanup, and goes on the next sync without it', async () => {
+    await sync();
+    const before = await storage.listAudio();
+    await fixture.rebuild((files) => {
+      files['modules/english-foundation-1/audio/intro.mp3'] = new TextEncoder().encode('new-intro');
+    });
+    const report = await sync({ keepAudio: () => new Set(before) });
+    expect(report.removedAudio).toBe(0);
+    for (const path of before) expect(await storage.hasAudio(path)).toBe(true);
+    const later = await sync();
+    expect(later.removedAudio).toBe(1);
+  });
+});

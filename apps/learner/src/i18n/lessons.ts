@@ -19,4 +19,8 @@ export const lessonsStrings = {
     hi: '{needed} MB चाहिए, {free} MB खाली हैं',
     en: 'Needs {needed} MB, {free} MB free',
   },
+  'lessons.audioFailed': {
+    hi: 'ऑडियो डाउनलोड नहीं हुआ। इंटरनेट मिलने पर फिर कोशिश करें।',
+    en: 'The audio did not download. Try again when there is internet.',
+  },
 } satisfies Record<string, Localized>;

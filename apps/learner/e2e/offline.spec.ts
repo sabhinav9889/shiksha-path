@@ -8,7 +8,9 @@ test('a learner can install, go offline, learn, and come back to their progress'
   // Online, first visit: make a profile, and the lessons download by themselves.
   await page.goto('/');
   await createProfile(page, 'प्रिया', '1234');
-  await expect(page.getByRole('button', { name: 'शुरू करें' })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('button', { name: 'शुरू करें', exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
   await waitForOfflineReady(page);
 
   // Offline from here on: a cold reload still opens the app.
@@ -19,11 +21,11 @@ test('a learner can install, go offline, learn, and come back to their progress'
   await expect(page.getByText('पाठ 1', { exact: true })).toBeVisible();
 
   // A reload in the middle of the lesson text, then in the middle of practice, loses only the run.
-  await page.getByRole('button', { name: 'शुरू करें' }).click();
+  await page.getByRole('button', { name: 'शुरू करें', exact: true }).click();
   await expect(page.getByRole('button', { name: 'अभ्यास करें' })).toBeVisible();
   await page.reload();
   await signIn(page, 'प्रिया', '1234');
-  await page.getByRole('button', { name: 'शुरू करें' }).click();
+  await page.getByRole('button', { name: 'शुरू करें', exact: true }).click();
   await page.getByRole('button', { name: 'अभ्यास करें' }).click();
   await expect(page.getByTestId('bank')).toBeVisible();
   await page.reload();
@@ -31,7 +33,7 @@ test('a learner can install, go offline, learn, and come back to their progress'
   await expect(page.getByText('पाठ 1', { exact: true })).toBeVisible(); // not finished: still lesson 1
 
   // Learn: today's lesson, the practice, one deliberate mistake.
-  await page.getByRole('button', { name: 'शुरू करें' }).click();
+  await page.getByRole('button', { name: 'शुरू करें', exact: true }).click();
   await page.getByRole('button', { name: 'अभ्यास करें' }).click();
   await playLesson(page, 2);
   await expect(page.getByRole('heading', { name: 'पाठ 1 पूरा!' })).toBeVisible();

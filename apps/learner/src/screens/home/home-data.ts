@@ -9,6 +9,8 @@ export interface HomeData {
   streak: { current: number; activeToday: boolean };
   tracks: { id: string; title: Localized; done: number; total: number }[];
   reviewDue: number;
+  /** The starting test is installed and the learner has neither taken nor skipped it. */
+  placement: boolean;
   sync: { lastSyncedAt: string | null; pending: number };
 }
 
@@ -43,6 +45,7 @@ export async function loadHome(
     streak: { current: 0, activeToday: false },
     tracks: [],
     reviewDue: 0,
+    placement: false,
     sync,
   };
   const manifest = await runtime.storage.getManifest();
@@ -62,6 +65,7 @@ export async function loadHome(
     streak: session.streak(),
     tracks,
     reviewDue: session.reviewDue().length,
+    placement: session.needsPlacement() && (await runtime.storage.getPlacement()) !== null,
     sync,
   };
 }

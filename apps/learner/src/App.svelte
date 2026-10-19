@@ -7,6 +7,9 @@
   import HomeScreen from './screens/home/HomeScreen.svelte';
   import LearnScreen from './screens/learn/LearnScreen.svelte';
   import LessonsScreen from './screens/lessons/LessonsScreen.svelte';
+  import MeScreen from './screens/me/MeScreen.svelte';
+  import PlacementResult from './screens/placement/PlacementResult.svelte';
+  import PlacementScreen from './screens/placement/PlacementScreen.svelte';
   import PracticeScreen from './screens/practice/PracticeScreen.svelte';
   import ProfilesScreen from './screens/profiles/ProfilesScreen.svelte';
   import Shell from './ui/Shell.svelte';
@@ -21,7 +24,13 @@
   });
 
   /** Browser Back, a nav tab or a reload away from a run ends it, so no stale run lingers. */
-  const RUN_SCREENS: Route['name'][] = ['learn', 'practice', 'finish'];
+  const RUN_SCREENS: Route['name'][] = [
+    'learn',
+    'practice',
+    'finish',
+    'placement',
+    'placement-result',
+  ];
   $effect(() => {
     if (activity.current && !RUN_SCREENS.includes(route.name)) resetActivity();
   });
@@ -29,7 +38,7 @@
   onMount(startRouter);
 
   const showNav = $derived(
-    appState.profile !== null && (route.name === 'home' || route.name === 'lessons'),
+    appState.profile !== null && ['home', 'lessons', 'me'].includes(route.name),
   );
 </script>
 
@@ -47,6 +56,12 @@
       <PracticeScreen />
     {:else if route.name === 'finish'}
       <FinishScreen />
+    {:else if route.name === 'placement'}
+      <PlacementScreen />
+    {:else if route.name === 'placement-result'}
+      <PlacementResult />
+    {:else if route.name === 'me'}
+      <MeScreen />
     {/if}
   </Shell>
 </div>

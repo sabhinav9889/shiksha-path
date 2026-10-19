@@ -5,8 +5,11 @@ import { finishStrings } from './finish.js';
 import { homeStrings } from './home.js';
 import { learnStrings } from './learn.js';
 import { lessonsStrings } from './lessons.js';
+import { meStrings } from './me.js';
+import { placementStrings } from './placement.js';
 import { practiceStrings } from './practice.js';
 import { profilesStrings } from './profiles.js';
+import { speakingStrings } from './speaking.js';
 import { shellStrings } from './shell.js';
 
 export type { Lang } from '@shiksha/learner-core';
@@ -21,6 +24,9 @@ export const STRINGS = {
   ...learnStrings,
   ...practiceStrings,
   ...finishStrings,
+  ...speakingStrings,
+  ...placementStrings,
+  ...meStrings,
 };
 
 export type StringKey = keyof typeof STRINGS;
@@ -55,7 +61,7 @@ export function uiLang(pref: LanguagePreference): Lang {
 }
 
 const BYTES_PER_MB = 1_048_576;
-const megabytes = (bytes: number): string => (bytes / BYTES_PER_MB).toFixed(1);
+export const megabytes = (bytes: number): string => (bytes / BYTES_PER_MB).toFixed(1);
 
 /** The plain message for a failure; "not enough space" also says how much is needed and free. */
 export function failureMessage(

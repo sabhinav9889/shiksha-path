@@ -5,7 +5,9 @@
   import { appState, refreshSession } from '../../app-state.svelte.js';
   import { errorMessage, failureMessage, t } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
+  import { startPlacementRun } from '../placement/placement-flow.js';
   import DownloadCard from './DownloadCard.svelte';
+  import PlacementCard from './PlacementCard.svelte';
   import { loadHome, type HomeData } from './home-data.js';
   import StatCards from './StatCards.svelte';
   import SyncChip from './SyncChip.svelte';
@@ -78,7 +80,10 @@
     working = true;
     try {
       const run = await appState.session.startReview();
-      if (!run) return;
+      if (!run) {
+        error = t('home.reviewNothing', lang); // the due items are no longer in the lessons
+        return;
+      }
       activity.current = { kind: 'review', run };
       navigate({ name: 'practice' });
     } catch (failure) {
@@ -102,7 +107,9 @@
     </header>
 
     {#if data.state !== 'download'}
-      <StatCards {lang} streak={data.streak} tracks={data.tracks} />
+      <div class="stats">
+        <StatCards {lang} streak={data.streak} tracks={data.tracks} />
+      </div>
     {/if}
 
     {#if data.state === 'download'}
@@ -120,6 +127,10 @@
         <h2>{t('home.allDone', lang)}</h2>
         <p>{t('home.allDoneBody', lang)}</p>
       </section>
+    {/if}
+
+    {#if data.placement}
+      <PlacementCard {lang} onstart={() => void startPlacementRun()} />
     {/if}
 
     {#if data.reviewDue > 0}
@@ -190,5 +201,18 @@
   .error {
     margin: 0;
     color: var(--color-wrong);
+  }
+
+  .stats {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  @media (min-width: 768px) {
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
   }
 </style>

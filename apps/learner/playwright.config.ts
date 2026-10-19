@@ -20,7 +20,21 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: /speaking-mic\.spec\.ts/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 360, height: 640 } },
+    },
+    {
+      // A fake microphone with permission granted, for the recording test only.
+      name: 'chromium-mic',
+      testMatch: /speaking-mic\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 360, height: 640 },
+        permissions: ['microphone'],
+        launchOptions: {
+          args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'],
+        },
+      },
     },
   ],
   webServer: {

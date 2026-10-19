@@ -5,9 +5,9 @@ Active tasks. Read this at the start of every session. Details live in `.claude/
 
 **Statuses:** `in-progress` · `blocked` · `shipped` · `on-hold`
 
-| Task                          | Status  | Assignee | Branch                       | Next step                                                      | Detail                                                     |
-| ----------------------------- | ------- | -------- | ---------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------- |
-| Plan 2c – learner app, part 2 | on-hold | Claude   | `docs/plan-2c-learner-app-2` | Owner reviews the plan PR; execution starts after it is merged | [plan](docs/superpowers/plans/2026-10-19-learner-app-2.md) |
+| Task                          | Status      | Assignee | Branch                  | Next step                                                            | Detail                                                     |
+| ----------------------------- | ----------- | -------- | ----------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Plan 2c – learner app, part 2 | in-progress | Claude   | `feature/learner-app-2` | Owner reviews and merges the Plan 2c PR; then write Plan 3 (backend) | [plan](docs/superpowers/plans/2026-10-19-learner-app-2.md) |
 
 ## Archive
 

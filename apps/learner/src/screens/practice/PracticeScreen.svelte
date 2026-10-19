@@ -10,7 +10,7 @@
   import Icon from '../../ui/Icon.svelte';
   import LeaveSheet from './LeaveSheet.svelte';
   import FeedbackSheet from './FeedbackSheet.svelte';
-  import { finishActivity } from './flow.js';
+  import { finishActivity, saveRecording } from './flow.js';
   import { ITEM_VIEWS } from './items/registry.js';
   import type { ViewProps } from './items/types.js';
 
@@ -75,7 +75,7 @@
     try {
       const out = await appState.session.answer(run, given);
       run = out.run;
-      if (activity.current) activity.current = { ...activity.current, run: out.run } as never;
+      if (activity.current) activity.current = { ...activity.current, run: out.run };
       if (out.result.outcome === 'unscored') await proceed();
       else result = out.result;
     } catch {
@@ -125,6 +125,8 @@
           seed={`${entry.item.id}-${index}`}
           locked={answering || finishing || result !== null}
           onanswer={answer}
+          recorder={appState.runtime?.recorder}
+          onrecord={(recording) => saveRecording(entry, recording)}
         />
       {/key}
     </div>
@@ -153,6 +155,9 @@
     display: flex;
     flex-direction: column;
     min-height: 100dvh;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
     background: var(--color-card);
   }
 

@@ -23,14 +23,25 @@
   .frame {
     display: flex;
     flex-direction: column;
-    max-width: 480px;
     min-height: 100dvh;
-    margin: 0 auto;
     background: var(--color-bg);
   }
 
   .screen {
     flex-grow: 1;
+    width: 100%;
     min-width: 0;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  @media (min-width: 768px) {
+    .frame {
+      flex-direction: row;
+    }
+
+    .frame > :global(nav) {
+      order: -1; /* the navigation comes first, on the left */
+    }
   }
 </style>

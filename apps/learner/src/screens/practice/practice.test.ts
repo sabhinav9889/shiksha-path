@@ -281,3 +281,38 @@ describe('when saving fails', () => {
     expect((await log()).filter((e) => e.type === 'lesson_completed')).toHaveLength(1);
   });
 });
+
+describe('speaking recordings', () => {
+  test('a recording is saved for the signed-in learner before moving on, and another learner has none', async () => {
+    const learnerId = await signedIn();
+    const recorder = {
+      isSupported: () => true,
+      start: () => Promise.resolve(),
+      stop: () =>
+        Promise.resolve({ mime: 'audio/webm', bytes: Uint8Array.of(7, 7), durationMs: 1500 }),
+      cancel: () => undefined,
+    };
+    (appState.runtime as NonNullable<typeof appState.runtime>).recorder = recorder;
+    const started = await appState.session?.startLesson('ef1-01');
+    const speak = {
+      id: 's1',
+      type: 'speak_compare',
+      prompt: { hi: 'बोलें', en: 'Say it' },
+      text: 'Hello',
+      model_audio: 'audio/0123456789abcdef.mp3',
+    } as const;
+    const run = startQuiz([{ source: { kind: 'lesson', lessonId: 'ef1-01' }, item: speak }]);
+    activity.current = { kind: 'lesson', ...(started as NonNullable<typeof started>), run };
+    navigate({ name: 'practice' });
+    render(PracticeScreen);
+    await fireEvent.click(await vi.waitFor(() => button('रिकॉर्ड करें')));
+    await fireEvent.click(await vi.waitFor(() => button('रोकें')));
+    await vi.waitFor(() => button('मेरी रिकॉर्डिंग सुनें'));
+    const saved = await env.runtime.recordings.latest(learnerId, 'ef1-01', 's1');
+    // compare values: IndexedDB hands back a Uint8Array from another realm
+    expect(Array.from(saved?.bytes ?? [])).toEqual([7, 7]);
+    expect(saved?.learnerId).toBe(learnerId);
+    const other = await env.addProfile('रोहित');
+    expect(await env.runtime.recordings.summary(other.id)).toEqual({ count: 0, bytes: 0 });
+  });
+});

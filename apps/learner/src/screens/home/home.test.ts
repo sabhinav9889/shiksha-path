@@ -203,3 +203,61 @@ describe('content that changed while a lesson was open (Review Focus 5)', () => 
     expect(document.body.textContent).not.toContain('ef1-03');
   });
 });
+
+describe('the placement card', () => {
+  test('a new learner is offered the starting test, which opens it', async () => {
+    await openHome();
+    await vi.waitFor(() => expect(screen.getByText('शुरुआती टेस्ट दें')).toBeTruthy());
+    await fireEvent.click(screen.getByText('शुरुआती टेस्ट दें'));
+    await vi.waitFor(() => expect(router.current.name).toBe('placement'));
+  });
+
+  test.each([
+    ['skipped', 'placement_skipped', {}],
+    [
+      'completed',
+      'placement_completed',
+      {
+        sections: [{ track: 'english', score: 0.5, startLesson: 'ef1-01' }],
+        englishOnlySuggested: false,
+      },
+    ],
+  ] as const)('is not shown once the test was %s', async (_label, type, data) => {
+    const profile = await env.addProfile('प्रिया');
+    await env.runtime.events.append(createEvent(env.runtime, profile.id, type, data as never));
+    await signIn(profile.id, '1234');
+    render(HomeScreen);
+    await vi.waitFor(() => screen.getByText('पाठ 1'));
+    expect(screen.queryByText('शुरुआती टेस्ट दें')).toBeNull();
+  });
+
+  test('is not shown when the phone has no placement test', async () => {
+    await env.runtime.storage.removePlacement();
+    await openHome();
+    await vi.waitFor(() => screen.getByText('पाठ 1'));
+    expect(screen.queryByText('शुरुआती टेस्ट दें')).toBeNull();
+  });
+});
+
+describe('hardening', () => {
+  test('a review with nothing left to show says so', async () => {
+    const profile = await env.addProfile('प्रिया');
+    await addEvents(profile.id, '2026-10-10T10:00:00Z', (deps) => [
+      createEvent(deps, profile.id, 'item_answered', {
+        source: { kind: 'lesson', lessonId: 'ef1-01' },
+        itemId: 'q1',
+        outcome: 'wrong',
+      }),
+    ]);
+    await signIn(profile.id, '1234');
+    render(HomeScreen);
+    await vi.waitFor(() => screen.getByText('दोहराने के लिए 1 सवाल'));
+    const session = appState.session;
+    if (!session) throw new Error('no session');
+    session.startReview = () => Promise.resolve(null); // the item vanished meanwhile
+    await fireEvent.click(screen.getByText('दोहराने के लिए 1 सवाल'));
+    await vi.waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toContain('अभी दोहराने के लिए कुछ नहीं'),
+    );
+  });
+});

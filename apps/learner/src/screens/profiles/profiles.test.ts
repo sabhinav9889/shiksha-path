@@ -161,3 +161,48 @@ describe('creating a profile', () => {
     expect(events.map((e) => e.type)).toEqual(['language_changed']);
   });
 });
+
+describe('hardening', () => {
+  test('a retry after a half-finished creation does not make a second profile', async () => {
+    const events = env.runtime.events;
+    const real = events.append.bind(events);
+    let failOnce = true;
+    events.append = (event) => {
+      if (failOnce) {
+        failOnce = false;
+        return Promise.reject(new Error('disk'));
+      }
+      return real(event);
+    };
+    render(ProfilesScreen);
+    await fireEvent.input(await vi.waitFor(() => screen.getByLabelText('आपका नाम')), {
+      target: { value: 'रोहित' },
+    });
+    await fireEvent.click(button('आगे'));
+    await enterPin('4821');
+    await vi.waitFor(() => screen.getByText('PIN फिर से डालें'));
+    await enterPin('4821');
+    await vi.waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
+    await enterPin('4821');
+    await vi.waitFor(() => expect(router.current.name).toBe('home'), { timeout: 5000 });
+    expect(await env.runtime.profiles.list()).toHaveLength(1);
+  });
+
+  test('a locked profile stays locked after looking at another profile and back', async () => {
+    await env.addProfile('प्रिया');
+    await env.addProfile('रोहित');
+    render(ProfilesScreen);
+    await fireEvent.click(await vi.waitFor(() => button('प्रिया')));
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await enterPin('0000');
+      await vi.waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
+    }
+    // the picker re-reads the stored profiles after each attempt; allow for a busy machine
+    const slow = { timeout: 5000 };
+    await vi.waitFor(() => expect(button('1').disabled).toBe(true), slow);
+    await fireEvent.click(button('रोहित'));
+    await vi.waitFor(() => expect(button('1').disabled).toBe(false), slow);
+    await fireEvent.click(button('प्रिया'));
+    await vi.waitFor(() => expect(button('1').disabled).toBe(true), slow);
+  });
+});

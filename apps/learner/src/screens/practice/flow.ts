@@ -1,4 +1,5 @@
-import { summarize } from '@shiksha/learner-core';
+import { summarize, type QuizEntry } from '@shiksha/learner-core';
+import type { RecordingResult } from '../../audio/recorder.js';
 import { activity } from '../../activity.svelte.js';
 import { appState } from '../../app-state.svelte.js';
 import { navigate } from '../../router.svelte.js';
@@ -26,4 +27,26 @@ export async function finishActivity(): Promise<void> {
   };
   navigate({ name: 'finish' });
   void runtime.flush(profile.id); // saved on the phone already; uploading may take a while
+}
+
+/** Where a recording belongs: the lesson for lesson and review items, otherwise the quiz. */
+function recordingKey(source: QuizEntry['source']): string {
+  if (source.kind === 'lesson' || source.kind === 'review') return source.lessonId;
+  return source.kind === 'test_out' ? `test-out:${source.moduleId}` : `placement:${source.track}`;
+}
+
+/** Keep a speaking recording on the phone for the signed-in learner (spec §7.1). */
+export async function saveRecording(entry: QuizEntry, result: RecordingResult): Promise<void> {
+  const { runtime, profile } = appState;
+  if (!runtime || !profile) throw new Error('nobody is signed in');
+  await runtime.recordings.put({
+    id: runtime.ids.uuid(),
+    learnerId: profile.id,
+    lessonId: recordingKey(entry.source),
+    itemId: entry.item.id,
+    mime: result.mime,
+    bytes: result.bytes,
+    durationMs: result.durationMs,
+    at: runtime.clock.now().toISOString(),
+  });
 }

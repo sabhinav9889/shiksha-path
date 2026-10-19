@@ -31,8 +31,16 @@ export class ContentService {
   private chain: Promise<unknown> = Promise.resolve();
   private queued = 0;
   private readonly listeners = new Set<() => void>();
+  private changes = 0;
+  /** Audio a sync must not delete; the app points this at the lesson on screen. */
+  keepAudio: () => ReadonlySet<string> = () => new Set();
 
   constructor(private readonly deps: ContentDeps) {}
+
+  /** Goes up whenever stored lesson content changed, so a session knows to reopen. */
+  get version(): number {
+    return this.changes;
+  }
 
   get busy(): boolean {
     return this.queued > 0;
@@ -48,13 +56,19 @@ export class ContentService {
   }
 
   fetchAudio(moduleId: string): Promise<ContentResult<{ fetched: number }>> {
-    return this.run(() => fetchMissingAudio(moduleId, this.deps));
+    return this.run(async () => {
+      const result = await fetchMissingAudio(moduleId, this.deps);
+      if (result.fetched > 0) this.changes += 1;
+      return result;
+    });
   }
 
   remove(moduleId: string): Promise<ContentResult<{ removedAudio: number }>> {
     return this.run(async () => {
       await this.deps.prefs.markRemoved(moduleId);
-      return removeModuleContent(moduleId, this.deps.storage);
+      const result = await removeModuleContent(moduleId, this.deps.storage);
+      this.changes += 1;
+      return result;
     });
   }
 
@@ -67,7 +81,14 @@ export class ContentService {
 
   private async doSync(): Promise<SyncReport> {
     const skipModules = await this.deps.prefs.removedModules();
-    return syncContent({ ...this.deps, skipModules });
+    const report = await syncContent({
+      ...this.deps,
+      skipModules,
+      keepAudio: () => this.keepAudio(),
+    });
+    const installed = [...report.modules, report.placement].some((r) => r?.status === 'installed');
+    if (installed || report.removedAudio > 0) this.changes += 1;
+    return report;
   }
 
   private notify(): void {

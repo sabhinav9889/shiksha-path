@@ -140,3 +140,47 @@ describe('a slow refresh', () => {
     expect(appState.session).toBe(before);
   });
 });
+
+describe('reopening the session', () => {
+  test('is skipped while the stored content has not changed, and done after it changed', async () => {
+    const env = await makeEnv();
+    initApp(env.runtime);
+    const runtime = appState.runtime as typeof env.runtime;
+    const real = runtime.openSession.bind(runtime);
+    let opens = 0;
+    runtime.openSession = (id) => {
+      opens += 1;
+      return real(id);
+    };
+    const profile = await env.addProfile('A');
+    await signIn(profile.id, '1234');
+    expect(opens).toBe(1);
+    await refreshSession();
+    await refreshSession();
+    expect(opens).toBe(1);
+    await env.runtime.content.remove('aptitude-1');
+    await refreshSession();
+    expect(opens).toBe(2);
+  });
+});
+
+describe('the audio of the run in progress', () => {
+  test('is kept by a sync that would otherwise remove it', async () => {
+    const env = await makeEnv();
+    initApp(env.runtime);
+    const profile = await env.addProfile('A');
+    await signIn(profile.id, '1234');
+    const started = await appState.session?.startLesson('ef1-01');
+    activity.current = { kind: 'lesson', ...(started as NonNullable<typeof started>) };
+    const lessonAudio = started?.lesson.audio?.hi ?? '';
+    expect(lessonAudio).not.toBe('');
+    await env.fixture.rebuild((files) => {
+      files['modules/english-foundation-1/audio/intro.mp3'] = new TextEncoder().encode('new-intro');
+    });
+    await env.runtime.content.sync();
+    expect(await env.runtime.storage.hasAudio(lessonAudio)).toBe(true);
+    activity.current = null;
+    await env.runtime.content.sync();
+    expect(await env.runtime.storage.hasAudio(lessonAudio)).toBe(false);
+  });
+});

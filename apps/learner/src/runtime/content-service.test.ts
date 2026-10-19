@@ -11,6 +11,7 @@ import { Prefs } from './prefs.js';
 const EN = 'english-foundation-1';
 let counter = 0;
 let server: ServedBuild;
+let fixture: Awaited<ReturnType<typeof makeContentFixture>>;
 let storage: MemoryBundleStorage;
 let prefs: Prefs;
 let gate: { release(): void; wait: Promise<void> } | null;
@@ -33,7 +34,7 @@ function makeService(): ContentService {
 }
 
 beforeEach(async () => {
-  const fixture = await makeContentFixture();
+  fixture = await makeContentFixture();
   server = serveBuild(fixture.outDir);
   storage = new MemoryBundleStorage();
   prefs = new Prefs(new ShikshaDb(`content-test-${counter++}`));
@@ -100,5 +101,41 @@ describe('ContentService', () => {
     stop();
     await service.sync();
     expect(seen).toEqual([true, false]);
+  });
+});
+
+describe("keeping the open lesson's audio and counting changes", () => {
+  test('version goes up when stored content changes, not when a sync finds nothing new', async () => {
+    const service = makeService();
+    expect(service.version).toBe(0);
+    await service.sync();
+    const afterInstall = service.version;
+    expect(afterInstall).toBeGreaterThan(0);
+    server.reset();
+    await service.sync();
+    expect(service.version).toBe(afterInstall);
+    await service.remove(EN);
+    expect(service.version).toBeGreaterThan(afterInstall);
+  });
+});
+
+describe('audio in use when a sync finishes', () => {
+  test('a lesson opened while a sync is running keeps its audio', async () => {
+    const service = makeService();
+    await service.sync();
+    const before = await storage.listAudio();
+    await fixture.rebuild((files) => {
+      files['modules/english-foundation-1/audio/intro.mp3'] = new TextEncoder().encode('new-intro');
+    });
+    let inUse: ReadonlySet<string> = new Set();
+    service.keepAudio = () => inUse;
+    let release = (): void => undefined;
+    gate = { release: () => release(), wait: new Promise<void>((resolve) => (release = resolve)) };
+    const running = service.sync();
+    await new Promise((resolve) => setTimeout(resolve, 20)); // the sync is now downloading
+    inUse = new Set(before); // the learner opens a lesson while the sync is still downloading
+    gate.release();
+    await running;
+    for (const path of before) expect(await storage.hasAudio(path)).toBe(true);
   });
 });
