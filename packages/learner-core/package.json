@@ -5,7 +5,10 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./testing": "./src/testing/index.ts"
+    "./testing": "./src/testing/index.ts",
+    "./test-helpers/content-fixture": "./test/helpers/content-fixture.ts",
+    "./test-helpers/serve-build": "./test/helpers/serve-build.ts",
+    "./test-helpers/session-env": "./test/helpers/session-env.ts"
   },
   "scripts": {
     "test": "vitest run",

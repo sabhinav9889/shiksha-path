@@ -114,3 +114,14 @@ describe('relaxations for tests and test helpers', () => {
     expect((rules['max-lines'] as [number, { max: number }])[1].max).toBe(300);
   });
 });
+
+describe('Svelte files', () => {
+  test('are limited to 200 lines while TypeScript beside them keeps 300', async () => {
+    const maxLines = async (path: string): Promise<number> => {
+      const config = await eslint.calculateConfigForFile(path);
+      return (config.rules?.['max-lines'] as [number, { max: number }])[1].max;
+    };
+    expect(await maxLines('apps/learner/src/A.svelte')).toBe(200);
+    expect(await maxLines('apps/learner/src/a.ts')).toBe(300);
+  });
+});

@@ -7,3 +7,7 @@ coverage/
 .superpowers/
 *.log
 .DS_Store
+apps/learner/dist
+apps/learner/public/content
+apps/learner/test-results
+apps/learner/playwright-report

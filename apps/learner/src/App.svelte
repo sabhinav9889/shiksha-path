@@ -1,0 +1,52 @@
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { activity, resetActivity } from './activity.svelte.js';
+  import { appState } from './app-state.svelte.js';
+  import { navigate, router, startRouter, type Route } from './router.svelte.js';
+  import FinishScreen from './screens/finish/FinishScreen.svelte';
+  import HomeScreen from './screens/home/HomeScreen.svelte';
+  import LearnScreen from './screens/learn/LearnScreen.svelte';
+  import LessonsScreen from './screens/lessons/LessonsScreen.svelte';
+  import PracticeScreen from './screens/practice/PracticeScreen.svelte';
+  import ProfilesScreen from './screens/profiles/ProfilesScreen.svelte';
+  import Shell from './ui/Shell.svelte';
+
+  /** Without a signed-in profile the only place to be is the profile picker. */
+  const route: Route = $derived(
+    appState.profile || router.current.name === 'profiles' ? router.current : { name: 'profiles' },
+  );
+
+  $effect(() => {
+    if (route !== router.current) navigate(route);
+  });
+
+  /** Browser Back, a nav tab or a reload away from a run ends it, so no stale run lingers. */
+  const RUN_SCREENS: Route['name'][] = ['learn', 'practice', 'finish'];
+  $effect(() => {
+    if (activity.current && !RUN_SCREENS.includes(route.name)) resetActivity();
+  });
+
+  onMount(startRouter);
+
+  const showNav = $derived(
+    appState.profile !== null && (route.name === 'home' || route.name === 'lessons'),
+  );
+</script>
+
+<div data-testid="app-root">
+  <Shell lang={appState.lang} current={route.name} {showNav}>
+    {#if route.name === 'profiles'}
+      <ProfilesScreen />
+    {:else if route.name === 'home'}
+      <HomeScreen />
+    {:else if route.name === 'lessons'}
+      <LessonsScreen />
+    {:else if route.name === 'learn'}
+      <LearnScreen />
+    {:else if route.name === 'practice'}
+      <PracticeScreen />
+    {:else if route.name === 'finish'}
+      <FinishScreen />
+    {/if}
+  </Shell>
+</div>

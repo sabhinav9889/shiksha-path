@@ -1,12 +1,14 @@
 import js from '@eslint/js';
 import comments from '@eslint-community/eslint-plugin-eslint-comments/configs';
 import prettier from 'eslint-config-prettier';
+import svelte from 'eslint-plugin-svelte';
 import tseslint from 'typescript-eslint';
 
 const LIMITS = {
   lineLength: 100,
   fileLines: 300,
   testFileLines: 500,
+  svelteFileLines: 200,
   functionLines: 50,
   complexity: 10,
   depth: 3,
@@ -23,14 +25,21 @@ export default tseslint.config(
       'tooling/lint-fixtures/**',
       '**/*.generated.*',
       '.superpowers/**',
+      'apps/*/public/content/**',
     ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   comments.recommended,
+  ...svelte.configs['flat/recommended'],
   prettier,
+  ...svelte.configs['flat/prettier'],
   {
-    files: ['**/*.{ts,js}'],
+    files: ['**/*.svelte', '**/*.svelte.ts'],
+    languageOptions: { parserOptions: { parser: tseslint.parser } },
+  },
+  {
+    files: ['**/*.{ts,js,svelte}'],
     rules: {
       'max-len': [
         'error',
@@ -74,7 +83,13 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.test.ts', '**/*.spec.ts', '**/test/**/*.ts', '**/testing/**/*.ts'],
+    files: [
+      '**/*.test.ts',
+      '**/*.spec.ts',
+      '**/test/**/*.ts',
+      '**/testing/**/*.ts',
+      '**/e2e/**/*.ts',
+    ],
     rules: {
       'max-lines': [
         'error',
@@ -82,6 +97,27 @@ export default tseslint.config(
       ],
       'max-lines-per-function': 'off',
       'no-magic-numbers': 'off',
+    },
+  },
+  {
+    // Command-line scripts: printing is their job, and they run in Node.
+    files: ['tooling/**/*.mjs'],
+    languageOptions: {
+      globals: { process: 'readonly', console: 'readonly', Buffer: 'readonly' },
+    },
+    rules: { 'no-console': 'off' },
+  },
+  {
+    files: ['**/*.svelte'],
+    rules: {
+      // Svelte 5 props are `let { a } = $props()`; only the Svelte-aware rule understands that.
+      'no-undef': 'off', // TypeScript already checks undefined names
+      'prefer-const': 'off',
+      'svelte/prefer-const': 'error',
+      'max-lines': [
+        'error',
+        { max: LIMITS.svelteFileLines, skipBlankLines: true, skipComments: true },
+      ],
     },
   },
 );
