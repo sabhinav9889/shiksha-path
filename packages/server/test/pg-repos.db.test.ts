@@ -116,3 +116,32 @@ describe('Postgres specifics', () => {
     }
   });
 });
+
+describe('pull visibility', () => {
+  test('a pull never passes an event whose transaction has not committed yet', async () => {
+    const learner = randomUUID();
+    await sql`insert into learners (id, name) values (${learner}, 'race')`;
+    const repo = new PgEventRepo(sql);
+    const event = () =>
+      createEvent({ clock: systemClock, ids: cryptoIds }, learner, 'language_changed', {
+        preference: 'hi_en',
+      });
+    const slow = await sql.reserve();
+    try {
+      const first = event();
+      await slow`begin`;
+      await slow`insert into learner_events (id, learner_id, type, at, data)
+        values (${first.id}, ${learner}, ${first.type}, ${first.at}, ${slow.json(first.data)})`;
+      const second = event();
+      await repo.insertMany(learner, [second]); // commits, with a higher seq
+      expect((await repo.page(learner, 0, 100)).events).toEqual([]);
+      await slow`commit`;
+      const page = await repo.page(learner, 0, 100);
+      expect(page.events.map((e) => e.id)).toEqual([first.id, second.id]);
+    } finally {
+      await slow`rollback`.catch(() => undefined); // never hand back an open transaction
+      slow.release();
+      await sql`delete from learners where id = ${learner}`;
+    }
+  });
+});

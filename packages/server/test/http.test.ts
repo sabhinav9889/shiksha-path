@@ -22,12 +22,25 @@ beforeEach(async () => {
     'token-c': 'auth-c',
   };
   const auth: Auth = {
-    verify: (t) => Promise.resolve(tokens[t] ? { authUserId: tokens[t] } : null),
+    verify: (t) =>
+      Promise.resolve(tokens[t] ? { authUserId: tokens[t], provider: 'google' } : null),
   };
   logger = memoryLogger();
   deps = { ...repos, auth, allowedOrigins: [APP], logger };
-  a = (await linkLearner(repos, 'auth-a', { profileId: randomUUID(), name: 'A' })).learnerId;
-  b = (await linkLearner(repos, 'auth-b', { profileId: randomUUID(), name: 'B' })).learnerId;
+  a = (
+    await linkLearner(
+      repos,
+      { authUserId: 'auth-a', provider: 'google' },
+      { profileId: randomUUID(), name: 'A' },
+    )
+  ).learnerId;
+  b = (
+    await linkLearner(
+      repos,
+      { authUserId: 'auth-b', provider: 'google' },
+      { profileId: randomUUID(), name: 'B' },
+    )
+  ).learnerId;
 });
 
 function call(

@@ -44,7 +44,13 @@ export async function makeGoogleUser(stack: LocalStack): Promise<TestUser> {
   const admin = createClient(stack.apiUrl, stack.serviceKey, { auth: { persistSession: false } });
   const email = `${randomUUID()}@test.local`;
   const password = `pw-${randomUUID()}`;
-  const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+  // `provider: google` (admin-only metadata): /v1 lets only Google sign-ins create a learner.
+  const created = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    app_metadata: { provider: 'google' },
+  });
   if (created.error || !created.data.user) throw new Error('could not create a test user');
   return { id: created.data.user.id, email, password };
 }

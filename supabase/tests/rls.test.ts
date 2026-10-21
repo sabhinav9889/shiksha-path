@@ -102,9 +102,11 @@ describe('nobody writes through the database API', () => {
     ['cohorts (delete)', 'delete from cohorts'],
     ['feature_switches (delete)', 'delete from feature_switches'],
     ['feature_overrides (delete)', 'delete from feature_overrides'],
-  ])('a student changes nothing in %s', async (_table, statement) => {
-    const changed = await asUser(sql, a.authId, (tx) => tx.unsafe(statement));
-    expect(changed.count).toBe(0);
+  ])('a student changes nothing in %s: it is refused outright', async (_table, statement) => {
+    // Plan 3b removed the write grants, so these no longer even reach RLS.
+    await expect(asUser(sql, a.authId, (tx) => tx.unsafe(statement))).rejects.toThrow(
+      /permission denied/,
+    );
   });
 
   test.each([
@@ -136,8 +138,37 @@ describe('nobody writes through the database API', () => {
 });
 
 describe('an anonymous caller sees nothing', () => {
-  test.each(TABLES)('%s', async (table) => {
-    const rows = await asAnon(sql, (tx) => tx.unsafe(`select * from ${table}`));
-    expect(rows.length).toBe(0);
+  // Plan 3b removed every grant to anon, so the read is refused before RLS is even asked.
+  test.each(TABLES)('%s: refused outright', async (table) => {
+    await expect(asAnon(sql, (tx) => tx.unsafe(`select * from ${table}`))).rejects.toThrow(
+      /permission denied/,
+    );
+  });
+});
+
+describe('database hardening', () => {
+  const TABLES = [
+    'cohorts',
+    'learners',
+    'learner_identities',
+    'learner_events',
+    'feature_switches',
+    'feature_overrides',
+  ];
+
+  test('anon holds no privilege and authenticated may only select', async () => {
+    const grants = await sql<{ grantee: string; table_name: string; privilege_type: string }[]>`
+      select grantee, table_name, privilege_type from information_schema.role_table_grants
+      where table_schema = 'public' and grantee in ('anon', 'authenticated')
+        and table_name = any(${TABLES})`;
+    expect(grants.filter((g) => g.grantee === 'anon')).toEqual([]);
+    expect(
+      grants.filter((g) => g.grantee === 'authenticated' && g.privilege_type !== 'SELECT'),
+    ).toEqual([]);
+  });
+
+  test('GraphQL is not installed', async () => {
+    const rows = await sql`select 1 from pg_extension where extname = 'pg_graphql'`;
+    expect(rows).toHaveLength(0);
   });
 });

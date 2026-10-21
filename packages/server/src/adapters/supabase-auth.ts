@@ -10,7 +10,10 @@ export function createSupabaseAuth(url: string, serviceRoleKey: string): Auth {
     async verify(accessToken) {
       try {
         const { data, error } = await client.auth.getUser(accessToken);
-        return error || !data.user ? null : { authUserId: data.user.id };
+        if (error || !data.user) return null;
+        // `app_metadata` is set by Supabase and the admin API only; users cannot change it.
+        const provider = String(data.user.app_metadata.provider ?? 'unknown');
+        return { authUserId: data.user.id, provider };
       } catch {
         return null;
       }

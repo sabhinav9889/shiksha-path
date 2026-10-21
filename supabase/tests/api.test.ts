@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
+import { createClient } from '@supabase/supabase-js';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { connect } from './db.js';
 import { deleteUser, localStack, makeUser } from './stack.js';
@@ -111,5 +112,36 @@ describe('the /v1 API served by the Edge Function', () => {
     const forA =
       await sql`select count(*)::int as n from learner_events where learner_id = ${a.learner} and type = 'x'`;
     expect(forA[0]?.n).toBe(0);
+  });
+});
+
+describe('sign-ups', () => {
+  // Supabase cannot keep email login for server-made users while refusing self sign-up, so
+  // sign-up stays on with confirmation required: a stranger gets no session (Plan 3b ruling).
+  test('nobody can sign themselves up with an email and password and get a session', async () => {
+    const { apiUrl, anonKey } = localStack();
+    const client = createClient(apiUrl, anonKey, { auth: { persistSession: false } });
+    const { data, error } = await client.auth.signUp({
+      email: `${randomUUID()}@test.local`,
+      password: `pw-${randomUUID()}`,
+    });
+    expect(error !== null || data.session === null).toBe(true);
+    expect(data.session).toBeNull();
+  });
+
+  test('an email sign-in /v1 did not issue cannot create a learner', async () => {
+    const user = await makeUser('email');
+    const res = await api('/v1/learners/link', user.accessToken, {
+      profileId: randomUUID(),
+      name: 'stranger',
+    });
+    expect(res.status).toBe(403);
+    await deleteUser(user.id);
+  });
+
+  test('a user the server creates can still sign in with a password', async () => {
+    const user = await makeUser(); // admin createUser, then signInWithPassword
+    expect(user.accessToken).toBeTruthy();
+    await deleteUser(user.id);
   });
 });

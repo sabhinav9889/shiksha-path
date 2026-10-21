@@ -1,11 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import type { EventRepo, LearnerRepo, SwitchRepo } from '../ports.js';
+import type { Caller, EventRepo, LearnerRepo, SwitchRepo } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
 import { pullEvents, pushEvents } from '../services/sync.js';
+
+const google = (authUserId: string): Caller => ({ authUserId, provider: 'google' });
 
 /** Repositories plus the set-up a test needs that the read-only ports do not offer. */
 export interface ServiceFixture {
@@ -45,8 +47,8 @@ export function describeServiceContract(
     beforeEach(async () => {
       f = await makeFixture();
       [authA, authB] = [await f.newAuthUser(), await f.newAuthUser()];
-      a = (await linkLearner(f, authA, { profileId: randomUUID(), name: 'A' })).learnerId;
-      b = (await linkLearner(f, authB, { profileId: randomUUID(), name: 'B' })).learnerId;
+      a = (await linkLearner(f, google(authA), { profileId: randomUUID(), name: 'A' })).learnerId;
+      b = (await linkLearner(f, google(authB), { profileId: randomUUID(), name: 'B' })).learnerId;
     });
 
     afterEach(async () => {
@@ -54,11 +56,26 @@ export function describeServiceContract(
     });
 
     describe('linking', () => {
+      test('an email sign-in the server did not issue cannot create a learner', async () => {
+        const auth = await f.newAuthUser();
+        const profileId = randomUUID();
+        const out = linkLearner(
+          f,
+          { authUserId: auth, provider: 'email' },
+          { profileId, name: 'X' },
+        );
+        expect(await codeOf(out)).toBe('FORBIDDEN');
+        expect(await f.learners.findById(profileId)).toBeNull();
+      });
+
       test('two links at once for one identity: one creates it, the other finds it', async () => {
         const auth = await f.newAuthUser();
         const profileId = randomUUID();
         const body = { profileId, name: 'A' };
-        const both = await Promise.all([linkLearner(f, auth, body), linkLearner(f, auth, body)]);
+        const both = await Promise.all([
+          linkLearner(f, google(auth), body),
+          linkLearner(f, google(auth), body),
+        ]);
         expect(both.map((r) => r.created).sort()).toEqual([false, true]);
         expect(both.every((r) => r.learnerId === profileId)).toBe(true);
       });
@@ -67,8 +84,8 @@ export function describeServiceContract(
         const [one, two] = [await f.newAuthUser(), await f.newAuthUser()];
         const body = { profileId: randomUUID(), name: 'A' };
         const results = await Promise.allSettled([
-          linkLearner(f, one, body),
-          linkLearner(f, two, body),
+          linkLearner(f, google(one), body),
+          linkLearner(f, google(two), body),
         ]);
         const codes = results.map((r) =>
           r.status === 'fulfilled' ? 'ok' : (r.reason as { code?: string }).code,
@@ -79,18 +96,21 @@ export function describeServiceContract(
       test('a new identity creates a learner with the phone profile id', async () => {
         const auth = await f.newAuthUser();
         const profileId = randomUUID();
-        const out = await linkLearner(f, auth, { profileId, name: 'प्रिया' });
+        const out = await linkLearner(f, google(auth), { profileId, name: 'प्रिया' });
         expect(out).toEqual({ learnerId: profileId, name: 'प्रिया', created: true });
       });
 
       test('an identity already linked gets its own learner back, whatever profile id is sent', async () => {
-        const again = await linkLearner(f, authA, { profileId: randomUUID(), name: 'Other' });
+        const again = await linkLearner(f, google(authA), {
+          profileId: randomUUID(),
+          name: 'Other',
+        });
         expect(again).toEqual({ learnerId: a, name: 'A', created: false });
       });
 
       test("nobody can claim another learner's id", async () => {
         const auth = await f.newAuthUser();
-        expect(await codeOf(linkLearner(f, auth, { profileId: a, name: 'X' }))).toBe(
+        expect(await codeOf(linkLearner(f, google(auth), { profileId: a, name: 'X' }))).toBe(
           'PROFILE_TAKEN',
         );
         expect((await f.learners.findById(a))?.name).toBe('A');

@@ -39,9 +39,12 @@ Plan: [Plan 3a](../superpowers/plans/2026-10-20-backend-sync.md) · Spec §5.4.
 2. In **Authentication → URL Configuration**:
    - set **Site URL** to `<APP_URL>`;
    - add the redirect URL `<APP_URL>/**`. The app comes back to `<APP_URL>/#/auth-callback`.
-3. In **Authentication → Sign In / Providers**, turn off the **Email** provider. Students sign in
-   with Google only, and email sign-in is on by default. Leave the general "allow new users to
-   sign up" setting **on**: new students sign up through Google.
+3. In **Authentication → Sign In / Providers → Email**, keep the provider **on** and keep
+   **Confirm email** **on**. Do not turn off email sign-ups or the Email provider: Supabase then
+   refuses every email login, and backup-code students sign in through it. With confirmation
+   required, a stranger who signs up with an email gets no session, and the API never lets an
+   email sign-in it did not create itself make a learner. (An earlier version of this runbook said
+   to turn the Email provider off. That was wrong; turn it back on if you followed it.)
 
 ## 4. Create the tables
 

@@ -34,22 +34,22 @@ type Route = (request: Request, url: URL, deps: HandlerDeps) => Promise<unknown>
 /** Each route parses its input with the contract, calls one service and checks the response. */
 const ROUTES: Record<string, Route> = {
   'POST /v1/learners/link': async (request, _url, deps) => {
-    const authUserId = await caller(request, deps.auth);
+    const who = await caller(request, deps.auth);
     const body = parseWith(linkRequest, await jsonBody(request));
-    return linkResponse.parse(await linkLearner(deps, authUserId, body));
+    return linkResponse.parse(await linkLearner(deps, who, body));
   },
   'POST /v1/sync/push': async (request, _url, deps) => {
-    const authUserId = await caller(request, deps.auth);
+    const { authUserId } = await caller(request, deps.auth);
     const body = parseWith(pushRequest, await jsonBody(request));
     return pushResponse.parse(await pushEvents(deps, authUserId, body));
   },
   'GET /v1/sync/pull': async (request, url, deps) => {
-    const authUserId = await caller(request, deps.auth);
+    const { authUserId } = await caller(request, deps.auth);
     const query = parseWith(pullQuery, Object.fromEntries(url.searchParams));
     return pullResponse.parse(await pullEvents(deps, authUserId, query));
   },
   'GET /v1/me': async (request, _url, deps) =>
-    meResponse.parse(await getMe(deps, await caller(request, deps.auth))),
+    meResponse.parse(await getMe(deps, (await caller(request, deps.auth)).authUserId)),
 };
 
 /** The whole /v1 API as one function of a standard Request, for any runtime (Deno, Node). */

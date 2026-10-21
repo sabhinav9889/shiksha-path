@@ -41,7 +41,13 @@ export interface SwitchRepo {
   overrides(learnerId: string): Promise<Record<string, boolean>>;
 }
 
+/** Who is calling: the auth user and how they signed in (`google`, or `email` for codes). */
+export interface Caller {
+  authUserId: string;
+  provider: string;
+}
+
 /** Verifies an access token; the identity comes from here, never from a request body. */
 export interface Auth {
-  verify(accessToken: string): Promise<{ authUserId: string } | null>;
+  verify(accessToken: string): Promise<Caller | null>;
 }

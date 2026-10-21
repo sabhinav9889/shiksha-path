@@ -1,15 +1,15 @@
 import { MAX_BODY_BYTES } from '@shiksha/api-contract';
-import type { Auth } from '../ports.js';
+import type { Auth, Caller } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 
 const BEARER = /^Bearer\s+(\S+)$/i;
 
 /** The verified identity of the caller, from the access token only. */
-export async function caller(request: Request, auth: Auth): Promise<string> {
+export async function caller(request: Request, auth: Auth): Promise<Caller> {
   const token = BEARER.exec(request.headers.get('authorization') ?? '')?.[1];
   const verified = token ? await auth.verify(token) : null;
   if (!verified) throw new ApiFailure('UNAUTHENTICATED');
-  return verified.authUserId;
+  return verified;
 }
 
 /** Read the body, stopping as soon as it passes the limit (a chunked body has no length). */
