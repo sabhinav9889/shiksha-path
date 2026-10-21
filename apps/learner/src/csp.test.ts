@@ -34,6 +34,13 @@ describe('contentSecurityPolicy', () => {
   );
 });
 
+describe('the sign-in and API host', () => {
+  test('may be reached when it is configured', () => {
+    const policy = directives(contentSecurityPolicy('/content', ['https://abc.supabase.co']));
+    expect(policy['connect-src']).toBe("'self' https://abc.supabase.co");
+  });
+});
+
 describe('cspPlugin', () => {
   test('puts the policy at the top of index.html, at build time only', () => {
     const plugin = cspPlugin('/content');

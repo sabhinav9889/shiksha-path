@@ -13,8 +13,10 @@
   "dependencies": {
     "@fontsource/baloo-2": "^5.3.0",
     "@fontsource/mukta": "^5.3.0",
+    "@shiksha/api-contract": "^0.1.0",
     "@shiksha/content": "^0.1.0",
     "@shiksha/learner-core": "^0.1.0",
+    "@supabase/supabase-js": "^2.118.0",
     "dexie": "^4.4.6"
   },
   "devDependencies": {

@@ -15,6 +15,7 @@ export class ShikshaDb extends Dexie {
   declare meta: Table<{ key: string; value: string }, string>;
   declare profiles: Table<Profile, string>;
   declare recordings: Table<Recording, string>;
+  declare auth: Table<{ key: string; value: string }, string>;
 
   constructor(name = 'shiksha') {
     super(name);
@@ -31,5 +32,8 @@ export class ShikshaDb extends Dexie {
     });
     // Version 2 adds speaking recordings; every version-1 table is kept as it is.
     this.version(2).stores({ recordings: 'id, learnerId, [learnerId+lessonId+itemId]' });
+    // Version 3 adds sign-in sessions, one per profile (keys are `<profileId>:<name>`).
+    // eslint-disable-next-line no-magic-numbers -- schema version numbers are their own names
+    this.version(3).stores({ auth: 'key' });
   }
 }
