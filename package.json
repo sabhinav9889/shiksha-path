@@ -48,6 +48,7 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.6.0",
+    "postgres": "^3.4.9",
     "prettier": "^3.9.10",
     "secretlint": "^13.0.7",
     "supabase": "^2.121.0",
