@@ -47,10 +47,10 @@
     busy = true;
     message = '';
     const result = await runtime.content.sync();
-    const upload = await runtime.flush(profile.id);
+    const { flush } = await runtime.sync(profile.id);
     if (!result.ok) message = errorMessage(result.error, lang);
-    else message = upload.ok ? t('me.syncDone', lang) : t('status.savedLater', lang);
-    await refreshSession();
+    else message = flush.ok ? t('me.syncDone', lang) : t('status.savedLater', lang);
+    await refreshSession({ force: true });
     await load();
     busy = false;
   }

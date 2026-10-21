@@ -13,7 +13,7 @@ import {
   type ProfileStore,
   type StorageEstimator,
 } from '@shiksha/learner-core';
-import type { AccountDeps } from '../account/account.js';
+import { apiFor, isLinked, type AccountDeps } from '../account/account.js';
 import { createApiClient } from '../api/api-client.js';
 import { apiConfig } from '../api/config.js';
 import { createRecorder, type Recorder } from '../audio/recorder.js';
@@ -28,6 +28,8 @@ import type { RecordingStore } from '../storage/recording-store.js';
 import { ContentService } from './content-service.js';
 import { createFetcher } from './fetcher.js';
 import { Prefs } from './prefs.js';
+import { httpTransport } from './http-transport.js';
+import { pullNew } from './pull.js';
 import { noServerTransport } from './transport.js';
 
 const ALL_PENDING = Number.MAX_SAFE_INTEGER;
@@ -47,10 +49,12 @@ export interface Runtime {
   openSession(profileId: string): Promise<LearnerSession>;
   syncStatus(learnerId: string): Promise<{ lastSyncedAt: string | null; pending: number }>;
   flush(learnerId: string): Promise<FlushResult>;
+  /** Upload, then fetch events made on other phones. `added` > 0 means progress changed. */
+  sync(learnerId: string): Promise<{ flush: FlushResult; added: number }>;
   /** Google sign-in and /v1; null on a phone-only build. */
   account: AccountDeps | null;
-  /** Store events that came from the server as already uploaded. */
-  appendSent(events: LearnerEvent[]): Promise<void>;
+  /** Store events that came from the server as already uploaded; returns how many were new. */
+  appendSent(events: LearnerEvent[]): Promise<number>;
   removeLearnerEvents(learnerId: string): Promise<void>;
 }
 
@@ -92,7 +96,8 @@ export function createRuntime(opts: RuntimeOptions = {}): Runtime {
     estimator: opts.estimator ?? browserStorageEstimator(),
     prefs,
   });
-  return {
+  const account = opts.account === undefined ? defaultAccount(db) : opts.account;
+  const runtime: Runtime = {
     storage,
     events,
     profiles: new IdbProfileStore(db),
@@ -109,10 +114,20 @@ export function createRuntime(opts: RuntimeOptions = {}): Runtime {
       const lastSyncedAt = await events.getMeta(`lastSyncedAt:${learnerId}`);
       return { lastSyncedAt, pending: (await events.pending(learnerId, ALL_PENDING)).length };
     },
-    flush: (learnerId) =>
-      flushOutbox(learnerId, { store: events, transport: noServerTransport, clock }),
-    account: opts.account === undefined ? defaultAccount(db) : opts.account,
+    /** Upload pending events: through /v1 for a linked profile, otherwise they wait. */
+    async flush(learnerId) {
+      const api = (await isLinked(runtime, learnerId)) ? await apiFor(runtime, learnerId) : null;
+      const transport = api ? httpTransport(api) : noServerTransport;
+      return flushOutbox(learnerId, { store: events, transport, clock });
+    },
+    async sync(learnerId) {
+      const flush = await runtime.flush(learnerId);
+      const { added } = await pullNew(runtime, learnerId);
+      return { flush, added };
+    },
+    account,
     appendSent: (list) => events.appendSent(list),
     removeLearnerEvents: (learnerId) => events.removeLearner(learnerId),
   };
+  return runtime;
 }

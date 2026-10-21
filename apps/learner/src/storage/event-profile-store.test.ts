@@ -57,6 +57,16 @@ describe('IdbEventStore', () => {
     await store.append(event as LearnerEvent);
     expect(await store.all('a')).toEqual([event]);
   });
+
+  test('server events are counted only when new, and are never pending', async () => {
+    const store = new IdbEventStore(new ShikshaDb(freshName()));
+    const [own, other] = makeEvents(2) as [LearnerEvent, LearnerEvent];
+    await store.append(own);
+    expect(await store.appendSent([own, other])).toBe(1);
+    expect(await store.appendSent([other])).toBe(0);
+    expect(await store.all('a')).toHaveLength(2);
+    expect(await store.pending('a', 10)).toEqual([]);
+  });
 });
 
 describe('IdbProfileStore', () => {

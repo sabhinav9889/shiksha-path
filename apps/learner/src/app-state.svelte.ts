@@ -84,17 +84,24 @@ export function signOut(): void {
 }
 
 /**
+ * Nothing on the phone changed since this session was opened: reopening would only re-read every
+ * bundle (slow on a cheap phone). Every learner action goes through the session itself; `force`
+ * means events arrived from another phone, so the log changed even if lessons did not.
+ */
+function upToDate(version: number, force: boolean): boolean {
+  return !force && appState.session !== null && version === openedAtVersion;
+}
+
+/**
  * Pick up newly installed content. It reads storage for a while, so afterwards it checks that the
  * same learner is still signed in and no lesson started meanwhile; otherwise the result is dropped
  * (it could belong to someone else, or swap the session under a running lesson).
  */
-export async function refreshSession(): Promise<void> {
+export async function refreshSession(opts: { force?: boolean } = {}): Promise<void> {
   const { runtime, profile } = appState;
   if (!runtime || !profile || activity.current) return;
-  // Nothing on the phone changed since this session was opened: reopening would only re-read
-  // every bundle (slow on a cheap phone). Every learner action goes through the session itself.
   const version = runtime.content.version;
-  if (appState.session && version === openedAtVersion) return;
+  if (upToDate(version, opts.force === true)) return;
   const learnerId = profile.id;
   const session = await openIfInstalled(runtime, learnerId);
   const lang = await languageOf(runtime, learnerId);

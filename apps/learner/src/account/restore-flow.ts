@@ -21,8 +21,7 @@ export async function restoreEvents(
     const page = await api.pull({ after });
     if (!page.ok) return { pulled };
     const events = parseEvents(page.value.events).events.filter((e) => e.learnerId === learnerId);
-    await runtime.appendSent(events);
-    pulled += events.length;
+    pulled += await runtime.appendSent(events);
     after = page.value.cursor;
     await runtime.events.setMeta(cursorKey(learnerId), String(after));
     if (page.value.next === null) return { pulled };
