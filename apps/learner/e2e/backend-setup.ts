@@ -1,8 +1,19 @@
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { expect, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import postgres from 'postgres';
+import { PgCodeRepo } from '../../../packages/server/src/adapters/pg-code-repo.js';
+import { PgLearnerRepo } from '../../../packages/server/src/adapters/pg-learner-repo.js';
+import { PgRateLimiter } from '../../../packages/server/src/adapters/pg-rate-limiter.js';
+import { PgSwitchRepo } from '../../../packages/server/src/adapters/pg-switch-repo.js';
+import { createSupabaseAuth } from '../../../packages/server/src/adapters/supabase-auth.js';
+import { issueCode } from '../../../packages/server/src/services/codes.js';
+
+const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 
 /**
  * The local Supabase stack for the backend end-to-end test. Google is replaced by an email and
@@ -150,4 +161,35 @@ export async function serverEventIds(sql: postgres.Sql, learnerId: string): Prom
   const rows = await sql<{ id: string }[]>`
     select id from public.learner_events where learner_id = ${learnerId}`;
   return rows.map((r) => r.id);
+}
+
+/**
+ * A mentor issues a backup code for a new student, through the same service the admin tool uses.
+ * The pepper is the functions' local placeholder (supabase/functions/.env.local), not a secret.
+ */
+export async function issueBackupCode(
+  stack: LocalStack,
+  sql: postgres.Sql,
+  name: string,
+): Promise<{ learnerId: string; code: string; cleanup: () => Promise<void> }> {
+  const env = readFileSync(join(ROOT, 'supabase/functions/.env.local'), 'utf8');
+  const pepper = /^CODE_PEPPER=(.+)$/m.exec(env)?.[1] ?? '';
+  const deps = {
+    learners: new PgLearnerRepo(sql),
+    switches: new PgSwitchRepo(sql),
+    codes: new PgCodeRepo(sql),
+    auth: createSupabaseAuth(stack.apiUrl, stack.serviceKey),
+    limiter: new PgRateLimiter(sql),
+    pepper,
+  };
+  const { learnerId, code } = await issueCode(deps, { name });
+  return {
+    learnerId,
+    code,
+    async cleanup() {
+      const row = await deps.codes.forLearner(learnerId);
+      await sql`delete from public.learners where id = ${learnerId}`;
+      if (row) await deps.auth.deleteUser(row.authUserId);
+    },
+  };
 }

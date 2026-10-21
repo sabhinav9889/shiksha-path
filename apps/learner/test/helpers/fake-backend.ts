@@ -4,10 +4,14 @@ import {
   linkLearner,
   pullEvents,
   pushEvents,
+  issueCode,
+  signInWithCode,
   startRecording,
   ApiFailure,
+  type CodeAuth,
+  type CodeDeps,
 } from '@shiksha/server';
-import { makeMemoryRepos } from '@shiksha/server/testing';
+import { makeMemoryRepos, memoryCodeRepo } from '@shiksha/server/testing';
 import type { ApiClient, ApiResult } from '../../src/api/api-client.js';
 import type { GoogleAuth } from '../../src/api/auth.js';
 import type { AccountDeps } from '../../src/account/account.js';
@@ -23,6 +27,8 @@ export interface FakeBackend {
   sessions: Map<string, string>;
   useGoogleAccount(id: string): void;
   setOnline(value: boolean): void;
+  /** A mentor issues a backup code: for a new student by name. */
+  issueCode(name: string): Promise<{ learnerId: string; code: string }>;
   /** Make every upload to a signed URL fail (the network drops mid-upload). */
   failUploads(value: boolean): void;
   serverFor(googleAccount: string): ApiClient;
@@ -30,6 +36,31 @@ export interface FakeBackend {
 
 export function makeFakeBackend(): FakeBackend {
   const repos = makeMemoryRepos();
+  const codes = memoryCodeRepo(repos);
+  // Code users sign in with a token equal to their auth user id, like the fake Google tokens.
+  const codeUsers = new Map<string, { email: string; password: string }>();
+  const codeAuth: CodeAuth = {
+    createCodeUser: (password) => {
+      const authUserId = crypto.randomUUID();
+      const email = `code-${authUserId}@codes.invalid`;
+      codeUsers.set(authUserId, { email, password });
+      return Promise.resolve({ authUserId, email });
+    },
+    deleteUser: (id) => Promise.resolve(void codeUsers.delete(id)),
+    signInWithPassword: (email, password) => {
+      const found = [...codeUsers].find(([, u]) => u.email === email && u.password === password);
+      const session = found
+        ? { accessToken: found[0], refreshToken: `r-${found[0]}`, expiresAt: 4_102_444_800 }
+        : null;
+      return Promise.resolve(session);
+    },
+  };
+  // Reads the repos live (not a copy), so a test that swaps `repos.limiter` affects codes too.
+  const codeDeps: CodeDeps = Object.assign(Object.create(repos) as typeof repos, {
+    codes,
+    auth: { verify: () => Promise.resolve(null), ...codeAuth },
+    pepper: 'fake-backend-pepper-0123456789abcdef',
+  });
   const sessions = new Map<string, string>(); // profileId -> Google account
   let nextGoogleAccount = 'google-1';
   let remembered: string | null = null;
@@ -59,6 +90,7 @@ export function makeFakeBackend(): FakeBackend {
       me: () => as((auth) => getMe(repos, auth)),
       startRecording: (body) => as((auth) => startRecording(repos, auth, body)),
       completeRecording: (body) => as((auth) => completeRecording(repos, auth, body)),
+      codeSignIn: (body) => run(() => signInWithCode(codeDeps, body.code, 'phone-network')),
       uploadTo: (url, bytes) => {
         if (!online || uploadsFail) return Promise.resolve(false);
         const path = new URL(url).pathname.slice(1); // memory://upload/<learner>/<id>
@@ -85,6 +117,10 @@ export function makeFakeBackend(): FakeBackend {
       sessions.delete(profileId);
       return Promise.resolve();
     },
+    adoptSession: (profileId, session) => {
+      sessions.set(profileId, session.accessToken);
+      return Promise.resolve();
+    },
     moveSession: (from, to) => {
       const account = sessions.get(from);
       sessions.delete(from);
@@ -106,6 +142,7 @@ export function makeFakeBackend(): FakeBackend {
     setOnline(value: boolean) {
       online = value;
     },
+    issueCode: (name: string) => issueCode(codeDeps, { name }),
     failUploads(value: boolean) {
       uploadsFail = value;
     },

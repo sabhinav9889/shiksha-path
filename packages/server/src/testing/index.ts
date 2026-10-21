@@ -3,3 +3,4 @@ export * from './memory-rate-limiter.js';
 export * from './memory-recording-repo.js';
 export * from './memory-recording-storage.js';
 export * from './service-contract.js';
+export * from './memory-auth.js';

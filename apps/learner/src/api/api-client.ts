@@ -6,6 +6,7 @@ import {
   pushResponse,
   recordingCompleteResponse,
   recordingStartResponse,
+  session,
   type ApiError,
   type LinkRequest,
   type LinkResponse,
@@ -16,6 +17,7 @@ import {
   type RecordingCompleteResponse,
   type RecordingStart,
   type RecordingStartResponse,
+  type Session,
 } from '@shiksha/api-contract';
 
 export type ApiResult<T> = { ok: true; value: T } | { ok: false; error: ApiError | 'OFFLINE' };
@@ -27,6 +29,8 @@ export interface ApiClient {
   me(): Promise<ApiResult<MeResponse>>;
   startRecording(body: RecordingStart): Promise<ApiResult<RecordingStartResponse>>;
   completeRecording(body: { id: string }): Promise<ApiResult<RecordingCompleteResponse>>;
+  /** Exchange a backup code for a session. Needs no sign-in (it is how one starts). */
+  codeSignIn(body: { code: string }): Promise<ApiResult<Session>>;
   /** Put the bytes at a signed upload URL (no sign-in token: the URL carries its own). */
   uploadTo(url: string, bytes: Uint8Array, mime: string): Promise<boolean>;
 }
@@ -48,6 +52,26 @@ async function readJson(response: Response): Promise<unknown> {
   } catch {
     return null;
   }
+}
+
+/** GET without a body, POST with one; the token only when signed in. */
+function requestInit(body: unknown, token: string | null): RequestInit {
+  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  if (token) headers.authorization = `Bearer ${token}`;
+  const init: RequestInit = { method: body === undefined ? 'GET' : 'POST', headers };
+  if (body !== undefined) init.body = JSON.stringify(body);
+  return init;
+}
+
+/** The answer checked against the contract: an error code, or the value. */
+async function answerOf<T>(response: Response, schema: Schema<T>): Promise<ApiResult<T>> {
+  const payload = await readJson(response);
+  if (!response.ok) {
+    const parsed = errorBody.safeParse(payload);
+    return { ok: false, error: parsed.success ? parsed.data.error : 'INTERNAL' };
+  }
+  const parsed = schema.safeParse(payload);
+  return parsed.success ? { ok: true, value: parsed.data as T } : { ok: false, error: 'INTERNAL' };
 }
 
 /** PUT bytes to a signed upload URL; false on any failure (it is retried on a later sync). */
@@ -76,14 +100,17 @@ export function createApiClient(deps: ClientDeps): ApiClient {
   const fetchFn = deps.fetchFn ?? ((input, init) => fetch(input, init));
   const timeoutMs = deps.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-  async function call<T>(path: string, schema: Schema<T>, body?: unknown): Promise<ApiResult<T>> {
-    const token = await deps.token();
-    if (!token) return { ok: false, error: 'UNAUTHENTICATED' };
+  async function call<T>(
+    path: string,
+    schema: Schema<T>,
+    body?: unknown,
+    signedIn = true,
+  ): Promise<ApiResult<T>> {
+    const token = signedIn ? await deps.token() : null;
+    if (signedIn && !token) return { ok: false, error: 'UNAUTHENTICATED' };
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
-    const headers = { authorization: `Bearer ${token}`, 'content-type': 'application/json' };
-    const init: RequestInit = { method: body === undefined ? 'GET' : 'POST', headers };
-    if (body !== undefined) init.body = JSON.stringify(body);
+    const init = requestInit(body, token);
     let response: Response;
     try {
       response = await fetchFn(`${deps.baseUrl}${path}`, { ...init, signal: controller.signal });
@@ -92,15 +119,7 @@ export function createApiClient(deps: ClientDeps): ApiClient {
     } finally {
       clearTimeout(timer);
     }
-    const payload = await readJson(response);
-    if (!response.ok) {
-      const parsed = errorBody.safeParse(payload);
-      return { ok: false, error: parsed.success ? parsed.data.error : 'INTERNAL' };
-    }
-    const parsed = schema.safeParse(payload);
-    return parsed.success
-      ? { ok: true, value: parsed.data as T }
-      : { ok: false, error: 'INTERNAL' };
+    return answerOf(response, schema);
   }
 
   return {
@@ -110,6 +129,7 @@ export function createApiClient(deps: ClientDeps): ApiClient {
     me: () => call('/v1/me', meResponse),
     startRecording: (body) => call('/v1/recordings/start', recordingStartResponse, body),
     completeRecording: (body) => call('/v1/recordings/complete', recordingCompleteResponse, body),
+    codeSignIn: (body) => call('/v1/auth/code', session, body, false),
     uploadTo: (url, bytes, mime) => putBytes({ fetchFn, timeoutMs, url, bytes, mime }),
   };
 }

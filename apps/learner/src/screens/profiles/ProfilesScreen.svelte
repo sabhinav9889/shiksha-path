@@ -5,6 +5,7 @@
   import { errorMessage, t } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
   import { visibleProfiles } from '../../account/account.js';
+  import { profilesChanged } from '../../account/profiles-changed.svelte.js';
   import RestoreButton from '../account/RestoreButton.svelte';
   import RestoreProfile from '../account/RestoreProfile.svelte';
   import CreateProfile from './CreateProfile.svelte';
@@ -26,11 +27,20 @@
   const selected = $derived(profiles?.find((p) => p.id === selectedId) ?? null);
   const locked = $derived(lockSeconds > 0);
 
-  onMount(async () => {
+  onMount(() => {
     signOut(); // opening the picker is how a learner switches: nobody stays signed in
+  });
+
+  /** Load the list now, and again whenever a sign-in changed the phone's profiles. */
+  $effect(() => {
+    void profilesChanged.count;
+    creating = false;
+    restoring = false;
     const runtime = appState.runtime;
-    profiles = runtime ? await visibleProfiles(runtime) : [];
-    selectedId = profiles[0]?.id ?? null;
+    void (runtime ? visibleProfiles(runtime) : Promise.resolve([])).then((list) => {
+      profiles = list;
+      selectedId = list[0]?.id ?? null;
+    });
   });
 
   /** A lock saved with the profile (set before a restart) shows its remaining time at once. */

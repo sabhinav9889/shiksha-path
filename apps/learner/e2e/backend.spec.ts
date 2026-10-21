@@ -3,6 +3,7 @@ import {
   database,
   deleteGoogleUser,
   holdGoogleRedirect,
+  issueBackupCode,
   learnerOf,
   localStack,
   makeGoogleUser,
@@ -127,4 +128,34 @@ test('progress is backed up, restored on a new phone, and follows the server', a
   expect((await serverEventIds(sql, learner)).sort()).toEqual([...onPhone2].sort());
   expect(onPhone2.length).toBeGreaterThan(onPhone.length);
   await phone2.close();
+});
+
+test('a student with a backup code brings their profile to a new phone', async ({
+  browser,
+  baseURL,
+}) => {
+  const issued = await issueBackupCode(stack, sql, 'कोड वाली');
+  const phone = await browser.newContext({
+    baseURL: baseURL ?? '',
+    viewport: { width: 360, height: 640 },
+    locale: 'hi-IN',
+  });
+  try {
+    const page = await phone.newPage();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'पुरानी प्रोफ़ाइल वापस लाएँ' }).click();
+    await page.getByRole('button', { name: 'मेरे पास कोड है' }).click();
+    await enterPin(page, '2468');
+    await enterPin(page, '2468');
+    await page.getByLabel('अपना कोड लिखें').fill(issued.code.toLowerCase());
+    await page.getByRole('button', { name: 'कोड से जुड़ें' }).click();
+    await expect(page.getByRole('status')).toHaveText('आपकी प्रोफ़ाइल और प्रोग्रेस वापस आ गई', {
+      timeout: 20_000,
+    });
+    await page.getByRole('button', { name: 'आगे', exact: true }).click();
+    await signIn(page, 'कोड वाली', '2468');
+  } finally {
+    await phone.close();
+    await issued.cleanup();
+  }
 });

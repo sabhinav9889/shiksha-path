@@ -71,8 +71,15 @@ export async function isRestoring(runtime: Runtime, profileId: string): Promise<
   return (await runtime.events.getMeta(restoringKey(profileId))) === '1';
 }
 
-/** Begin restoring on this phone: a hidden profile holds the new PIN while Google signs in. */
-export async function startRestore(runtime: Runtime, pin: string): Promise<string> {
+/**
+ * Begin restoring on this phone: a hidden profile holds the new PIN while the learner signs in.
+ * `google` goes to Google now; `code` waits for the code screen.
+ */
+export async function startRestore(
+  runtime: Runtime,
+  pin: string,
+  via: 'google' | 'code' = 'google',
+): Promise<string> {
   for (const old of await runtime.profiles.list()) {
     if (await isRestoring(runtime, old.id)) await forgetProfile(runtime, old.id);
   }
@@ -81,6 +88,7 @@ export async function startRestore(runtime: Runtime, pin: string): Promise<strin
     { store: runtime.profiles, ids: runtime.ids, clock: runtime.clock },
   );
   await runtime.events.setMeta(restoringKey(profile.id), '1');
+  if (via === 'code') return profile.id;
   const auth = await runtime.account?.loadAuth();
   await auth?.startGoogleSignIn(profile.id);
   return profile.id;
