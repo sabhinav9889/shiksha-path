@@ -61,6 +61,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Build the api function (supabase start loads it; the bundle is not in git)
+        run: npm run functions:build
       - name: Local Supabase stack
         run: npx supabase start -x studio,imgproxy,inbucket,logflare,vector
       - name: Serve the api Edge Function
