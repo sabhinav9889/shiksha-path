@@ -36,6 +36,10 @@ export function createSupabaseAuth(url: string, serviceRoleKey: string): Auth & 
       const { error } = await client.auth.admin.deleteUser(authUserId);
       if (error && error.status !== NOT_FOUND) throw new Error('could not delete a user');
     },
+    async emailOf(authUserId) {
+      const { data, error } = await client.auth.admin.getUserById(authUserId);
+      return error || !data.user ? null : (data.user.email ?? null);
+    },
     async signInWithPassword(email, password) {
       // A fresh client each time, so no session is kept in the API between requests.
       const signer = createClient(url, serviceRoleKey, { auth: NO_SESSION });

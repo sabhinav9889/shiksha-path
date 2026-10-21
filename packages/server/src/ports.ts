@@ -77,7 +77,25 @@ export interface RecordingStorage {
   /** The stored object's size in bytes, or null when there is none. */
   size(path: string): Promise<number | null>;
   signDownload(path: string, seconds: number): Promise<string>;
+  /** The object's bytes (for an export), or null when there is none. */
+  read(path: string): Promise<Uint8Array | null>;
   remove(paths: string[]): Promise<void>;
+}
+
+/** What the server holds about one learner, for export and deletion (privacy rule). */
+export interface LearnerRows {
+  learner: { id: string; name: string; cohortId: string | null; createdAt: string };
+  authUserIds: string[];
+  events: LearnerEvent[];
+  overrides: Record<string, boolean>;
+}
+
+export interface LearnerDataRepo {
+  rows(learnerId: string): Promise<LearnerRows | null>;
+  /** Delete the learner (everything cascades) and leave a tombstone, in one transaction. */
+  deleteWithTombstone(learnerId: string): Promise<{ events: number }>;
+  /** Which of these ids belong to students deleted on request. */
+  deleted(ids: string[]): Promise<string[]>;
 }
 
 /** Counts actions per bucket in fixed windows. `false` means this one is over the limit. */
@@ -101,6 +119,8 @@ export interface CodeAuth {
   /** A new email user with a made-up address and this password. */
   createCodeUser(password: string): Promise<{ authUserId: string; email: string }>;
   deleteUser(authUserId: string): Promise<void>;
+  /** The auth user's email (for an export), or null when the user is gone. */
+  emailOf(authUserId: string): Promise<string | null>;
   signInWithPassword(email: string, password: string): Promise<Session | null>;
 }
 

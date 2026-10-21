@@ -21,6 +21,7 @@ export function memoryAuth(): Auth & CodeAuth {
       users.set(authUserId, { email, password });
       return Promise.resolve({ authUserId, email });
     },
+    emailOf: (authUserId) => Promise.resolve(users.get(authUserId)?.email ?? null),
     deleteUser(authUserId) {
       users.delete(authUserId);
       return Promise.resolve();

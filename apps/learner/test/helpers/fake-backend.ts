@@ -47,6 +47,7 @@ export function makeFakeBackend(): FakeBackend {
       return Promise.resolve({ authUserId, email });
     },
     deleteUser: (id) => Promise.resolve(void codeUsers.delete(id)),
+    emailOf: (id) => Promise.resolve(codeUsers.get(id)?.email ?? null),
     signInWithPassword: (email, password) => {
       const found = [...codeUsers].find(([, u]) => u.email === email && u.password === password);
       const session = found

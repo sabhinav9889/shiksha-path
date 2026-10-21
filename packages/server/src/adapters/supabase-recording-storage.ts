@@ -39,6 +39,10 @@ export function createSupabaseRecordingStorage(
       if (error) throw new Error('could not sign a download');
       return forPhone(data.signedUrl);
     },
+    async read(path) {
+      const { data, error } = await bucket.download(path);
+      return error ? null : new Uint8Array(await data.arrayBuffer());
+    },
     async remove(paths) {
       if (paths.length === 0) return;
       const { error } = await bucket.remove(paths);

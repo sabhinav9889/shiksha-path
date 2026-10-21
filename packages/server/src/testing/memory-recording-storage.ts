@@ -14,6 +14,10 @@ export function memoryRecordingStorage(): MemoryRecordingStorage {
     signUpload: (path) =>
       Promise.resolve({ url: `memory://upload/${path}?n=${Math.random()}`, token: 'token' }),
     size: (path) => Promise.resolve(objects.get(path) ?? null),
+    read: (path) => {
+      const size = objects.get(path);
+      return Promise.resolve(size === undefined ? null : new Uint8Array(size));
+    },
     signDownload: (path, seconds) => Promise.resolve(`memory://read/${path}?ttl=${seconds}`),
     remove: (paths) => {
       for (const path of paths) objects.delete(path);
