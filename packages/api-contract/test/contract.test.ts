@@ -82,6 +82,25 @@ describe('me', () => {
     ]);
     const switches = Object.fromEntries(FEATURE_KEYS.map((k) => [k, true]));
     expect(ok(meResponse, { learner: { id, name: 'A' }, switches })).toBe(true);
-    expect(ok(meResponse, { learner: { id, name: 'A' }, switches: { nope: true } })).toBe(false);
+    expect(ok(meResponse, { learner: { id, name: 'A' }, switches: { ai_doubts: 'yes' } })).toBe(
+      false,
+    );
+  });
+
+  test('an old phone still reads a newer server: added switches and fields are accepted', () => {
+    const switches = { ...Object.fromEntries(FEATURE_KEYS.map((k) => [k, true])), later: false };
+    const parsed = meResponse.safeParse({ learner: { id, name: 'A', added: 1 }, switches, x: 1 });
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.switches.ai_doubts).toBe(true);
+  });
+});
+
+describe('responses from a newer server', () => {
+  test('extra fields are accepted and dropped', () => {
+    const pull = pullResponse.safeParse({ events: [], next: null, cursor: 0, added: true });
+    expect(pull.success).toBe(true);
+    expect(pull.data).toEqual({ events: [], next: null, cursor: 0 });
+    expect(ok(pushResponse, { accepted: [], rejected: [], added: true })).toBe(true);
+    expect(ok(linkResponse, { learnerId: id, name: 'A', created: true, added: 1 })).toBe(true);
   });
 });

@@ -10,7 +10,9 @@ export const pushRequest = z.strictObject({
 });
 export type PushRequest = z.infer<typeof pushRequest>;
 
-export const pushResponse = z.strictObject({
+// Responses are `z.object` (extra fields dropped), so an old phone keeps working when a newer
+// server adds fields. Requests stay strict.
+export const pushResponse = z.object({
   accepted: z.array(z.uuid()),
   /** Event ids, or `#<index>` for an event with no usable id. */
   rejected: z.array(z.string()),
@@ -23,7 +25,7 @@ export const pullQuery = z.strictObject({
 });
 export type PullQuery = z.infer<typeof pullQuery>;
 
-export const pullResponse = z.strictObject({
+export const pullResponse = z.object({
   events: z.array(z.unknown()),
   /** The cursor for the next page, or `null` when there is nothing more. */
   next: z.number().int().nullable(),

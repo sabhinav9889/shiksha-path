@@ -9,7 +9,9 @@ export const linkRequest = z.strictObject({
 });
 export type LinkRequest = z.infer<typeof linkRequest>;
 
-export const linkResponse = z.strictObject({
+// Responses are `z.object` (extra fields dropped), so an old phone keeps working when a newer
+// server adds fields. Requests stay strict.
+export const linkResponse = z.object({
   learnerId: z.uuid(),
   name: z.string(),
   created: z.boolean(),
