@@ -32,8 +32,9 @@ type Route = (request: Request, url: URL, deps: HandlerDeps) => Promise<unknown>
 /** Each route parses its input with the contract, calls one service and checks the response. */
 const ROUTES: Record<string, Route> = {
   'POST /v1/learners/link': async (request, _url, deps) => {
+    const authUserId = await caller(request, deps.auth);
     const body = parseWith(linkRequest, await jsonBody(request));
-    return linkResponse.parse(await linkLearner(deps, await caller(request, deps.auth), body));
+    return linkResponse.parse(await linkLearner(deps, authUserId, body));
   },
   'POST /v1/sync/push': async (request, _url, deps) => {
     const authUserId = await caller(request, deps.auth);

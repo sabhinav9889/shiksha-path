@@ -96,6 +96,12 @@ describe('refusals', () => {
     expect([bad.status, await json(bad)]).toEqual([401, { error: 'UNAUTHENTICATED' }]);
   });
 
+  test('every route checks the caller before reading the body', async () => {
+    for (const path of ['/v1/learners/link', '/v1/sync/push']) {
+      expect((await call('POST', path, { raw: '{not json' })).status).toBe(401);
+    }
+  });
+
   test('broken JSON and a body that breaks the contract are 400', async () => {
     const broken = await call('POST', '/v1/sync/push', { token: 'token-a', raw: '{not json' });
     expect([broken.status, await json(broken)]).toEqual([400, { error: 'INVALID_REQUEST' }]);
