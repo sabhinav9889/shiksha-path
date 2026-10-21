@@ -5,3 +5,4 @@ export { PgSwitchRepo } from './adapters/pg-switch-repo.js';
 export { createSql } from './adapters/pg.js';
 export { createSupabaseAuth } from './adapters/supabase-auth.js';
 export { handle } from './http/router.js';
+export { jsonLogger } from './logger.js';

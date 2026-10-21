@@ -5,3 +5,4 @@ export { linkLearner } from './services/link.js';
 export { getMe } from './services/me.js';
 export { pullEvents, pushEvents } from './services/sync.js';
 export { handle, type HandlerDeps } from './http/router.js';
+export { jsonLogger, memoryLogger, type Logger, type LogEntry } from './logger.js';

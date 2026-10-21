@@ -7,6 +7,7 @@ import {
   pushRequest,
   pushResponse,
 } from '@shiksha/api-contract';
+import type { Logger } from '../logger.js';
 import type { Auth, EventRepo, LearnerRepo, SwitchRepo } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
@@ -22,6 +23,7 @@ export interface HandlerDeps {
   events: EventRepo;
   switches: SwitchRepo;
   allowedOrigins: readonly string[];
+  logger: Logger;
 }
 
 const NO_CONTENT = 204;
@@ -55,11 +57,23 @@ export async function handle(request: Request, deps: HandlerDeps): Promise<Respo
   const headers = corsHeaders(request, deps.allowedOrigins);
   if (request.method === 'OPTIONS') return new Response(null, { status: NO_CONTENT, headers });
   const url = new URL(request.url);
-  const route = ROUTES[`${request.method} ${routePath(url)}`];
-  if (!route) return failure('INVALID_REQUEST', headers, NOT_FOUND);
+  const name = `${request.method} ${routePath(url)}`;
+  const started = Date.now();
+  const route = ROUTES[name];
+  if (!route) {
+    deps.logger.info({ route: name, status: NOT_FOUND, code: 'INVALID_REQUEST', ms: 0 });
+    return failure('INVALID_REQUEST', headers, NOT_FOUND);
+  }
   try {
-    return json(await route(request, url, deps), headers);
+    const response = json(await route(request, url, deps), headers);
+    deps.logger.info({ route: name, status: response.status, ms: Date.now() - started });
+    return response;
   } catch (error) {
-    return failure(error instanceof ApiFailure ? error.code : 'INTERNAL', headers);
+    const code = error instanceof ApiFailure ? error.code : 'INTERNAL';
+    const response = failure(code, headers);
+    const entry = { route: name, status: response.status, code, ms: Date.now() - started };
+    if (code === 'INTERNAL') deps.logger.error(entry);
+    else deps.logger.info(entry);
+    return response;
   }
 }

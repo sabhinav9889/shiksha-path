@@ -1,4 +1,6 @@
-import type { LearnerRepo, LearnerRow } from '../ports.js';
+import { LinkConflict, type LearnerRepo, type LearnerRow } from '../ports.js';
+
+const UNIQUE_VIOLATION = '23505';
 import type { Sql } from './pg.js';
 
 export class PgLearnerRepo implements LearnerRepo {
@@ -18,10 +20,15 @@ export class PgLearnerRepo implements LearnerRepo {
   }
 
   async createLinked(input: { id: string; name: string; authUserId: string }): Promise<void> {
-    await this.sql.begin(async (tx) => {
-      await tx`insert into learners (id, name) values (${input.id}, ${input.name})`;
-      await tx`insert into learner_identities (auth_user_id, learner_id)
-               values (${input.authUserId}, ${input.id})`;
-    });
+    try {
+      await this.sql.begin(async (tx) => {
+        await tx`insert into learners (id, name) values (${input.id}, ${input.name})`;
+        await tx`insert into learner_identities (auth_user_id, learner_id)
+                 values (${input.authUserId}, ${input.id})`;
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code === UNIQUE_VIOLATION) throw new LinkConflict();
+      throw error;
+    }
   }
 }

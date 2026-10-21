@@ -5,10 +5,18 @@ export interface LearnerRow {
   name: string;
 }
 
+/** Another request created the same learner or identity at the same moment. */
+export class LinkConflict extends Error {
+  constructor() {
+    super('link conflict');
+    this.name = 'LinkConflict';
+  }
+}
+
 export interface LearnerRepo {
   findByAuthUser(authUserId: string): Promise<LearnerRow | null>;
   findById(id: string): Promise<LearnerRow | null>;
-  /** Creates the learner and links the identity together, or neither. */
+  /** Creates the learner and links the identity together, or neither. Throws `LinkConflict`. */
   createLinked(input: { id: string; name: string; authUserId: string }): Promise<void>;
 }
 

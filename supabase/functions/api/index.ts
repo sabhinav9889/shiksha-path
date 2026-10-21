@@ -4,6 +4,7 @@ import {
   createSql,
   createSupabaseAuth,
   handle,
+  jsonLogger,
   PgEventRepo,
   PgLearnerRepo,
   PgSwitchRepo,
@@ -24,6 +25,8 @@ const deps = {
   allowedOrigins: env('ALLOWED_ORIGINS')
     .split(',')
     .map((origin: string) => origin.trim()),
+  // The only place the API writes logs: one JSON line per request, ids and codes only.
+  logger: jsonLogger((line: string) => console.log(line)),
 };
 
 Deno.serve((request: Request) => handle(request, deps));

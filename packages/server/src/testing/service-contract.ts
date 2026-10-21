@@ -54,6 +54,28 @@ export function describeServiceContract(
     });
 
     describe('linking', () => {
+      test('two links at once for one identity: one creates it, the other finds it', async () => {
+        const auth = await f.newAuthUser();
+        const profileId = randomUUID();
+        const body = { profileId, name: 'A' };
+        const both = await Promise.all([linkLearner(f, auth, body), linkLearner(f, auth, body)]);
+        expect(both.map((r) => r.created).sort()).toEqual([false, true]);
+        expect(both.every((r) => r.learnerId === profileId)).toBe(true);
+      });
+
+      test('two identities racing for one profile id: one wins, the other is PROFILE_TAKEN', async () => {
+        const [one, two] = [await f.newAuthUser(), await f.newAuthUser()];
+        const body = { profileId: randomUUID(), name: 'A' };
+        const results = await Promise.allSettled([
+          linkLearner(f, one, body),
+          linkLearner(f, two, body),
+        ]);
+        const codes = results.map((r) =>
+          r.status === 'fulfilled' ? 'ok' : (r.reason as { code?: string }).code,
+        );
+        expect(codes.sort()).toEqual(['PROFILE_TAKEN', 'ok']);
+      });
+
       test('a new identity creates a learner with the phone profile id', async () => {
         const auth = await f.newAuthUser();
         const profileId = randomUUID();

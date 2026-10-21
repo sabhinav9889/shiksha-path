@@ -1,6 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import type { LearnerEvent } from '@shiksha/learner-core';
-import type { EventRepo, LearnerRepo, LearnerRow, SwitchRepo } from '../ports.js';
+import {
+  LinkConflict,
+  type EventRepo,
+  type LearnerRepo,
+  type LearnerRow,
+  type SwitchRepo,
+} from '../ports.js';
 import type { ServiceFixture } from './service-contract.js';
 
 const SEED_KEYS = [
@@ -29,7 +35,7 @@ export function makeMemoryRepos(): ServiceFixture {
     findById: (id) => Promise.resolve(learners.get(id) ?? null),
     createLinked: ({ id, name, authUserId }) => {
       if (learners.has(id) || identities.has(authUserId)) {
-        return Promise.reject(new Error('already exists'));
+        return Promise.reject(new LinkConflict());
       }
       learners.set(id, { id, name });
       identities.set(authUserId, id);

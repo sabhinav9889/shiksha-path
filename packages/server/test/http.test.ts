@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { cryptoIds, createEvent, systemClock } from '@shiksha/learner-core';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { handle, type HandlerDeps } from '../src/http/router.js';
+import { memoryLogger, type MemoryLogger } from '../src/logger.js';
 import type { Auth } from '../src/ports.js';
 import { linkLearner } from '../src/services/link.js';
 import { makeMemoryRepos } from '../src/testing/memory-repos.js';
@@ -9,6 +10,7 @@ import { makeMemoryRepos } from '../src/testing/memory-repos.js';
 const APP = 'https://app.example.org';
 const BASE = 'https://x.supabase.co/functions/v1/api';
 let deps: HandlerDeps;
+let logger: MemoryLogger;
 let a: string;
 let b: string;
 
@@ -22,7 +24,8 @@ beforeEach(async () => {
   const auth: Auth = {
     verify: (t) => Promise.resolve(tokens[t] ? { authUserId: tokens[t] } : null),
   };
-  deps = { ...repos, auth, allowedOrigins: [APP] };
+  logger = memoryLogger();
+  deps = { ...repos, auth, allowedOrigins: [APP], logger };
   a = (await linkLearner(repos, 'auth-a', { profileId: randomUUID(), name: 'A' })).learnerId;
   b = (await linkLearner(repos, 'auth-b', { profileId: randomUUID(), name: 'B' })).learnerId;
 });
@@ -168,5 +171,66 @@ describe('CORS', () => {
     expect(res.status).toBe(204);
     expect(res.headers.get('access-control-allow-methods')).toBe('GET, POST, OPTIONS');
     expect(res.headers.get('access-control-allow-headers')).toBe('authorization, content-type');
+  });
+});
+
+describe('streamed bodies', () => {
+  test('a body with no content-length is cut off once it passes the limit', async () => {
+    const CHUNK = 16_384;
+    let pulled = 0;
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulled += CHUNK;
+        controller.enqueue(new Uint8Array(CHUNK).fill(32)); // spaces: valid JSON padding
+        if (pulled > 2_000_000) controller.close();
+      },
+    });
+    const request = new Request(`${BASE}/v1/sync/push`, {
+      method: 'POST',
+      headers: { authorization: 'Bearer token-a', 'content-type': 'application/json' },
+      body: stream,
+      duplex: 'half',
+    } as RequestInit);
+    const res = await handle(request, deps);
+    expect(res.status).toBe(413);
+    expect(pulled).toBeLessThanOrEqual(262_145 + 65_536);
+  });
+});
+
+describe('logging', () => {
+  test('every request logs one line with its route, status and time', async () => {
+    await call('GET', '/v1/me', { token: 'token-a' });
+    await call('GET', '/v1/me');
+    expect(logger.entries).toHaveLength(2);
+    expect(logger.entries[0]).toMatchObject({ level: 'info', route: 'GET /v1/me', status: 200 });
+    expect(logger.entries[1]).toMatchObject({ route: 'GET /v1/me', status: 401 });
+    expect(logger.entries[1]?.code).toBe('UNAUTHENTICATED');
+    expect(typeof logger.entries[0]?.ms).toBe('number');
+  });
+
+  test('a server failure logs at error level as INTERNAL', async () => {
+    deps.learners.findByAuthUser = () => Promise.reject(new Error('db down: secret details'));
+    const res = await call('GET', '/v1/me', { token: 'token-a' });
+    expect(res.status).toBe(500);
+    expect(logger.entries.at(-1)).toMatchObject({ level: 'error', code: 'INTERNAL', status: 500 });
+    expect(JSON.stringify(logger.entries)).not.toContain('secret details');
+  });
+
+  test('nothing personal or secret is ever logged', async () => {
+    await call('POST', '/v1/learners/link', {
+      token: 'token-c',
+      body: { profileId: randomUUID(), name: 'Priya Sharma' },
+    });
+    await call('POST', '/v1/sync/push', { token: 'token-a', body: { learnerId: a, events: [] } });
+    const logged = JSON.stringify(logger.entries);
+    for (const secret of ['Priya', 'token-c', 'token-a', 'profileId', 'events']) {
+      expect(logged).not.toContain(secret);
+    }
+    expect(logged).not.toMatch(/name|email/);
+  });
+
+  test('an unknown route logs too', async () => {
+    await call('GET', '/v1/nope', { token: 'token-a' });
+    expect(logger.entries.at(-1)).toMatchObject({ route: 'GET /v1/nope', status: 404 });
   });
 });
