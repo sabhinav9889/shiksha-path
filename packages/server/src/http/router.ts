@@ -1,4 +1,5 @@
 import {
+  codeSignIn,
   linkRequest,
   linkResponse,
   meResponse,
@@ -10,10 +11,13 @@ import {
   recordingCompleteResponse,
   recordingStart,
   recordingStartResponse,
+  session,
 } from '@shiksha/api-contract';
 import type { Logger } from '../logger.js';
 import type {
   Auth,
+  CodeAuth,
+  CodeRepo,
   EventRepo,
   LearnerRepo,
   RateLimiter,
@@ -22,16 +26,21 @@ import type {
   SwitchRepo,
 } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
+import { signInWithCode } from '../services/codes.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
 import { completeRecording, startRecording } from '../services/recordings.js';
 import { pullEvents, pushEvents } from '../services/sync.js';
+import { clientKey } from './client-key.js';
 import { corsHeaders } from './cors.js';
 import { caller, jsonBody, parseWith, routePath } from './request.js';
 import { failure, json } from './respond.js';
 
 export interface HandlerDeps {
-  auth: Auth;
+  auth: Auth & CodeAuth;
+  codes: CodeRepo;
+  /** CODE_PEPPER: keys the code hashes and the network hash for rate limits. */
+  pepper: string;
   learners: LearnerRepo;
   events: EventRepo;
   switches: SwitchRepo;
@@ -73,6 +82,12 @@ const ROUTES: Record<string, Route> = {
     const { authUserId } = await caller(request, deps.auth);
     const body = parseWith(recordingComplete, await jsonBody(request));
     return recordingCompleteResponse.parse(await completeRecording(deps, authUserId, body));
+  },
+  /** Public: a backup-code student has no session yet. Rate-limited per network and overall. */
+  'POST /v1/auth/code': async (request, _url, deps) => {
+    const body = parseWith(codeSignIn, await jsonBody(request));
+    const key = await clientKey(request, deps.pepper);
+    return session.parse(await signInWithCode(deps, body.code, key));
   },
   'GET /v1/me': async (request, _url, deps) =>
     meResponse.parse(await getMe(deps, (await caller(request, deps.auth)).authUserId)),

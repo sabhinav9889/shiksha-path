@@ -1,11 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Auth } from '../ports.js';
+import type { Auth, CodeAuth } from '../ports.js';
 
-/** Verifies access tokens with Supabase Auth, which also catches revoked and deleted users. */
-export function createSupabaseAuth(url: string, serviceRoleKey: string): Auth {
-  const client = createClient(url, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+const NO_SESSION = { persistSession: false, autoRefreshToken: false } as const;
+const NOT_FOUND = 404;
+
+/**
+ * Supabase Auth: verifies access tokens (which also catches revoked and deleted users), and makes
+ * and signs in the email users behind backup codes, with the service role, inside the API only.
+ */
+export function createSupabaseAuth(url: string, serviceRoleKey: string): Auth & CodeAuth {
+  const client = createClient(url, serviceRoleKey, { auth: NO_SESSION });
   return {
     async verify(accessToken) {
       try {
@@ -17,6 +21,31 @@ export function createSupabaseAuth(url: string, serviceRoleKey: string): Auth {
       } catch {
         return null;
       }
+    },
+    async createCodeUser(password) {
+      const email = `code-${crypto.randomUUID()}@codes.invalid`;
+      const { data, error } = await client.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+      if (error || !data.user) throw new Error('could not create a code user');
+      return { authUserId: data.user.id, email };
+    },
+    async deleteUser(authUserId) {
+      const { error } = await client.auth.admin.deleteUser(authUserId);
+      if (error && error.status !== NOT_FOUND) throw new Error('could not delete a user');
+    },
+    async signInWithPassword(email, password) {
+      // A fresh client each time, so no session is kept in the API between requests.
+      const signer = createClient(url, serviceRoleKey, { auth: NO_SESSION });
+      const { data, error } = await signer.auth.signInWithPassword({ email, password });
+      if (error || !data.session) return null;
+      return {
+        accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
+        expiresAt: data.session.expires_at ?? 0,
+      };
     },
   };
 }

@@ -1,3 +1,4 @@
+import type { Session } from '@shiksha/api-contract';
 import type { LearnerEvent } from '@shiksha/learner-core';
 
 export interface LearnerRow {
@@ -93,4 +94,32 @@ export interface Caller {
 /** Verifies an access token; the identity comes from here, never from a request body. */
 export interface Auth {
   verify(accessToken: string): Promise<Caller | null>;
+}
+
+/** The auth users behind backup codes: made only by the server (Plan 3b). */
+export interface CodeAuth {
+  /** A new email user with a made-up address and this password. */
+  createCodeUser(password: string): Promise<{ authUserId: string; email: string }>;
+  deleteUser(authUserId: string): Promise<void>;
+  signInWithPassword(email: string, password: string): Promise<Session | null>;
+}
+
+export interface CodeRow {
+  learnerId: string;
+  lookup: string;
+  authUserId: string;
+  authEmail: string;
+}
+
+export interface CodeRepo {
+  findByLookup(lookup: string): Promise<CodeRow | null>;
+  forLearner(learnerId: string): Promise<CodeRow | null>;
+  /** The auth user linked to a learner, by code or by Google; null when none. */
+  identityOf(learnerId: string): Promise<string | null>;
+  /** A new learner, their identity and their code, together or not at all. */
+  createLearnerWithCode(row: CodeRow & { name: string }): Promise<void>;
+  /** An identity and a code for a learner who has neither. */
+  addCode(row: CodeRow): Promise<void>;
+  /** Point the learner's code and identity at a new auth user. */
+  replace(row: CodeRow): Promise<void>;
 }

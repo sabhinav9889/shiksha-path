@@ -6,6 +6,7 @@ import {
   handle,
   jsonLogger,
   PgEventRepo,
+  PgCodeRepo,
   PgLearnerRepo,
   PgRateLimiter,
   PgRecordingRepo,
@@ -19,6 +20,10 @@ function env(name: string): string {
   return value;
 }
 
+const MIN_PEPPER = 32;
+const pepper = env('CODE_PEPPER');
+if (pepper.length < MIN_PEPPER) throw new Error('CODE_PEPPER must be at least 32 characters');
+
 const sql = createSql(env('SUPABASE_DB_URL'));
 const deps = {
   auth: createSupabaseAuth(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY')),
@@ -26,6 +31,8 @@ const deps = {
   events: new PgEventRepo(sql),
   switches: new PgSwitchRepo(sql),
   limiter: new PgRateLimiter(sql),
+  codes: new PgCodeRepo(sql),
+  pepper,
   recordings: new PgRecordingRepo(sql),
   storage: createSupabaseRecordingStorage(
     env('SUPABASE_URL'),

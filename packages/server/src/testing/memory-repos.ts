@@ -21,8 +21,11 @@ const SEED_KEYS = [
   'community_feed',
 ];
 
+/** The memory repos, plus the identity map the memory code repo shares (auth user → learner). */
+export type MemoryRepos = ServiceFixture & { identities: Map<string, string> };
+
 /** In-memory repositories with the same behaviour as the Postgres ones. */
-export function makeMemoryRepos(): ServiceFixture {
+export function makeMemoryRepos(): MemoryRepos {
   const learners = new Map<string, LearnerRow>();
   const identities = new Map<string, string>();
   const events: (LearnerEvent & { seq: number })[] = [];
@@ -75,6 +78,7 @@ export function makeMemoryRepos(): ServiceFixture {
   };
 
   return {
+    identities,
     learners: learnerRepo,
     events: eventRepo,
     switches: switchRepo,

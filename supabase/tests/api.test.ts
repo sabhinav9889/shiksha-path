@@ -1,7 +1,14 @@
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
 import { createClient } from '@supabase/supabase-js';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { PgCodeRepo } from '../../packages/server/src/adapters/pg-code-repo.js';
+import { PgLearnerRepo } from '../../packages/server/src/adapters/pg-learner-repo.js';
+import { PgRateLimiter } from '../../packages/server/src/adapters/pg-rate-limiter.js';
+import { PgSwitchRepo } from '../../packages/server/src/adapters/pg-switch-repo.js';
+import { createSupabaseAuth } from '../../packages/server/src/adapters/supabase-auth.js';
+import { issueCode } from '../../packages/server/src/services/codes.js';
 import { connect } from './db.js';
 import { deleteUser, localStack, makeUser } from './stack.js';
 
@@ -210,5 +217,42 @@ describe('recordings through the function and the bucket', () => {
     const rows = (await rest.json()) as { learner_id: string }[];
     expect(rows.length).toBeGreaterThan(0);
     expect(rows.every((r) => r.learner_id === b.learner)).toBe(true);
+  });
+});
+
+describe('backup codes through the function', () => {
+  test('a code signs in, the session reaches /v1/me, and a wrong code is BAD_CODE', async () => {
+    // The pepper is the local placeholder from the functions' .env.local (not a secret).
+    const env = readFileSync('supabase/functions/.env.local', 'utf8');
+    const pepper = /^CODE_PEPPER=(.+)$/m.exec(env)?.[1] ?? '';
+    const { apiUrl, serviceKey } = localStack();
+    const deps = {
+      learners: new PgLearnerRepo(sql),
+      switches: new PgSwitchRepo(sql),
+      codes: new PgCodeRepo(sql),
+      auth: createSupabaseAuth(apiUrl, serviceKey),
+      limiter: new PgRateLimiter(sql),
+      pepper,
+    };
+    const { learnerId, code } = await issueCode(deps, { name: 'कोड' });
+    const res = await fetch(`${localStack().functionsUrl}/v1/auth/code`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ code }),
+    });
+    expect(res.status).toBe(200);
+    const { accessToken } = (await res.json()) as { accessToken: string };
+    const me = (await (await api('/v1/me', accessToken)).json()) as { learner: { id: string } };
+    expect(me.learner.id).toBe(learnerId);
+    const wrong = await fetch(`${localStack().functionsUrl}/v1/auth/code`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ code: 'ABCD-EFGH' }),
+    });
+    expect([wrong.status, await wrong.json()]).toEqual([401, { error: 'BAD_CODE' }]);
+    const [row] = await sql<{ auth_user_id: string }[]>`
+      select auth_user_id from login_codes where learner_id = ${learnerId}`;
+    await sql`delete from learners where id = ${learnerId}`;
+    await deps.auth.deleteUser(row?.auth_user_id ?? '');
   });
 });

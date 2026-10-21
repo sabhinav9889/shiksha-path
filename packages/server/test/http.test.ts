@@ -3,7 +3,7 @@ import { cryptoIds, createEvent, systemClock } from '@shiksha/learner-core';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { handle, type HandlerDeps } from '../src/http/router.js';
 import { memoryLogger, type MemoryLogger } from '../src/logger.js';
-import type { Auth } from '../src/ports.js';
+import { memoryAuth, memoryCodeRepo } from '../src/testing/memory-auth.js';
 import { linkLearner } from '../src/services/link.js';
 import { makeMemoryRepos } from '../src/testing/memory-repos.js';
 
@@ -21,12 +21,20 @@ beforeEach(async () => {
     'token-b': 'auth-b',
     'token-c': 'auth-c',
   };
-  const auth: Auth = {
-    verify: (t) =>
+  const auth = {
+    ...memoryAuth(),
+    verify: (t: string) =>
       Promise.resolve(tokens[t] ? { authUserId: tokens[t], provider: 'google' } : null),
   };
   logger = memoryLogger();
-  deps = { ...repos, auth, allowedOrigins: [APP], logger };
+  deps = {
+    ...repos,
+    auth,
+    codes: memoryCodeRepo(repos),
+    pepper: 'test-pepper-0123456789abcdef0123456789',
+    allowedOrigins: [APP],
+    logger,
+  };
   a = (
     await linkLearner(
       repos,
