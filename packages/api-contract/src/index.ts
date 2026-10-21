@@ -5,3 +5,4 @@ export * from './errors.js';
 export * from './learners.js';
 export * from './me.js';
 export * from './sync.js';
+export * from './recordings.js';

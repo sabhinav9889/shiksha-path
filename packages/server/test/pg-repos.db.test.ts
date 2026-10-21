@@ -7,6 +7,8 @@ import { afterAll, describe, expect, test } from 'vitest';
 import { PgEventRepo } from '../src/adapters/pg-event-repo.js';
 import { PgLearnerRepo } from '../src/adapters/pg-learner-repo.js';
 import { PgRateLimiter } from '../src/adapters/pg-rate-limiter.js';
+import { PgRecordingRepo } from '../src/adapters/pg-recording-repo.js';
+import { memoryRecordingStorage } from '../src/testing/memory-recording-storage.js';
 import { PgSwitchRepo } from '../src/adapters/pg-switch-repo.js';
 import { createSql } from '../src/adapters/pg.js';
 import { describeServiceContract, type ServiceFixture } from '../src/testing/service-contract.js';
@@ -27,6 +29,8 @@ async function makePgFixture(): Promise<ServiceFixture> {
     events: new PgEventRepo(sql),
     switches: new PgSwitchRepo(sql),
     limiter: new PgRateLimiter(sql),
+    recordings: new PgRecordingRepo(sql),
+    storage: memoryRecordingStorage(), // the real bucket is tested through the API
     async newAuthUser() {
       const id = randomUUID();
       await sql`insert into auth.users (id, instance_id, aud, role, email)

@@ -6,12 +6,25 @@ import {
   pullResponse,
   pushRequest,
   pushResponse,
+  recordingComplete,
+  recordingCompleteResponse,
+  recordingStart,
+  recordingStartResponse,
 } from '@shiksha/api-contract';
 import type { Logger } from '../logger.js';
-import type { Auth, EventRepo, LearnerRepo, RateLimiter, SwitchRepo } from '../ports.js';
+import type {
+  Auth,
+  EventRepo,
+  LearnerRepo,
+  RateLimiter,
+  RecordingRepo,
+  RecordingStorage,
+  SwitchRepo,
+} from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
+import { completeRecording, startRecording } from '../services/recordings.js';
 import { pullEvents, pushEvents } from '../services/sync.js';
 import { corsHeaders } from './cors.js';
 import { caller, jsonBody, parseWith, routePath } from './request.js';
@@ -23,6 +36,8 @@ export interface HandlerDeps {
   events: EventRepo;
   switches: SwitchRepo;
   limiter: RateLimiter;
+  recordings: RecordingRepo;
+  storage: RecordingStorage;
   allowedOrigins: readonly string[];
   logger: Logger;
 }
@@ -48,6 +63,16 @@ const ROUTES: Record<string, Route> = {
     const { authUserId } = await caller(request, deps.auth);
     const query = parseWith(pullQuery, Object.fromEntries(url.searchParams));
     return pullResponse.parse(await pullEvents(deps, authUserId, query));
+  },
+  'POST /v1/recordings/start': async (request, _url, deps) => {
+    const { authUserId } = await caller(request, deps.auth);
+    const body = parseWith(recordingStart, await jsonBody(request));
+    return recordingStartResponse.parse(await startRecording(deps, authUserId, body));
+  },
+  'POST /v1/recordings/complete': async (request, _url, deps) => {
+    const { authUserId } = await caller(request, deps.auth);
+    const body = parseWith(recordingComplete, await jsonBody(request));
+    return recordingCompleteResponse.parse(await completeRecording(deps, authUserId, body));
   },
   'GET /v1/me': async (request, _url, deps) =>
     meResponse.parse(await getMe(deps, (await caller(request, deps.auth)).authUserId)),

@@ -145,3 +145,70 @@ describe('sign-ups', () => {
     await deleteUser(user.id);
   });
 });
+
+describe('recordings through the function and the bucket', () => {
+  const recording = (over: Record<string, unknown> = {}) => ({
+    id: randomUUID(),
+    lessonId: 'ef1-02',
+    itemId: 's1',
+    mime: 'audio/webm',
+    bytes: 4,
+    durationMs: 1000,
+    at: new Date().toISOString(),
+    ...over,
+  });
+  const upload = (
+    url: string,
+    bytes: Uint8Array<ArrayBuffer>,
+    type = 'audio/webm',
+  ): Promise<Response> =>
+    fetch(url, { method: 'PUT', headers: { 'content-type': type }, body: bytes });
+
+  async function begin(token: string, body: Record<string, unknown>): Promise<string> {
+    const res = await api('/v1/recordings/start', token, body);
+    expect(res.status).toBe(200);
+    const { uploadUrl } = (await res.json()) as { uploadUrl: string };
+    return uploadUrl;
+  }
+
+  test('start, upload to the signed URL, then complete', async () => {
+    const body = recording();
+    const url = await begin(a.accessToken, body);
+    expect((await upload(url, Uint8Array.of(1, 2, 3, 4))).ok).toBe(true);
+    const done = await api('/v1/recordings/complete', a.accessToken, { id: body.id });
+    expect([done.status, await done.json()]).toEqual([200, { status: 'uploaded' }]);
+    const [row] = await sql`select status, learner_id from recordings where id = ${body.id}`;
+    expect(row).toEqual({ status: 'uploaded', learner_id: a.learner });
+  });
+
+  test('the bucket refuses more than 1 MB or a type that is not audio, whatever was declared', async () => {
+    const big = await begin(a.accessToken, recording());
+    expect((await upload(big, new Uint8Array(1_048_577))).ok).toBe(false);
+    const html = await begin(a.accessToken, recording());
+    expect((await upload(html, new TextEncoder().encode('<b>x</b>'), 'text/html')).ok).toBe(false);
+  });
+
+  test("another student can neither read nor list A's recordings with their own token", async () => {
+    const body = recording();
+    await upload(await begin(a.accessToken, body), Uint8Array.of(9, 9));
+    const { apiUrl, anonKey } = localStack();
+    const headers = { apikey: anonKey, authorization: `Bearer ${b.accessToken}` };
+    const read = await fetch(`${apiUrl}/storage/v1/object/recordings/${a.learner}/${body.id}`, {
+      headers,
+    });
+    expect(read.ok).toBe(false);
+    const list = await fetch(`${apiUrl}/storage/v1/object/list/recordings`, {
+      method: 'POST',
+      headers: { ...headers, 'content-type': 'application/json' },
+      body: JSON.stringify({ prefix: a.learner }),
+    });
+    const listed = list.ok ? ((await list.json()) as unknown[]) : [];
+    expect(listed).toEqual([]);
+    await begin(b.accessToken, recording()); // B has a recording row of their own
+    const rest = await fetch(`${apiUrl}/rest/v1/recordings?select=learner_id`, { headers });
+    expect(rest.status).toBe(200);
+    const rows = (await rest.json()) as { learner_id: string }[];
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => r.learner_id === b.learner)).toBe(true);
+  });
+});

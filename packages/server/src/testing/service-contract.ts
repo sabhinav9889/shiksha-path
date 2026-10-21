@@ -1,7 +1,17 @@
 import { randomUUID } from 'node:crypto';
+import type { RecordingStart } from '@shiksha/api-contract';
 import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import type { Caller, EventRepo, LearnerRepo, RateLimiter, SwitchRepo } from '../ports.js';
+import type {
+  Caller,
+  EventRepo,
+  LearnerRepo,
+  RateLimiter,
+  RecordingRepo,
+  SwitchRepo,
+} from '../ports.js';
+import { completeRecording, startRecording } from '../services/recordings.js';
+import type { MemoryRecordingStorage } from './memory-recording-storage.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
@@ -15,6 +25,9 @@ export interface ServiceFixture {
   events: EventRepo;
   switches: SwitchRepo;
   limiter: RateLimiter;
+  recordings: RecordingRepo;
+  /** Stands in for the bucket: a test "uploads" with `storage.put`. */
+  storage: MemoryRecordingStorage;
   newAuthUser(): Promise<string>;
   setAllStudents(key: string, enabled: boolean): Promise<void>;
   setOverride(learnerId: string, key: string, enabled: boolean): Promise<void>;
@@ -266,6 +279,70 @@ export function describeServiceContract(
           f.limiter.hit(bucket, 2, 60),
         ]);
         expect(both.filter(Boolean)).toHaveLength(1);
+      });
+    });
+
+    describe('recordings', () => {
+      const start = (over: Partial<RecordingStart> = {}): RecordingStart => ({
+        id: randomUUID(),
+        lessonId: 'ef1-02',
+        itemId: 's1',
+        mime: 'audio/webm',
+        bytes: 2048,
+        durationMs: 3000,
+        at: '2026-10-22T10:00:00.000Z',
+        ...over,
+      });
+
+      test('start, upload, complete: the object sits under the learner and is uploaded', async () => {
+        const body = start();
+        const out = await startRecording(f, authA, body);
+        expect(out.uploadUrl).toBeTruthy();
+        expect(out.token).toBeTruthy();
+        f.storage.put(`${a}/${body.id}`, 2048);
+        expect(await completeRecording(f, authA, { id: body.id })).toEqual({ status: 'uploaded' });
+        expect((await f.recordings.get(body.id))?.status).toBe('uploaded');
+        expect((await f.recordings.listByLearner(a)).map((r) => r.id)).toEqual([body.id]);
+      });
+
+      test('starting again: nothing to do once uploaded, a fresh URL while pending', async () => {
+        const body = start();
+        await startRecording(f, authA, body);
+        expect((await startRecording(f, authA, body)).uploadUrl).toBeTruthy();
+        f.storage.put(`${a}/${body.id}`, 2048);
+        await completeRecording(f, authA, { id: body.id });
+        expect(await startRecording(f, authA, body)).toEqual({ uploadUrl: null, token: null });
+      });
+
+      test("nobody starts or completes another learner's recording", async () => {
+        const body = start();
+        await startRecording(f, authA, body);
+        expect(await codeOf(startRecording(f, authB, body))).toBe('FORBIDDEN');
+        f.storage.put(`${a}/${body.id}`, 2048);
+        expect(await codeOf(completeRecording(f, authB, { id: body.id }))).toBe('FORBIDDEN');
+        expect((await f.recordings.get(body.id))?.status).toBe('pending');
+      });
+
+      test('complete needs the object, within the size limit', async () => {
+        const body = start();
+        await startRecording(f, authA, body);
+        expect(await codeOf(completeRecording(f, authA, { id: body.id }))).toBe('INVALID_REQUEST');
+        f.storage.put(`${a}/${body.id}`, 1_048_577);
+        expect(await codeOf(completeRecording(f, authA, { id: body.id }))).toBe('INVALID_REQUEST');
+        expect(await codeOf(completeRecording(f, authA, { id: randomUUID() }))).toBe(
+          'INVALID_REQUEST',
+        );
+      });
+
+      test('with speaking practice off for the learner, uploads are refused', async () => {
+        await f.setOverride(a, 'speaking_practice', false);
+        expect(await codeOf(startRecording(f, authA, start()))).toBe('FEATURE_OFF');
+        expect((await startRecording(f, authB, start())).uploadUrl).toBeTruthy();
+      });
+
+      test('the 101st start in a day is refused', async () => {
+        for (let n = 0; n < 100; n += 1) await startRecording(f, authA, start());
+        expect(await codeOf(startRecording(f, authA, start()))).toBe('RATE_LIMITED');
       });
     });
   });

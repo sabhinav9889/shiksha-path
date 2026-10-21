@@ -41,6 +41,44 @@ export interface SwitchRepo {
   overrides(learnerId: string): Promise<Record<string, boolean>>;
 }
 
+export interface RecordingRow {
+  id: string;
+  learnerId: string;
+  lessonId: string;
+  itemId: string;
+  mime: string;
+  bytes: number;
+  durationMs: number;
+  recordedAt: string;
+  status: 'pending' | 'uploaded';
+  uploadedAt: string | null;
+  reviewedAt: string | null;
+  /** When the upload was started (an old recording made offline can start uploading late). */
+  createdAt: string;
+}
+
+export interface RecordingRepo {
+  /** `exists`: this learner already has it; `ownedByOther`: the id is someone else's. */
+  create(
+    row: Omit<RecordingRow, 'status' | 'uploadedAt' | 'reviewedAt' | 'createdAt'>,
+  ): Promise<'created' | 'exists' | 'ownedByOther'>;
+  get(id: string): Promise<RecordingRow | null>;
+  markUploaded(id: string, at: Date): Promise<void>;
+  listByLearner(learnerId: string): Promise<RecordingRow[]>;
+  /** Rows retention should remove at `now` (Task 10). */
+  due(now: Date): Promise<RecordingRow[]>;
+  delete(ids: string[]): Promise<void>;
+}
+
+/** Where recordings live (spec §5.5 rule 5): S3-style, so another store is one adapter. */
+export interface RecordingStorage {
+  signUpload(path: string): Promise<{ url: string; token: string }>;
+  /** The stored object's size in bytes, or null when there is none. */
+  size(path: string): Promise<number | null>;
+  signDownload(path: string, seconds: number): Promise<string>;
+  remove(paths: string[]): Promise<void>;
+}
+
 /** Counts actions per bucket in fixed windows. `false` means this one is over the limit. */
 export interface RateLimiter {
   hit(bucket: string, limit: number, windowSeconds: number): Promise<boolean>;

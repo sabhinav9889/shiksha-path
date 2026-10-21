@@ -8,6 +8,8 @@ import {
   PgEventRepo,
   PgLearnerRepo,
   PgRateLimiter,
+  PgRecordingRepo,
+  createSupabaseRecordingStorage,
   PgSwitchRepo,
 } from './server.bundle.js';
 
@@ -24,6 +26,12 @@ const deps = {
   events: new PgEventRepo(sql),
   switches: new PgSwitchRepo(sql),
   limiter: new PgRateLimiter(sql),
+  recordings: new PgRecordingRepo(sql),
+  storage: createSupabaseRecordingStorage(
+    env('SUPABASE_URL'),
+    env('SUPABASE_SERVICE_ROLE_KEY'),
+    Deno.env.get('PUBLIC_SUPABASE_URL') ?? env('SUPABASE_URL'), // set only on a local stack
+  ),
   allowedOrigins: env('ALLOWED_ORIGINS')
     .split(',')
     .map((origin: string) => origin.trim()),

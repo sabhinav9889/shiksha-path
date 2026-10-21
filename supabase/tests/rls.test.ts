@@ -172,3 +172,28 @@ describe('database hardening', () => {
     expect(rows).toHaveLength(0);
   });
 });
+
+describe('recordings rows', () => {
+  test('each student reads only their own recordings, and the bucket is private', async () => {
+    for (const learner of [a, b]) {
+      await sql`insert into recordings (id, learner_id, lesson_id, item_id, mime, bytes,
+                                       duration_ms, recorded_at)
+                values (${randomUUID()}, ${learner.id}, 'ef1-02', 's1', 'audio/webm', 10, 1000,
+                        now())`;
+    }
+    for (const [mine, theirs] of [
+      [a, b],
+      [b, a],
+    ] as const) {
+      await asUser(sql, mine.authId, async (tx) => {
+        const rows = await tx`select learner_id from recordings`;
+        expect(rows.map((r) => r.learner_id)).toEqual([mine.id]);
+        expect(await tx`select 1 from recordings where learner_id = ${theirs.id}`).toHaveLength(0);
+      });
+    }
+    const [bucket] = await sql<{ public: boolean; file_size_limit: number }[]>`
+      select public, file_size_limit::int as file_size_limit from storage.buckets
+      where id = 'recordings'`;
+    expect(bucket).toEqual({ public: false, file_size_limit: 1048576 });
+  });
+});

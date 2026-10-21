@@ -8,6 +8,8 @@ import {
   type SwitchRepo,
 } from '../ports.js';
 import { memoryRateLimiter } from './memory-rate-limiter.js';
+import { memoryRecordingRepo } from './memory-recording-repo.js';
+import { memoryRecordingStorage } from './memory-recording-storage.js';
 import type { ServiceFixture } from './service-contract.js';
 
 const SEED_KEYS = [
@@ -77,6 +79,8 @@ export function makeMemoryRepos(): ServiceFixture {
     events: eventRepo,
     switches: switchRepo,
     limiter: memoryRateLimiter(),
+    recordings: memoryRecordingRepo(),
+    storage: memoryRecordingStorage(),
     newAuthUser: () => Promise.resolve(randomUUID()),
     setAllStudents: (key, enabled) => {
       allStudents.set(key, enabled);
