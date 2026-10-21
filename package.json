@@ -22,6 +22,7 @@
     "content:build": "tsx packages/content/src/cli.ts",
     "app:content": "tsx packages/content/src/cli.ts --out apps/learner/public/content",
     "test:e2e": "npm run build -w @shiksha/learner-app && playwright test -c apps/learner",
+    "test:e2e:backend": "node tooling/with-local-supabase.mjs npm run build -w @shiksha/learner-app && E2E_BACKEND=1 playwright test -c apps/learner --project chromium-backend",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",

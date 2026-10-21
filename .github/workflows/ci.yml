@@ -72,3 +72,7 @@ jobs:
           done
       - name: Database and API tests
         run: npm run test:db
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end tests against the local backend
+        run: npm run test:e2e:backend
