@@ -15,6 +15,12 @@ export const meStrings = {
   'me.never': { hi: 'अभी तक sync नहीं हुआ', en: 'Not synced yet' },
   'me.syncNow': { hi: 'अभी sync करें', en: 'Sync now' },
   'me.syncDone': { hi: 'पाठ अपडेट हो गए', en: 'Lessons are up to date' },
+  'me.recordingsUpload': { hi: 'रिकॉर्डिंग अपलोड करें', en: 'Upload recordings' },
+  'me.recordingsWaiting': {
+    hi: '{count} रिकॉर्डिंग अपलोड होनी हैं',
+    en: '{count} recordings to upload',
+  },
+  'me.recordingsDone': { hi: 'सब रिकॉर्डिंग अपलोड हो गईं', en: 'All recordings uploaded' },
   'me.storage': { hi: 'फ़ोन में डाउनलोड', en: 'Downloaded on this phone' },
   'me.used': { hi: '{used} MB इस्तेमाल', en: '{used} MB used' },
   'me.usedFree': {

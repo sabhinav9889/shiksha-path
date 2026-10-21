@@ -94,4 +94,21 @@ describe('upgrading the database to version 2', () => {
     await store.put(recording());
     expect((await store.summary('a')).count).toBe(1);
   });
+
+  test('uploaded recordings drop their bytes, keep their details, and no longer wait', async () => {
+    const store = new IdbRecordingStore(new ShikshaDb(freshName()));
+    const [one, two] = [recording(), recording({ itemId: 's2' })];
+    await store.put(one);
+    await store.put(two);
+    await store.put(recording({ learnerId: 'b' }));
+    expect((await store.pendingUpload('a')).map((r) => r.id).sort()).toEqual(
+      [one.id, two.id].sort(),
+    );
+    await store.markUploaded(one.id, '2026-10-22T10:00:00.000Z');
+    expect((await store.pendingUpload('a')).map((r) => r.id)).toEqual([two.id]);
+    const kept = await store.latest('a', 'ef1-02', 's1');
+    expect(kept?.bytes.length).toBe(0);
+    expect(kept?.uploadedAt).toBe('2026-10-22T10:00:00.000Z');
+    expect(await store.summary('a')).toEqual({ count: 1, bytes: 3 });
+  });
 });

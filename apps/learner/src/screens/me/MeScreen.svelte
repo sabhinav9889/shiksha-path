@@ -14,6 +14,7 @@
   import { install } from '../../runtime/install-prompt.js';
   import { browserStorageEstimator } from '../../storage/estimator.js';
   import { loadMe, type MeData } from './me-data.js';
+  import RecordingsCard from './RecordingsCard.svelte';
   import StorageCard from './StorageCard.svelte';
   import SyncCard from './SyncCard.svelte';
 
@@ -100,6 +101,7 @@
 
     <SyncCard {lang} sync={data.sync} {busy} {message} onsync={syncNow} />
     <StorageCard {lang} {data} />
+    {#if data.linked}<RecordingsCard {lang} />{/if}
   {/if}
 
   <section class="card links">

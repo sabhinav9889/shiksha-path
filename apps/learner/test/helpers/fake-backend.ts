@@ -1,4 +1,12 @@
-import { getMe, linkLearner, pullEvents, pushEvents, ApiFailure } from '@shiksha/server';
+import {
+  completeRecording,
+  getMe,
+  linkLearner,
+  pullEvents,
+  pushEvents,
+  startRecording,
+  ApiFailure,
+} from '@shiksha/server';
 import { makeMemoryRepos } from '@shiksha/server/testing';
 import type { ApiClient, ApiResult } from '../../src/api/api-client.js';
 import type { GoogleAuth } from '../../src/api/auth.js';
@@ -15,6 +23,8 @@ export interface FakeBackend {
   sessions: Map<string, string>;
   useGoogleAccount(id: string): void;
   setOnline(value: boolean): void;
+  /** Make every upload to a signed URL fail (the network drops mid-upload). */
+  failUploads(value: boolean): void;
   serverFor(googleAccount: string): ApiClient;
 }
 
@@ -24,6 +34,7 @@ export function makeFakeBackend(): FakeBackend {
   let nextGoogleAccount = 'google-1';
   let remembered: string | null = null;
   let online = true;
+  let uploadsFail = false;
 
   const run = async <T>(work: () => Promise<T>): Promise<ApiResult<T>> => {
     if (!online) return { ok: false, error: 'OFFLINE' };
@@ -46,6 +57,14 @@ export function makeFakeBackend(): FakeBackend {
       push: (body) => as((auth) => pushEvents(repos, auth, body)),
       pull: ({ after }) => as((auth) => pullEvents(repos, auth, { after, limit: 500 })),
       me: () => as((auth) => getMe(repos, auth)),
+      startRecording: (body) => as((auth) => startRecording(repos, auth, body)),
+      completeRecording: (body) => as((auth) => completeRecording(repos, auth, body)),
+      uploadTo: (url, bytes) => {
+        if (!online || uploadsFail) return Promise.resolve(false);
+        const path = new URL(url).pathname.slice(1); // memory://upload/<learner>/<id>
+        repos.storage.put(decodeURIComponent(path), bytes.length);
+        return Promise.resolve(true);
+      },
     };
   };
 
@@ -86,6 +105,9 @@ export function makeFakeBackend(): FakeBackend {
     },
     setOnline(value: boolean) {
       online = value;
+    },
+    failUploads(value: boolean) {
+      uploadsFail = value;
     },
     /** A server-side API client for one Google account, to set up "another phone". */
     serverFor: (googleAccount: string) => makeApi(() => Promise.resolve(googleAccount)),
