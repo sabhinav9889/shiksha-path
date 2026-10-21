@@ -65,7 +65,8 @@ describe('pull', () => {
     expect(ok(pullQuery, { limit: '0' })).toBe(false);
     expect(ok(pullQuery, { limit: '501' })).toBe(false);
     expect(ok(pullQuery, { after: '-1' })).toBe(false);
-    expect(ok(pullResponse, { events: [], next: null })).toBe(true);
+    expect(ok(pullResponse, { events: [], next: null, cursor: 0 })).toBe(true);
+    expect(ok(pullResponse, { events: [], next: null })).toBe(false);
   });
 });
 

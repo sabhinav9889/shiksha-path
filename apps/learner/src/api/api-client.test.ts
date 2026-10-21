@@ -46,7 +46,7 @@ describe('createApiClient', () => {
   test('each call goes to its route', async () => {
     const replies: Record<string, unknown> = {
       [`${BASE}/v1/learners/link`]: { learnerId, name: 'A', created: true },
-      [`${BASE}/v1/sync/pull?after=7`]: { events: [], next: null },
+      [`${BASE}/v1/sync/pull?after=7`]: { events: [], next: null, cursor: 7 },
       [`${BASE}/v1/me`]: {
         learner: { id: learnerId, name: 'A' },
         switches: {

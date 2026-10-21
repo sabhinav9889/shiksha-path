@@ -66,7 +66,11 @@ describe('each route', () => {
     expect(push.status).toBe(200);
     expect(((await json(push)) as { accepted: string[] }).accepted).toHaveLength(2);
     const pull = await call('GET', '/v1/sync/pull?after=0', { token: 'token-a' });
-    expect(await json(pull)).toEqual({ events, next: null });
+    expect(await json(pull)).toMatchObject({ events, next: null });
+    expect(
+      ((await json(await call('GET', '/v1/sync/pull', { token: 'token-a' }))) as { cursor: number })
+        .cursor,
+    ).toBeGreaterThan(0);
   });
 
   test('me lists the learner and every switch', async () => {

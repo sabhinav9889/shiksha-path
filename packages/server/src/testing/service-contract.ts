@@ -139,6 +139,15 @@ export function describeServiceContract(
           after = page.next;
         }
         expect(pages.map((p) => p.length)).toEqual([3, 3, 1]);
+        // the cursor says where the phone got to, even on the last page, so it can ask for new
+        // events only next time; with nothing new it stays put
+        const end = await pullEvents(f, authA, { after: 0, limit: 500 });
+        const again = await pullEvents(f, authA, { after: end.cursor, limit: 500 });
+        expect(again).toEqual({ events: [], next: null, cursor: end.cursor });
+        await pushEvents(f, authA, { learnerId: a, events: [event(a)] });
+        expect((await pullEvents(f, authA, { after: end.cursor, limit: 500 })).events).toHaveLength(
+          1,
+        );
         expect(pages.flat().sort()).toEqual(events.map((e) => e.id).sort());
       });
 

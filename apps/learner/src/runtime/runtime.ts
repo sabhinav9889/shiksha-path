@@ -9,9 +9,13 @@ import {
   type FlushResult,
   type Ids,
   type PartialStore,
+  type LearnerEvent,
   type ProfileStore,
   type StorageEstimator,
 } from '@shiksha/learner-core';
+import type { AccountDeps } from '../account/account.js';
+import { createApiClient } from '../api/api-client.js';
+import { apiConfig } from '../api/config.js';
 import { createRecorder, type Recorder } from '../audio/recorder.js';
 import { ShikshaDb } from '../storage/db.js';
 import { browserStorageEstimator } from '../storage/estimator.js';
@@ -43,6 +47,11 @@ export interface Runtime {
   openSession(profileId: string): Promise<LearnerSession>;
   syncStatus(learnerId: string): Promise<{ lastSyncedAt: string | null; pending: number }>;
   flush(learnerId: string): Promise<FlushResult>;
+  /** Google sign-in and /v1; null on a phone-only build. */
+  account: AccountDeps | null;
+  /** Store events that came from the server as already uploaded. */
+  appendSent(events: LearnerEvent[]): Promise<void>;
+  removeLearnerEvents(learnerId: string): Promise<void>;
 }
 
 interface RuntimeOptions {
@@ -52,6 +61,18 @@ interface RuntimeOptions {
   clock?: Clock;
   ids?: Ids;
   estimator?: StorageEstimator;
+  /** Tests pass a fake; `null` forces phone-only. */
+  account?: AccountDeps | null;
+}
+
+/** The real backend from the build's settings, loading the sign-in code only when needed. */
+function defaultAccount(db: ShikshaDb): AccountDeps | null {
+  const config = apiConfig();
+  if (!config) return null;
+  return {
+    loadAuth: async () => (await import('../api/auth.js')).createGoogleAuth({ db, ...config }),
+    makeApi: (token) => createApiClient({ baseUrl: config.baseUrl, token }),
+  };
 }
 
 /** Wires the browser adapters to the core's ports. One per app (tests make their own). */
@@ -90,5 +111,8 @@ export function createRuntime(opts: RuntimeOptions = {}): Runtime {
     },
     flush: (learnerId) =>
       flushOutbox(learnerId, { store: events, transport: noServerTransport, clock }),
+    account: opts.account === undefined ? defaultAccount(db) : opts.account,
+    appendSent: (list) => events.appendSent(list),
+    removeLearnerEvents: (learnerId) => events.removeLearner(learnerId),
   };
 }

@@ -12,6 +12,7 @@ const ROUTES: Route[] = [
   { name: 'placement' },
   { name: 'placement-result' },
   { name: 'me' },
+  { name: 'auth-callback' },
 ];
 
 describe('parseRoute', () => {
@@ -29,6 +30,12 @@ describe('parseRoute', () => {
 
   test('routeHref and parseRoute round-trip every route', () => {
     for (const route of ROUTES) expect(parseRoute(routeHref(route))).toEqual(route);
+  });
+});
+
+describe('the sign-in callback', () => {
+  test('ignores the query Google sign-in adds', () => {
+    expect(parseRoute('#/auth-callback?code=abc123')).toEqual({ name: 'auth-callback' });
   });
 });
 

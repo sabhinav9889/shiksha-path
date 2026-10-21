@@ -1,5 +1,6 @@
 import type { Localized, Manifest } from '@shiksha/content/schema';
 import { isModulePlayable, type LearnerSession } from '@shiksha/learner-core';
+import { isLinked } from '../../account/account.js';
 import type { Runtime } from '../../runtime/runtime.js';
 
 export interface HomeData {
@@ -11,6 +12,8 @@ export interface HomeData {
   reviewDue: number;
   /** The starting test is installed and the learner has neither taken nor skipped it. */
   placement: boolean;
+  /** Whether this profile is connected to Google; `null` on a phone-only build. */
+  linked: boolean | null;
   sync: { lastSyncedAt: string | null; pending: number };
 }
 
@@ -39,6 +42,7 @@ export async function loadHome(
   session: LearnerSession | null,
 ): Promise<HomeData> {
   const sync = await runtime.syncStatus(learnerId);
+  const linked = runtime.account ? await isLinked(runtime, learnerId) : null;
   const empty: HomeData = {
     state: 'download',
     today: null,
@@ -46,6 +50,7 @@ export async function loadHome(
     tracks: [],
     reviewDue: 0,
     placement: false,
+    linked,
     sync,
   };
   const manifest = await runtime.storage.getManifest();
@@ -66,6 +71,7 @@ export async function loadHome(
     tracks,
     reviewDue: session.reviewDue().length,
     placement: session.needsPlacement() && (await runtime.storage.getPlacement()) !== null,
+    linked,
     sync,
   };
 }

@@ -27,5 +27,7 @@ export const pullResponse = z.strictObject({
   events: z.array(z.unknown()),
   /** The cursor for the next page, or `null` when there is nothing more. */
   next: z.number().int().nullable(),
+  /** Where this page ended: pass it as `after` next time to get only newer events. */
+  cursor: z.number().int().min(0),
 });
 export type PullResponse = z.infer<typeof pullResponse>;

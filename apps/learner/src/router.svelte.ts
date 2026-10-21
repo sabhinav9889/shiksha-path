@@ -7,7 +7,8 @@ export type Route =
   | { name: 'finish' }
   | { name: 'placement' }
   | { name: 'placement-result' }
-  | { name: 'me' };
+  | { name: 'me' }
+  | { name: 'auth-callback' };
 
 const HOME: Route = { name: 'home' };
 const LESSON_ID = /^[a-z0-9-]+$/;
@@ -20,11 +21,13 @@ const SIMPLE_ROUTES = [
   'placement',
   'placement-result',
   'me',
+  'auth-callback',
 ] as const;
 
 /** Unknown, empty or malformed hashes go home; a lesson id must be a plain slug. */
 export function parseRoute(hash: string): Route {
-  const [head, ...rest] = hash.replace(/^#\/?/, '').split('/');
+  // Google sign-in may come back with `?code=…` after the route: only the path picks the route.
+  const [head, ...rest] = (hash.replace(/^#\/?/, '').split('?')[0] ?? '').split('/');
   if (head === 'learn') {
     const [lessonId] = rest;
     return rest.length === 1 && lessonId !== undefined && LESSON_ID.test(lessonId)

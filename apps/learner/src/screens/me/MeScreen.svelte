@@ -4,6 +4,7 @@
   import { appState, refreshSession, setLanguagePreference, signOut } from '../../app-state.svelte.js';
   import { errorMessage, t } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
+  import { linkSignedInProfile as link } from '../../account/link-signed-in.js';
   import { install } from '../../runtime/install-prompt.js';
   import { browserStorageEstimator } from '../../storage/estimator.js';
   import { loadMe, type MeData } from './me-data.js';
@@ -90,6 +91,11 @@
   {/if}
 
   <section class="card links">
+    {#if data?.linked === true}
+      <p>{t('account.linkedRow', lang)}</p>
+    {:else if data?.linked === false}
+      <button type="button" onclick={link}>{t('account.link', lang)}</button>
+    {/if}
     {#if canInstall}
       <button type="button" onclick={() => void install.prompt?.prompt()}>
         {t('me.install', lang)}

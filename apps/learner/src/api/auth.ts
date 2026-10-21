@@ -37,6 +37,8 @@ export interface GoogleAuth {
   finishGoogleSignIn(url: string): Promise<{ profileId: string } | null>;
   accessToken(profileId: string): Promise<string | null>;
   signOutGoogle(profileId: string): Promise<void>;
+  /** Carry a profile's sign-in session over to another profile id (after taking over a learner). */
+  moveSession(fromProfileId: string, toProfileId: string): Promise<void>;
 }
 
 /** Google sign-in through Supabase Auth with PKCE; one session per phone profile. */
@@ -73,6 +75,14 @@ export function createGoogleAuth(deps: AuthDeps): GoogleAuth {
     },
     async signOutGoogle(profileId) {
       await clientFor(profileId).auth.signOut({ scope: 'local' });
+    },
+    async moveSession(fromProfileId, toProfileId) {
+      const rows = await deps.db.auth.where('key').startsWith(`${fromProfileId}:`).toArray();
+      for (const row of rows) {
+        const name = row.key.slice(fromProfileId.length + 1);
+        await deps.db.auth.put({ key: `${toProfileId}:${name}`, value: row.value });
+        await deps.db.auth.delete(row.key);
+      }
     },
   };
 }

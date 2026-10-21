@@ -68,5 +68,6 @@ export async function pullEvents(
   return {
     events: events.map(withoutSeq),
     next: events.length === query.limit && last ? last.seq : null,
+    cursor: last?.seq ?? query.after,
   };
 }
