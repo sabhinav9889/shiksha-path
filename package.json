@@ -21,7 +21,13 @@
     "content:check": "tsx packages/content/src/cli.ts --check",
     "content:build": "tsx packages/content/src/cli.ts",
     "app:content": "tsx packages/content/src/cli.ts --out apps/learner/public/content",
-    "test:e2e": "npm run build -w @shiksha/learner-app && playwright test -c apps/learner"
+    "test:e2e": "npm run build -w @shiksha/learner-app && playwright test -c apps/learner",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "test:db": "vitest run -c vitest.db.config.ts",
+    "functions:build": "node tooling/build-functions.mjs",
+    "functions:serve": "npm run functions:build && supabase functions serve api --no-verify-jwt --env-file supabase/functions/.env.local"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
@@ -34,6 +40,7 @@
     "@testing-library/svelte": "^5.4.2",
     "@types/node": "^26.6.5",
     "@vitest/coverage-v8": "^5.0.5",
+    "esbuild": "^0.28.2",
     "eslint": "^10.13.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-svelte": "^3.23.1",
@@ -43,6 +50,7 @@
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.10",
     "secretlint": "^13.0.7",
+    "supabase": "^2.121.0",
     "svelte-check": "^4.7.7",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",

@@ -13,6 +13,8 @@ export default defineConfig({
     testTimeout: TEST_TIMEOUT_MS,
     setupFiles: ['apps/learner/test/setup.ts'],
     include: ['tooling/**/*.test.ts', 'packages/**/*.test.ts', 'apps/**/*.test.ts'],
+    // Database tests need the local Supabase stack (Docker): `npm run test:db`.
+    exclude: ['**/node_modules/**', '**/*.db.test.ts', 'supabase/**'],
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**', 'apps/*/src/**'],

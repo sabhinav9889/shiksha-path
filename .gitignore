@@ -11,3 +11,8 @@ apps/learner/dist
 apps/learner/public/content
 apps/learner/test-results
 apps/learner/playwright-report
+supabase/.branches
+supabase/.temp
+supabase/functions/.env*
+!supabase/functions/.env.local.example
+supabase/functions/api/server.bundle.js
