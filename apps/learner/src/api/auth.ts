@@ -50,7 +50,12 @@ export function createGoogleAuth(deps: AuthDeps): GoogleAuth {
       sessionStorage.setItem(LINKING_KEY, profileId);
       await clientFor(profileId).auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${location.origin}/#/auth-callback`, scopes: 'email profile' },
+        options: {
+          redirectTo: `${location.origin}/#/auth-callback`,
+          scopes: 'email profile',
+          // On a shared phone Google may remember another learner: always let them choose.
+          queryParams: { prompt: 'select_account' },
+        },
       });
     },
     async finishGoogleSignIn(url) {

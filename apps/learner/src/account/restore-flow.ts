@@ -47,6 +47,8 @@ export async function adopt(
   learner: { id: string; name: string },
 ): Promise<void> {
   if (from.id !== learner.id) {
+    // Callers check first; this stops any path from overwriting another profile's PIN.
+    if (await runtime.profiles.get(learner.id)) throw new Error('learner already on this phone');
     const reset = {
       ...from,
       id: learner.id,
@@ -84,8 +86,12 @@ export async function startRestore(runtime: Runtime, pin: string): Promise<strin
   return profile.id;
 }
 
+/** `onPhone`: that learner already has a profile here; it keeps its own PIN. */
 export type RestoreOutcome =
-  { kind: 'restored'; learnerId: string } | { kind: 'none' } | { kind: 'failed' };
+  | { kind: 'restored'; learnerId: string }
+  | { kind: 'onPhone' }
+  | { kind: 'none' }
+  | { kind: 'failed' };
 
 /** After Google sign-in: find this account's learner and bring it to the phone. */
 export async function completeRestore(
@@ -101,6 +107,10 @@ export async function completeRestore(
     return { kind: 'none' };
   }
   if (!me.ok) return { kind: 'failed' };
+  if (await runtime.profiles.get(me.value.learner.id)) {
+    await forgetProfile(runtime, provisionalId);
+    return { kind: 'onPhone' };
+  }
   await adopt(runtime, profile, me.value.learner);
   return { kind: 'restored', learnerId: me.value.learner.id };
 }

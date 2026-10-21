@@ -39,5 +39,9 @@ export const accountStrings = {
     hi: 'इस Google खाते की कोई प्रोफ़ाइल नहीं मिली',
     en: 'No profile was found for this Google account',
   },
+  'account.alreadyHere': {
+    hi: 'यह प्रोफ़ाइल इस फ़ोन पर पहले से है। उसे उसके PIN से खोलें।',
+    en: 'This profile is already on this phone. Open it with its PIN.',
+  },
   'account.continue': { hi: 'आगे', en: 'Continue' },
 } satisfies Record<string, Localized>;

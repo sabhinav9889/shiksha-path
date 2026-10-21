@@ -90,6 +90,25 @@ describe('linking a profile', () => {
     expect(await backend.google.accessToken(busy.id)).toBeNull(); // that session is dropped
   });
 
+  test('a learner already on this phone is never taken over by another profile (shared phone)', async () => {
+    const owner = await env.addProfile('प्रिया', '1111');
+    await signInGoogle(owner.id, 'google-priya');
+    expect(await linkProfile(env.runtime, owner.id)).toEqual({ kind: 'linked' });
+    await env.runtime.events.append(event(owner.id, 'lesson_completed'));
+    // Someone else makes a fresh profile; Google hands back the first learner's account.
+    const fresh = await env.addProfile('रवि', '2222');
+    await env.runtime.events.append(event(fresh.id, 'language_changed'));
+    await signInGoogle(fresh.id, 'google-priya');
+    expect(await linkProfile(env.runtime, fresh.id)).toEqual({ kind: 'elsewhere' });
+    expect((await env.runtime.profiles.get(owner.id))?.name).toBe('प्रिया');
+    await signIn(owner.id, '1111'); // the owner's PIN still opens it
+    await expect(signIn(owner.id, '2222')).rejects.toThrow();
+    expect(await env.runtime.profiles.get(fresh.id)).not.toBeNull();
+    expect(await isLinked(env.runtime, fresh.id)).toBe(false);
+    expect(await backend.google.accessToken(fresh.id)).toBeNull();
+    expect(await backend.google.accessToken(owner.id)).toBe('google-priya');
+  });
+
   test('offline, the profile stays usable and unlinked', async () => {
     const profile = await env.addProfile('रोहित');
     await signInGoogle(profile.id, 'google-rohit');
@@ -131,6 +150,21 @@ describe('restoring on a new phone', () => {
     expect((await env.runtime.profiles.list()).map((p) => p.id)).toEqual([server.id]);
   });
 
+  test('restoring a learner already on this phone keeps its PIN and drops the new one', async () => {
+    const server = await existingLearner('google-priya');
+    const first = await startRestore(env.runtime, '1111');
+    backend.useGoogleAccount('google-priya');
+    await backend.google.finishGoogleSignIn('https://app/#/auth-callback');
+    await completeRestore(env.runtime, first);
+    const second = await startRestore(env.runtime, '2222');
+    await backend.google.finishGoogleSignIn('https://app/#/auth-callback');
+    expect(await completeRestore(env.runtime, second)).toEqual({ kind: 'onPhone' });
+    expect((await env.runtime.profiles.list()).map((p) => p.id)).toEqual([server.id]);
+    await signIn(server.id, '1111');
+    await expect(signIn(server.id, '2222')).rejects.toThrow();
+    expect(await backend.google.accessToken(server.id)).toBe('google-priya');
+  });
+
   test('a Google account with no learner creates nothing', async () => {
     const provisional = await startRestore(env.runtime, '9876');
     backend.useGoogleAccount('google-nobody');
@@ -169,5 +203,22 @@ describe('the sign-in callback page', () => {
       expect(screen.getByRole('status').textContent?.trim()).toBe('Google से जुड़ गया'),
     );
     expect(await isLinked(env.runtime, profile.id)).toBe(true);
+  });
+
+  test('when linking breaks it says so and still offers the way on', async () => {
+    const profile = await env.addProfile('रोहित');
+    backend.useGoogleAccount('google-rohit');
+    await backend.google.startGoogleSignIn(profile.id);
+    await env.runtime.profiles.delete(profile.id);
+    vi.spyOn(env.runtime.profiles, 'get').mockRejectedValue(new Error('storage broke'));
+    navigate({ name: 'auth-callback' });
+    render(AuthCallback);
+    await vi.waitFor(() =>
+      expect(screen.getByRole('status').textContent?.trim()).toBe(
+        'अभी Google से नहीं जुड़ पाए। इंटरनेट मिलने पर फिर कोशिश करें।',
+      ),
+    );
+    expect(screen.getByRole('button', { name: 'आगे' })).toBeTruthy();
+    vi.restoreAllMocks();
   });
 });

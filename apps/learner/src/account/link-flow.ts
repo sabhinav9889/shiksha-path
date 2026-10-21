@@ -27,7 +27,10 @@ export async function linkProfile(runtime: Runtime, profileId: string): Promise<
     await setLinked(runtime, profileId);
     return { kind: 'linked' };
   }
-  if (await hasLearning(runtime, profileId)) {
+  // Never take over a learner already on this phone (a shared phone where Google remembered
+  // someone else's account), and never merge a profile that has its own learning.
+  const onPhone = (await runtime.profiles.get(result.value.learnerId)) !== null;
+  if (onPhone || (await hasLearning(runtime, profileId))) {
     const auth = await runtime.account?.loadAuth();
     await auth?.signOutGoogle(profileId);
     return { kind: 'elsewhere' };
