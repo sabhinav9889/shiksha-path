@@ -6,6 +6,7 @@ import { cryptoIds, createEvent, systemClock } from '@shiksha/learner-core';
 import { afterAll, describe, expect, test } from 'vitest';
 import { PgEventRepo } from '../src/adapters/pg-event-repo.js';
 import { PgLearnerRepo } from '../src/adapters/pg-learner-repo.js';
+import { PgRateLimiter } from '../src/adapters/pg-rate-limiter.js';
 import { PgSwitchRepo } from '../src/adapters/pg-switch-repo.js';
 import { createSql } from '../src/adapters/pg.js';
 import { describeServiceContract, type ServiceFixture } from '../src/testing/service-contract.js';
@@ -25,6 +26,7 @@ async function makePgFixture(): Promise<ServiceFixture> {
     learners: new PgLearnerRepo(sql),
     events: new PgEventRepo(sql),
     switches: new PgSwitchRepo(sql),
+    limiter: new PgRateLimiter(sql),
     async newAuthUser() {
       const id = randomUUID();
       await sql`insert into auth.users (id, instance_id, aud, role, email)

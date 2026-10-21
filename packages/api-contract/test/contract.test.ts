@@ -27,6 +27,9 @@ describe('error bodies', () => {
       'PROFILE_TAKEN',
       'TOO_LARGE',
       'INTERNAL',
+      'RATE_LIMITED',
+      'FEATURE_OFF',
+      'BAD_CODE',
     ]);
     expect(ok(errorBody, { error: 'FORBIDDEN' })).toBe(true);
     expect(ok(errorBody, { error: 'NOPE' })).toBe(false);

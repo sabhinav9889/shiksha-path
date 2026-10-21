@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import type { Caller, EventRepo, LearnerRepo, SwitchRepo } from '../ports.js';
+import type { Caller, EventRepo, LearnerRepo, RateLimiter, SwitchRepo } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
@@ -14,6 +14,7 @@ export interface ServiceFixture {
   learners: LearnerRepo;
   events: EventRepo;
   switches: SwitchRepo;
+  limiter: RateLimiter;
   newAuthUser(): Promise<string>;
   setAllStudents(key: string, enabled: boolean): Promise<void>;
   setOverride(learnerId: string, key: string, enabled: boolean): Promise<void>;
@@ -228,6 +229,43 @@ export function describeServiceContract(
         );
         expect(await codeOf(pullEvents(f, stranger, { after: 0, limit: 10 }))).toBe('NOT_LINKED');
         expect(await codeOf(getMe(f, stranger))).toBe('NOT_LINKED');
+      });
+    });
+
+    describe('rate limits', () => {
+      test('the 61st push in a minute is refused, and another learner is unaffected', async () => {
+        for (let n = 0; n < 60; n += 1) {
+          await pushEvents(f, authA, { learnerId: a, events: [event(a)] });
+        }
+        const over = pushEvents(f, authA, { learnerId: a, events: [event(a)] });
+        expect(await codeOf(over)).toBe('RATE_LIMITED');
+        expect(
+          (await pushEvents(f, authB, { learnerId: b, events: [event(b)] })).accepted,
+        ).toHaveLength(1);
+      });
+
+      test('the 61st pull in a minute is refused', async () => {
+        for (let n = 0; n < 60; n += 1) await pullEvents(f, authA, { after: 0, limit: 10 });
+        expect(await codeOf(pullEvents(f, authA, { after: 0, limit: 10 }))).toBe('RATE_LIMITED');
+      });
+
+      test('the 11th link in an hour by one sign-in is refused', async () => {
+        for (let n = 0; n < 9; n += 1) {
+          // the set-up's own link was the first
+          await linkLearner(f, google(authA), { profileId: randomUUID(), name: 'A' });
+        }
+        const over = linkLearner(f, google(authA), { profileId: randomUUID(), name: 'A' });
+        expect(await codeOf(over)).toBe('RATE_LIMITED');
+      });
+
+      test('two hits at once never both take the last slot', async () => {
+        const bucket = `test:${randomUUID()}`;
+        await f.limiter.hit(bucket, 2, 60);
+        const both = await Promise.all([
+          f.limiter.hit(bucket, 2, 60),
+          f.limiter.hit(bucket, 2, 60),
+        ]);
+        expect(both.filter(Boolean)).toHaveLength(1);
       });
     });
   });

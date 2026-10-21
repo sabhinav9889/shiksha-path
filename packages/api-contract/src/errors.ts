@@ -9,6 +9,9 @@ export const API_ERRORS = [
   'PROFILE_TAKEN',
   'TOO_LARGE',
   'INTERNAL',
+  'RATE_LIMITED',
+  'FEATURE_OFF',
+  'BAD_CODE',
 ] as const;
 export type ApiError = (typeof API_ERRORS)[number];
 

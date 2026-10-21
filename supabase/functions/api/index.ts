@@ -7,6 +7,7 @@ import {
   jsonLogger,
   PgEventRepo,
   PgLearnerRepo,
+  PgRateLimiter,
   PgSwitchRepo,
 } from './server.bundle.js';
 
@@ -22,6 +23,7 @@ const deps = {
   learners: new PgLearnerRepo(sql),
   events: new PgEventRepo(sql),
   switches: new PgSwitchRepo(sql),
+  limiter: new PgRateLimiter(sql),
   allowedOrigins: env('ALLOWED_ORIGINS')
     .split(',')
     .map((origin: string) => origin.trim()),

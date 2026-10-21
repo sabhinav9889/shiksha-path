@@ -1,6 +1,7 @@
 import type { PullQuery, PullResponse, PushRequest, PushResponse } from '@shiksha/api-contract';
 import { learnerEventSchema, type LearnerEvent } from '@shiksha/learner-core';
-import type { EventRepo, LearnerRepo } from '../ports.js';
+import type { EventRepo, LearnerRepo, RateLimiter } from '../ports.js';
+import { enforce } from './limits.js';
 import { callerLearner } from './caller.js';
 import { ApiFailure } from './failure.js';
 
@@ -33,11 +34,12 @@ function sortEvents(
  * again (a retry); one whose id belongs to someone else is rejected.
  */
 export async function pushEvents(
-  deps: { learners: LearnerRepo; events: EventRepo },
+  deps: { learners: LearnerRepo; events: EventRepo; limiter: RateLimiter },
   authUserId: string,
   request: PushRequest,
 ): Promise<PushResponse> {
   const learner = await callerLearner(deps.learners, authUserId);
+  await enforce(deps.limiter, 'push', `push:${learner.id}`);
   if (request.learnerId !== learner.id) throw new ApiFailure('FORBIDDEN');
   const { valid, rejected } = sortEvents(learner.id, request.events);
   if (valid.length === 0) return { accepted: [], rejected };
@@ -58,11 +60,12 @@ function withoutSeq(row: LearnerEvent & { seq: number }): LearnerEvent {
 
 /** The learner's events after the cursor, oldest first, for restore and other phones. */
 export async function pullEvents(
-  deps: { learners: LearnerRepo; events: EventRepo },
+  deps: { learners: LearnerRepo; events: EventRepo; limiter: RateLimiter },
   authUserId: string,
   query: PullQuery,
 ): Promise<PullResponse> {
   const learner = await callerLearner(deps.learners, authUserId);
+  await enforce(deps.limiter, 'pull', `pull:${learner.id}`);
   const { events } = await deps.events.page(learner.id, query.after, query.limit);
   const last = events.at(-1);
   return {

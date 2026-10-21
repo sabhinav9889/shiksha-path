@@ -1,5 +1,6 @@
 import type { LinkRequest, LinkResponse } from '@shiksha/api-contract';
-import { LinkConflict, type Caller, type LearnerRepo } from '../ports.js';
+import { LinkConflict, type Caller, type LearnerRepo, type RateLimiter } from '../ports.js';
+import { enforce } from './limits.js';
 import { ApiFailure } from './failure.js';
 
 /**
@@ -24,10 +25,11 @@ async function linkOnce(
 
 /** Link the caller to a learner. A request racing another for the same rows re-reads once. */
 export async function linkLearner(
-  deps: { learners: LearnerRepo },
+  deps: { learners: LearnerRepo; limiter: RateLimiter },
   who: Caller,
   request: LinkRequest,
 ): Promise<LinkResponse> {
+  await enforce(deps.limiter, 'link', `link:${who.authUserId}`);
   try {
     return await linkOnce(deps, who, request);
   } catch (error) {

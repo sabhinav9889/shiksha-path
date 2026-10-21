@@ -8,6 +8,9 @@ const STATUS: Record<ApiError, number> = {
   PROFILE_TAKEN: 409,
   TOO_LARGE: 413,
   INTERNAL: 500,
+  RATE_LIMITED: 429,
+  FEATURE_OFF: 403,
+  BAD_CODE: 401,
 };
 
 const HTTP_OK = 200;

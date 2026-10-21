@@ -7,6 +7,7 @@ import {
   type LearnerRow,
   type SwitchRepo,
 } from '../ports.js';
+import { memoryRateLimiter } from './memory-rate-limiter.js';
 import type { ServiceFixture } from './service-contract.js';
 
 const SEED_KEYS = [
@@ -75,6 +76,7 @@ export function makeMemoryRepos(): ServiceFixture {
     learners: learnerRepo,
     events: eventRepo,
     switches: switchRepo,
+    limiter: memoryRateLimiter(),
     newAuthUser: () => Promise.resolve(randomUUID()),
     setAllStudents: (key, enabled) => {
       allStudents.set(key, enabled);

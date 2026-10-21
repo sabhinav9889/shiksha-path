@@ -8,7 +8,7 @@ import {
   pushResponse,
 } from '@shiksha/api-contract';
 import type { Logger } from '../logger.js';
-import type { Auth, EventRepo, LearnerRepo, SwitchRepo } from '../ports.js';
+import type { Auth, EventRepo, LearnerRepo, RateLimiter, SwitchRepo } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
@@ -22,6 +22,7 @@ export interface HandlerDeps {
   learners: LearnerRepo;
   events: EventRepo;
   switches: SwitchRepo;
+  limiter: RateLimiter;
   allowedOrigins: readonly string[];
   logger: Logger;
 }

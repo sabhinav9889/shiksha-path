@@ -41,6 +41,11 @@ export interface SwitchRepo {
   overrides(learnerId: string): Promise<Record<string, boolean>>;
 }
 
+/** Counts actions per bucket in fixed windows. `false` means this one is over the limit. */
+export interface RateLimiter {
+  hit(bucket: string, limit: number, windowSeconds: number): Promise<boolean>;
+}
+
 /** Who is calling: the auth user and how they signed in (`google`, or `email` for codes). */
 export interface Caller {
   authUserId: string;
