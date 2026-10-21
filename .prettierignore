@@ -5,3 +5,4 @@ package-lock.json
 .superpowers
 # Lesson content is authored by people (and later AI drafts); never reformat it.
 /content/
+supabase/functions/api/server.bundle.js

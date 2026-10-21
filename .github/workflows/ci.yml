@@ -63,5 +63,12 @@ jobs:
       - run: npm ci
       - name: Local Supabase stack
         run: npx supabase start -x studio,imgproxy,inbucket,logflare,vector
-      - name: Database tests
+      - name: Serve the api Edge Function
+        run: |
+          npm run functions:serve > functions.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -s -o /dev/null http://127.0.0.1:54321/functions/v1/api/v1/me && break
+            sleep 2
+          done
+      - name: Database and API tests
         run: npm run test:db
