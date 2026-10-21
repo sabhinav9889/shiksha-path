@@ -142,3 +142,18 @@ describe('setLanguagePreference', () => {
     expect(appState.lang).toBe('en');
   });
 });
+
+describe('with the English-only option switched off', () => {
+  test('a strong first placement does not suggest English only', async () => {
+    const id = await signedIn();
+    await env.runtime.events.setMeta(
+      `switches:${id}`,
+      JSON.stringify({ english_only_option: false }),
+    );
+    await signIn(id, '1234');
+    await place(5);
+    render(PlacementResult);
+    await vi.waitFor(() => expect(text()).toContain('से शुरू'));
+    expect(text()).not.toContain('आपकी English अच्छी है');
+  });
+});

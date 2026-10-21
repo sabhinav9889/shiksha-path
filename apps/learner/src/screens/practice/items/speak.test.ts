@@ -5,6 +5,8 @@ import { MemoryBundleStorage } from '@shiksha/learner-core/testing';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { RecorderError, type Recorder, type RecordingResult } from '../../../audio/recorder.js';
+import { appState } from '../../../app-state.svelte.js';
+import { ALL_ON } from '../../../runtime/switches.js';
 import SpeakView from './SpeakView.svelte';
 
 const speak: Extract<PracticeItem, { type: 'speak_compare' }> = {
@@ -244,5 +246,22 @@ describe('review fixes', () => {
     await vi.waitFor(() => expect(revokeUrl).toHaveBeenCalledTimes(1));
     await fireEvent.click(button('मेरी रिकॉर्डिंग सुनें'));
     await vi.waitFor(() => expect(createUrl).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe('with speaking practice switched off', () => {
+  afterEach(() => {
+    appState.switches = { ...ALL_ON };
+  });
+
+  test('there is no record button, the model audio stays and "आगे" still works', async () => {
+    appState.switches = { ...ALL_ON, speaking_practice: false };
+    const { onanswer } = renderView(fakeRecorder());
+    expect(screen.queryByRole('button', { name: 'रिकॉर्ड करें' })).toBeNull();
+    expect(text()).not.toContain('सिर्फ़ आपको और आपके मेंटर को');
+    // the model audio is still offered (this test's phone has not downloaded it yet)
+    await vi.waitFor(() => button('ऑडियो डाउनलोड करें'));
+    await fireEvent.click(button('आगे'));
+    expect(onanswer).toHaveBeenCalledWith({ kind: 'spoken' });
   });
 });

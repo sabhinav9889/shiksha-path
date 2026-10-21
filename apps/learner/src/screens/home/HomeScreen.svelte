@@ -6,6 +6,8 @@
   import { errorMessage, failureMessage, t } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
   import { startPlacementRun } from '../placement/placement-flow.js';
+  import { linkSignedInProfile as link } from '../../account/link-signed-in.js';
+  import LinkCard from '../account/LinkCard.svelte';
   import DownloadCard from './DownloadCard.svelte';
   import PlacementCard from './PlacementCard.svelte';
   import { loadHome, type HomeData } from './home-data.js';
@@ -127,6 +129,10 @@
         <h2>{t('home.allDone', lang)}</h2>
         <p>{t('home.allDoneBody', lang)}</p>
       </section>
+    {/if}
+
+    {#if data.linked === false}
+      <LinkCard {lang} message="account.nudge" onlink={link} />
     {/if}
 
     {#if data.placement}

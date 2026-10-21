@@ -20,7 +20,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: /speaking-mic\.spec\.ts/,
+      testIgnore: /(speaking-mic|backend)\.spec\.ts/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 360, height: 640 } },
     },
     {
@@ -36,6 +36,16 @@ export default defineConfig({
         },
       },
     },
+    // Against the local Supabase stack and the served api function: `npm run test:e2e:backend`.
+    ...(process.env.E2E_BACKEND === '1'
+      ? [
+          {
+            name: 'chromium-backend',
+            testMatch: /backend\.spec\.ts/,
+            use: { ...devices['Desktop Chrome'], viewport: { width: 360, height: 640 } },
+          },
+        ]
+      : []),
   ],
   webServer: {
     command: `npm run preview -- --port ${PORT} --strictPort`,

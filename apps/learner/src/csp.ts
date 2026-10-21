@@ -14,8 +14,9 @@ function contentOrigin(contentBaseUrl: string): string | null {
  * A second guard behind build-time escaping of lesson HTML: only our own scripts run, nothing
  * inline, and the only other place the app may talk to is the lesson-pack host.
  */
-export function contentSecurityPolicy(contentBaseUrl: string): string {
+export function contentSecurityPolicy(contentBaseUrl: string, apiUrls: string[] = []): string {
   const packs = contentOrigin(contentBaseUrl);
+  const hosts = [packs, ...apiUrls.map((url) => contentOrigin(url))].filter(Boolean);
   return [
     "default-src 'self'",
     "script-src 'self'",
@@ -23,7 +24,7 @@ export function contentSecurityPolicy(contentBaseUrl: string): string {
     "img-src 'self' data: blob:",
     "media-src 'self' blob:",
     "font-src 'self'",
-    `connect-src 'self'${packs ? ` ${packs}` : ''}`,
+    ['connect-src', "'self'", ...new Set(hosts)].join(' '),
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'none'",
@@ -31,8 +32,11 @@ export function contentSecurityPolicy(contentBaseUrl: string): string {
 }
 
 /** Adds the policy to index.html when building (the dev server needs inline scripts). */
-export function cspPlugin(contentBaseUrl: string): Plugin & { apply: 'build' } {
-  const policy = contentSecurityPolicy(contentBaseUrl);
+export function cspPlugin(
+  contentBaseUrl: string,
+  apiUrls: string[] = [],
+): Plugin & { apply: 'build' } {
+  const policy = contentSecurityPolicy(contentBaseUrl, apiUrls);
   return {
     name: 'shiksha-csp',
     apply: 'build',

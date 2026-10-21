@@ -11,5 +11,7 @@ export default defineConfig(({ mode }) => {
   // The same source the app reads (import.meta.env): .env files and VITE_ variables.
   const env = loadEnv(mode, APP_DIR, 'VITE_');
   const contentBaseUrl = env.VITE_CONTENT_BASE_URL ?? '/content';
-  return { plugins: [svelte(), VitePWA(pwaOptions), cspPlugin(contentBaseUrl)] };
+  // Google sign-in and the /v1 API live on the Supabase host.
+  const apiUrls = env.VITE_SUPABASE_URL ? [env.VITE_SUPABASE_URL] : [];
+  return { plugins: [svelte(), VitePWA(pwaOptions), cspPlugin(contentBaseUrl, apiUrls)] };
 });

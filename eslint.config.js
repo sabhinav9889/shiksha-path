@@ -26,6 +26,8 @@ export default tseslint.config(
       '**/*.generated.*',
       '.superpowers/**',
       'apps/*/public/content/**',
+      // Deno code (checked by the Supabase runtime) and its generated bundle.
+      'supabase/functions/**',
     ],
   },
   js.configs.recommended,

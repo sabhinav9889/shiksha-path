@@ -51,3 +51,30 @@ jobs:
         run: npm run test:e2e
       - name: First-load size budget (120 KB gzipped)
         run: npm run size -w @shiksha/learner-app
+
+  db:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Build the api function (supabase start loads it; the bundle is not in git)
+        run: npm run functions:build
+      - name: Local Supabase stack
+        run: npx supabase start -x studio,imgproxy,inbucket,logflare,vector
+      - name: Serve the api Edge Function
+        run: |
+          npm run functions:serve > functions.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -s -o /dev/null http://127.0.0.1:54321/functions/v1/api/v1/me && break
+            sleep 2
+          done
+      - name: Database and API tests
+        run: npm run test:db
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end tests against the local backend
+        run: npm run test:e2e:backend

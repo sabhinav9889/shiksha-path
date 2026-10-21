@@ -7,6 +7,7 @@
   import HomeScreen from './screens/home/HomeScreen.svelte';
   import LearnScreen from './screens/learn/LearnScreen.svelte';
   import LessonsScreen from './screens/lessons/LessonsScreen.svelte';
+  import AuthCallback from './screens/account/AuthCallback.svelte';
   import MeScreen from './screens/me/MeScreen.svelte';
   import PlacementResult from './screens/placement/PlacementResult.svelte';
   import PlacementScreen from './screens/placement/PlacementScreen.svelte';
@@ -14,9 +15,14 @@
   import ProfilesScreen from './screens/profiles/ProfilesScreen.svelte';
   import Shell from './ui/Shell.svelte';
 
+  /** Places a signed-out phone may be: the picker, and the page Google sign-in returns to. */
+  const OPEN_ROUTES: Route['name'][] = ['profiles', 'auth-callback'];
+
   /** Without a signed-in profile the only place to be is the profile picker. */
   const route: Route = $derived(
-    appState.profile || router.current.name === 'profiles' ? router.current : { name: 'profiles' },
+    appState.profile || OPEN_ROUTES.includes(router.current.name)
+      ? router.current
+      : { name: 'profiles' },
   );
 
   $effect(() => {
@@ -62,6 +68,8 @@
       <PlacementResult />
     {:else if route.name === 'me'}
       <MeScreen />
+    {:else if route.name === 'auth-callback'}
+      <AuthCallback />
     {/if}
   </Shell>
 </div>

@@ -9,7 +9,9 @@ import {
 } from '@shiksha/learner-core';
 import { activity, audioInUse, resetActivity } from './activity.svelte.js';
 import { uiLang, type Lang } from './i18n/index.js';
+import { apiFor, isLinked } from './account/account.js';
 import type { Runtime } from './runtime/runtime.js';
+import { ALL_ON, loadSwitches, refreshSwitches, type Switches } from './runtime/switches.js';
 
 interface AppState {
   runtime: Runtime | null;
@@ -17,6 +19,8 @@ interface AppState {
   /** Null until lessons have been installed at least once. */
   session: LearnerSession | null;
   lang: Lang;
+  /** What the server lets this learner use; every feature is on until it says otherwise. */
+  switches: Switches;
 }
 
 export const appState = $state<AppState>({
@@ -24,6 +28,7 @@ export const appState = $state<AppState>({
   profile: null,
   session: null,
   lang: 'hi',
+  switches: { ...ALL_ON },
 });
 
 /** The content version the open session was built from; -1 when there is none. */
@@ -69,10 +74,35 @@ export async function signIn(profileId: string, pin: string): Promise<void> {
   const version = runtime.content.version;
   const lang = await languageOf(runtime, profile.id);
   const session = await openIfInstalled(runtime, profile.id);
+  const switches = await loadSwitches(runtime, profile.id);
   appState.profile = { id: profile.id, name: profile.name };
   appState.lang = lang;
   appState.session = session;
+  appState.switches = switches;
   openedAtVersion = session ? version : -1;
+  void updateSwitches(); // the cached values show at once; the server's follow when online
+}
+
+/** Show the signed-in learner's switches as stored on the phone. */
+export async function reloadSwitches(): Promise<void> {
+  const { runtime, profile } = appState;
+  if (!runtime || !profile) return;
+  const switches = await loadSwitches(runtime, profile.id);
+  if (appState.profile?.id === profile.id) appState.switches = switches;
+}
+
+/** Ask the server for the signed-in learner's switches (linked profiles only), then show them. */
+export async function updateSwitches(): Promise<void> {
+  const { runtime, profile } = appState;
+  if (!runtime || !profile) return;
+  try {
+    if (await isLinked(runtime, profile.id)) {
+      await refreshSwitches(runtime, await apiFor(runtime, profile.id), profile.id);
+    }
+  } catch {
+    // sign-in code could not load (offline first visit): the cached values stand
+  }
+  await reloadSwitches();
 }
 
 export function signOut(): void {
@@ -80,7 +110,17 @@ export function signOut(): void {
   appState.profile = null;
   appState.session = null;
   appState.lang = 'hi';
+  appState.switches = { ...ALL_ON };
   openedAtVersion = -1;
+}
+
+/**
+ * Nothing on the phone changed since this session was opened: reopening would only re-read every
+ * bundle (slow on a cheap phone). Every learner action goes through the session itself; `force`
+ * means events arrived from another phone, so the log changed even if lessons did not.
+ */
+function upToDate(version: number, force: boolean): boolean {
+  return !force && appState.session !== null && version === openedAtVersion;
 }
 
 /**
@@ -88,13 +128,11 @@ export function signOut(): void {
  * same learner is still signed in and no lesson started meanwhile; otherwise the result is dropped
  * (it could belong to someone else, or swap the session under a running lesson).
  */
-export async function refreshSession(): Promise<void> {
+export async function refreshSession(opts: { force?: boolean } = {}): Promise<void> {
   const { runtime, profile } = appState;
   if (!runtime || !profile || activity.current) return;
-  // Nothing on the phone changed since this session was opened: reopening would only re-read
-  // every bundle (slow on a cheap phone). Every learner action goes through the session itself.
   const version = runtime.content.version;
-  if (appState.session && version === openedAtVersion) return;
+  if (upToDate(version, opts.force === true)) return;
   const learnerId = profile.id;
   const session = await openIfInstalled(runtime, learnerId);
   const lang = await languageOf(runtime, learnerId);

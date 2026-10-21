@@ -10,9 +10,11 @@
   import { errorMessage, t, type Lang } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
   import { requestPersistence } from '../../runtime/persistence.js';
+  import { linkSignedInProfile } from '../../account/link-signed-in.js';
+  import LinkCard from '../account/LinkCard.svelte';
   import PinPad from './PinPad.svelte';
 
-  type Step = 'details' | 'pin' | 'confirm';
+  type Step = 'details' | 'pin' | 'confirm' | 'link';
 
   let {
     lang,
@@ -48,7 +50,8 @@
     if (existingCount === 0) await requestPersistence();
     await runtime.events.append(createEvent(runtime, profile.id, 'language_changed', { preference }));
     await signIn(profile.id, pin);
-    navigate({ name: 'home' });
+    if (runtime.account) step = 'link'; // offer Google straight away, while the learner is here
+    else navigate({ name: 'home' });
   }
 
   async function confirmPin(pin: string): Promise<void> {
@@ -87,10 +90,12 @@
         <input type="radio" name="preference" value="hi_en" bind:group={preference} />
         {t('create.langHiEn', lang)}
       </label>
-      <label class="choice">
-        <input type="radio" name="preference" value="en_only" bind:group={preference} />
-        {t('create.langEn', lang)}
-      </label>
+      {#if appState.switches.english_only_option}
+        <label class="choice">
+          <input type="radio" name="preference" value="en_only" bind:group={preference} />
+          {t('create.langEn', lang)}
+        </label>
+      {/if}
     </fieldset>
     {#if error}
       <p class="error" role="alert">{error}</p>
@@ -98,6 +103,13 @@
     <button class="primary" type="button" disabled={name.trim() === ''} onclick={() => (step = 'pin')}>
       {t('action.next', lang)}
     </button>
+  {:else if step === 'link'}
+    <LinkCard
+      {lang}
+      message="account.linkWhy"
+      onlink={linkSignedInProfile}
+      onlater={() => navigate({ name: 'home' })}
+    />
   {:else}
     <p class="prompt">{t(step === 'pin' ? 'create.pinNew' : 'create.pinConfirm', lang)}</p>
     <PinPad
@@ -111,7 +123,7 @@
     {/if}
   {/if}
 
-  {#if oncancel}
+  {#if oncancel && step !== 'link'}
     <button class="link" type="button" onclick={oncancel}>{t('create.cancel', lang)}</button>
   {/if}
 </section>

@@ -29,6 +29,29 @@ export class IdbEventStore implements EventStore {
     return events.filter((_, i) => acknowledged[i] === undefined).slice(0, limit);
   }
 
+  /**
+   * Events that came from the server: stored once and never uploaded again.
+   * Returns how many were new to this phone (its own uploads come back too).
+   */
+  async appendSent(events: LearnerEvent[]): Promise<number> {
+    let added = 0;
+    await this.db.transaction('rw', this.db.events, this.db.sent, async () => {
+      for (const event of events) {
+        const exists = await this.db.events.where('id').equals(event.id).count();
+        if (exists > 0) continue;
+        await this.db.events.add({ ...event });
+        added += 1;
+      }
+      await this.db.sent.bulkPut(events.map((e) => ({ id: e.id })));
+    });
+    return added;
+  }
+
+  /** Remove a learner's events from this phone (the profile was replaced or removed). */
+  async removeLearner(learnerId: string): Promise<void> {
+    await this.db.events.where('learnerId').equals(learnerId).delete();
+  }
+
   async markSent(ids: string[]): Promise<void> {
     await this.db.sent.bulkPut(ids.map((id) => ({ id })));
   }
