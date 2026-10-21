@@ -39,6 +39,9 @@ Plan: [Plan 3a](../superpowers/plans/2026-10-20-backend-sync.md) · Spec §5.4.
 2. In **Authentication → URL Configuration**:
    - set **Site URL** to `<APP_URL>`;
    - add the redirect URL `<APP_URL>/**`. The app comes back to `<APP_URL>/#/auth-callback`.
+3. In **Authentication → Sign In / Providers**, turn off the **Email** provider. Students sign in
+   with Google only, and email sign-in is on by default. Leave the general "allow new users to
+   sign up" setting **on**: new students sign up through Google.
 
 ## 4. Create the tables
 
@@ -66,6 +69,8 @@ npx supabase functions deploy api --no-verify-jwt
 - `--no-verify-jwt` is needed because the browser's CORS check carries no token. The API checks
   every request's sign-in itself and answers 401 without one.
 - Supabase gives the function its database URL and service key itself. Never set those by hand.
+- The function's package versions are pinned in `supabase/functions/api/deno.json`. Change them
+  only together with `package.json`, so every deploy runs the code the tests ran.
 - To allow more than one address, separate them with commas, for example
   `ALLOWED_ORIGINS=<APP_URL>,https://preview.example.org`.
 
