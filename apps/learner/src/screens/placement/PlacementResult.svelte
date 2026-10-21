@@ -62,7 +62,7 @@
       </div>
     {/each}
 
-    {#if suggesting}
+    {#if suggesting && appState.switches.english_only_option}
       <div class="card suggest">
         <p>{t('placementResult.suggest', lang)}</p>
         <button type="button" class="primary" onclick={accept}>

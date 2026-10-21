@@ -11,7 +11,7 @@ import '@fontsource/mukta/latin-600.css';
 import { mount } from 'svelte';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App.svelte';
-import { appState, initApp, refreshSession } from './app-state.svelte.js';
+import { appState, initApp, refreshSession, reloadSwitches } from './app-state.svelte.js';
 import { startAutoSync } from './runtime/auto-sync.js';
 import { captureInstallPrompt, install } from './runtime/install-prompt.js';
 import { createRuntime } from './runtime/runtime.js';
@@ -30,6 +30,7 @@ startAutoSync({
     if (!appState.profile) return;
     const { added } = await runtime.sync(appState.profile.id);
     if (added > 0) await refreshSession({ force: true });
+    await reloadSwitches();
   },
   target: window,
 });

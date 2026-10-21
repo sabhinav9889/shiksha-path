@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { appState } from '../../../app-state.svelte.js';
   import { t } from '../../../i18n/index.js';
   import AudioButton from '../../learn/AudioButton.svelte';
   import RecordPanel from './RecordPanel.svelte';
@@ -16,7 +17,13 @@
   <p class="prompt">{item.prompt[lang]}</p>
   <p class="text">{item.text}</p>
   <AudioButton {storage} path={item.model_audio} label={t('practice.listen', lang)} />
-  <RecordPanel {lang} {recorder} {locked} {onrecord} onnext={next} />
+  {#if appState.switches.speaking_practice}
+    <RecordPanel {lang} {recorder} {locked} {onrecord} onnext={next} />
+  {:else}
+    <button type="button" class="next" disabled={locked} onclick={next}>
+      {t('action.next', lang)}
+    </button>
+  {/if}
 </div>
 
 <style>
@@ -38,5 +45,19 @@
     font-family: var(--font-heading);
     font-size: 26px;
     line-height: 1.2;
+  }
+
+  .next {
+    min-height: 52px;
+    border: none;
+    border-radius: 14px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .next:disabled {
+    opacity: 0.4;
   }
 </style>

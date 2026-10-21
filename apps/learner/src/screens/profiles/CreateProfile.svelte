@@ -90,10 +90,12 @@
         <input type="radio" name="preference" value="hi_en" bind:group={preference} />
         {t('create.langHiEn', lang)}
       </label>
-      <label class="choice">
-        <input type="radio" name="preference" value="en_only" bind:group={preference} />
-        {t('create.langEn', lang)}
-      </label>
+      {#if appState.switches.english_only_option}
+        <label class="choice">
+          <input type="radio" name="preference" value="en_only" bind:group={preference} />
+          {t('create.langEn', lang)}
+        </label>
+      {/if}
     </fieldset>
     {#if error}
       <p class="error" role="alert">{error}</p>

@@ -14,7 +14,7 @@ import {
   type StorageEstimator,
 } from '@shiksha/learner-core';
 import { apiFor, isLinked, type AccountDeps } from '../account/account.js';
-import { createApiClient } from '../api/api-client.js';
+import { createApiClient, type ApiClient } from '../api/api-client.js';
 import { apiConfig } from '../api/config.js';
 import { createRecorder, type Recorder } from '../audio/recorder.js';
 import { ShikshaDb } from '../storage/db.js';
@@ -30,6 +30,7 @@ import { createFetcher } from './fetcher.js';
 import { Prefs } from './prefs.js';
 import { httpTransport } from './http-transport.js';
 import { pullNew } from './pull.js';
+import { refreshSwitches } from './switches.js';
 import { noServerTransport } from './transport.js';
 
 const ALL_PENDING = Number.MAX_SAFE_INTEGER;
@@ -49,7 +50,10 @@ export interface Runtime {
   openSession(profileId: string): Promise<LearnerSession>;
   syncStatus(learnerId: string): Promise<{ lastSyncedAt: string | null; pending: number }>;
   flush(learnerId: string): Promise<FlushResult>;
-  /** Upload, then fetch events made on other phones. `added` > 0 means progress changed. */
+  /**
+   * Upload, fetch events made on other phones, then refresh the feature switches.
+   * `added` > 0 means progress changed.
+   */
   sync(learnerId: string): Promise<{ flush: FlushResult; added: number }>;
   /** Google sign-in and /v1; null on a phone-only build. */
   account: AccountDeps | null;
@@ -77,6 +81,29 @@ function defaultAccount(db: ShikshaDb): AccountDeps | null {
     loadAuth: async () => (await import('../api/auth.js')).createGoogleAuth({ db, ...config }),
     makeApi: (token) => createApiClient({ baseUrl: config.baseUrl, token }),
   };
+}
+
+/**
+ * The /v1 client for a profile connected to Google; null otherwise, or when the sign-in code
+ * cannot load (offline before it was ever cached). Null means nothing is sent: events wait.
+ */
+async function linkedApi(runtime: Runtime, learnerId: string): Promise<ApiClient | null> {
+  if (!(await isLinked(runtime, learnerId))) return null;
+  try {
+    return await apiFor(runtime, learnerId);
+  } catch {
+    return null;
+  }
+}
+
+async function syncLearner(
+  runtime: Runtime,
+  learnerId: string,
+): Promise<{ flush: FlushResult; added: number }> {
+  const flush = await runtime.flush(learnerId);
+  const { added } = await pullNew(runtime, learnerId);
+  await refreshSwitches(runtime, await linkedApi(runtime, learnerId), learnerId);
+  return { flush, added };
 }
 
 /** Wires the browser adapters to the core's ports. One per app (tests make their own). */
@@ -116,15 +143,11 @@ export function createRuntime(opts: RuntimeOptions = {}): Runtime {
     },
     /** Upload pending events: through /v1 for a linked profile, otherwise they wait. */
     async flush(learnerId) {
-      const api = (await isLinked(runtime, learnerId)) ? await apiFor(runtime, learnerId) : null;
+      const api = await linkedApi(runtime, learnerId);
       const transport = api ? httpTransport(api) : noServerTransport;
       return flushOutbox(learnerId, { store: events, transport, clock });
     },
-    async sync(learnerId) {
-      const flush = await runtime.flush(learnerId);
-      const { added } = await pullNew(runtime, learnerId);
-      return { flush, added };
-    },
+    sync: (learnerId) => syncLearner(runtime, learnerId),
     account,
     appendSent: (list) => events.appendSent(list),
     removeLearnerEvents: (learnerId) => events.removeLearner(learnerId),

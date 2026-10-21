@@ -261,3 +261,17 @@ describe('hardening', () => {
     );
   });
 });
+
+describe('the placement switch', () => {
+  test('a cached placement_test: false hides the placement card', async () => {
+    const profile = await env.addProfile('प्रिया');
+    await env.runtime.events.setMeta(
+      `switches:${profile.id}`,
+      JSON.stringify({ placement_test: false }),
+    );
+    await signIn(profile.id, '1234');
+    render(HomeScreen);
+    await vi.waitFor(() => screen.getByText('पाठ 1'));
+    expect(screen.queryByText('शुरुआती टेस्ट दें')).toBeNull();
+  });
+});

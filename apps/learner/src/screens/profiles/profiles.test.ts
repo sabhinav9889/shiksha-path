@@ -5,6 +5,7 @@ import { makeEnv, type TestEnv } from '../../../test/helpers/installed-runtime.j
 import { activity } from '../../activity.svelte.js';
 import { appState, initApp, signOut } from '../../app-state.svelte.js';
 import { navigate, router } from '../../router.svelte.js';
+import CreateProfile from './CreateProfile.svelte';
 import ProfilesScreen from './ProfilesScreen.svelte';
 
 let env: TestEnv;
@@ -204,5 +205,17 @@ describe('hardening', () => {
     await vi.waitFor(() => expect(button('1').disabled).toBe(false), slow);
     await fireEvent.click(button('प्रिया'));
     await vi.waitFor(() => expect(button('1').disabled).toBe(true), slow);
+  });
+});
+
+describe('with the English-only option switched off', () => {
+  // The picker signs everybody out, so a new profile normally sees every feature on; the form
+  // itself still follows the switch.
+  test('the create form offers no English-only choice', async () => {
+    appState.switches = { ...appState.switches, english_only_option: false };
+    render(CreateProfile, { lang: 'hi', existingCount: 0 });
+    await vi.waitFor(() => screen.getByLabelText('आपका नाम'));
+    expect(screen.queryByLabelText('सिर्फ़ English')).toBeNull();
+    expect(screen.getByLabelText('हिंदी + English')).toBeTruthy();
   });
 });

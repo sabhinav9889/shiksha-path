@@ -2,6 +2,7 @@ import type { Localized, Manifest } from '@shiksha/content/schema';
 import { isModulePlayable, type LearnerSession } from '@shiksha/learner-core';
 import { isLinked } from '../../account/account.js';
 import type { Runtime } from '../../runtime/runtime.js';
+import { loadSwitches } from '../../runtime/switches.js';
 
 export interface HomeData {
   /** `download`: nothing playable on the phone yet. `done`: every playable lesson is finished. */
@@ -10,7 +11,7 @@ export interface HomeData {
   streak: { current: number; activeToday: boolean };
   tracks: { id: string; title: Localized; done: number; total: number }[];
   reviewDue: number;
-  /** The starting test is installed and the learner has neither taken nor skipped it. */
+  /** The test is installed and switched on, and the learner has neither taken nor skipped it. */
   placement: boolean;
   /** Whether this profile is connected to Google; `null` on a phone-only build. */
   linked: boolean | null;
@@ -70,7 +71,10 @@ export async function loadHome(
     streak: session.streak(),
     tracks,
     reviewDue: session.reviewDue().length,
-    placement: session.needsPlacement() && (await runtime.storage.getPlacement()) !== null,
+    placement:
+      session.needsPlacement() &&
+      (await loadSwitches(runtime, learnerId)).placement_test &&
+      (await runtime.storage.getPlacement()) !== null,
     linked,
     sync,
   };

@@ -1,7 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { LanguagePreference } from '@shiksha/learner-core';
-  import { appState, refreshSession, setLanguagePreference, signOut } from '../../app-state.svelte.js';
+  import {
+    appState,
+    refreshSession,
+    reloadSwitches,
+    setLanguagePreference,
+    signOut,
+  } from '../../app-state.svelte.js';
   import { errorMessage, t } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
   import { linkSignedInProfile as link } from '../../account/link-signed-in.js';
@@ -16,6 +22,11 @@
     { id: 'hi_en', label: 'हिंदी + English', sub: 'me.langHiEnSub' },
     { id: 'en_only', label: 'English only', sub: 'me.langEnSub' },
   ];
+
+  /** English only can be switched off for a learner (spec §8.1); then there is nothing to pick. */
+  const languages = $derived(
+    LANGUAGES.filter((c) => c.id !== 'en_only' || appState.switches.english_only_option),
+  );
 
   let data = $state<MeData | null>(null);
   let busy = $state(false);
@@ -51,6 +62,7 @@
     if (!result.ok) message = errorMessage(result.error, lang);
     else message = flush.ok ? t('me.syncDone', lang) : t('status.savedLater', lang);
     await refreshSession({ force: true });
+    await reloadSwitches();
     await load();
     busy = false;
   }
@@ -72,7 +84,7 @@
     <section class="card">
       <h2>{t('me.language', lang)}</h2>
       <div class="choices">
-        {#each LANGUAGES as choice (choice.id)}
+        {#each languages as choice (choice.id)}
           <button
             type="button"
             aria-pressed={data.language === choice.id}

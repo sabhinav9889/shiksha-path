@@ -176,3 +176,17 @@ describe('navigation', () => {
     expect(tab.getAttribute('aria-current')).toBe('page');
   });
 });
+
+describe('with the English-only option switched off', () => {
+  test('the me screen offers only हिंदी + English', async () => {
+    const profile = await env.addProfile('रवि');
+    await env.runtime.events.setMeta(
+      `switches:${profile.id}`,
+      JSON.stringify({ english_only_option: false }),
+    );
+    await signIn(profile.id, '1234');
+    render(MeScreen);
+    await vi.waitFor(() => button(/हिंदी \+ English/));
+    expect(screen.queryByRole('button', { name: /English only/ })).toBeNull();
+  });
+});

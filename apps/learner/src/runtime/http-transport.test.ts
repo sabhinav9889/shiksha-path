@@ -126,3 +126,21 @@ describe('pulling', () => {
     expect(await env.runtime.events.all(learner)).toHaveLength(2);
   });
 });
+
+test('when the sign-in code cannot load, sync keeps everything on the phone and does not throw', async () => {
+  const broken = await makeEnv({
+    account: { ...backend.account, loadAuth: () => Promise.reject(new Error('offline')) },
+  });
+  const profile = await broken.addProfile('रवि');
+  await setLinked(broken.runtime, profile.id);
+  await broken.runtime.events.append(
+    createEvent(broken.runtime, profile.id, 'lesson_completed', {
+      lessonId: 'ef1-01',
+      correct: 5,
+      scored: 5,
+    }),
+  );
+  const out = await broken.runtime.sync(profile.id);
+  expect(out).toMatchObject({ flush: { ok: false }, added: 0 });
+  expect(await broken.runtime.events.pending(profile.id, 10)).toHaveLength(1);
+});
