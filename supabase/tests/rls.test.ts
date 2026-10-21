@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type postgres from 'postgres';
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { addEvent, asAnon, asUser, connect, makeLearner, removeLearner } from './db.js';
 
@@ -74,6 +75,8 @@ describe('a signed-in student sees only their own rows (2 students, 2 cohorts)',
   });
 });
 
+type Tx = postgres.TransactionSql;
+
 describe('nobody writes through the database API', () => {
   test('a student cannot insert an event, even for themselves', async () => {
     await expect(
@@ -94,9 +97,30 @@ describe('nobody writes through the database API', () => {
     ['learners (delete)', 'delete from learners'],
     ['learner_events (delete)', 'delete from learner_events'],
     ['learner_identities (delete)', 'delete from learner_identities'],
+    ['learner_identities', 'update learner_identities set learner_id = learner_id'],
+    ['cohorts', "update cohorts set name = 'x'"],
+    ['cohorts (delete)', 'delete from cohorts'],
+    ['feature_switches (delete)', 'delete from feature_switches'],
+    ['feature_overrides (delete)', 'delete from feature_overrides'],
   ])('a student changes nothing in %s', async (_table, statement) => {
     const changed = await asUser(sql, a.authId, (tx) => tx.unsafe(statement));
     expect(changed.count).toBe(0);
+  });
+
+  test.each([
+    ['learners', (tx: Tx) => tx`insert into learners (id, name) values (${randomUUID()}, 'x')`],
+    ['cohorts', (tx: Tx) => tx`insert into cohorts (id, name) values (${randomUUID()}, 'x')`],
+    [
+      'feature_switches',
+      (tx: Tx) => tx`insert into feature_switches (key, enabled_for_all) values ('x', true)`,
+    ],
+    [
+      'feature_overrides',
+      (tx: Tx) => tx`insert into feature_overrides (learner_id, key, enabled)
+        values (${a.id}, 'ai_doubts', false)`,
+    ],
+  ] as const)('a student cannot insert into %s', async (_table, insert) => {
+    await expect(asUser(sql, a.authId, insert)).rejects.toThrow();
   });
 
   test('a student cannot link themselves to another learner', async () => {

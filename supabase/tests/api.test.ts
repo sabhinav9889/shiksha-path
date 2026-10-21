@@ -32,6 +32,12 @@ beforeAll(async () => {
     if (name === 'a') a = { ...user, learner };
     else b = { ...user, learner };
   }
+  // B has learning of its own, so "B sees only B's rows" is checked against real rows.
+  const res = await api('/v1/sync/push', b.accessToken, {
+    learnerId: b.learner,
+    events: [event(b.learner)],
+  });
+  expect(res.status).toBe(200);
 });
 
 afterAll(async () => {
@@ -59,9 +65,10 @@ describe('the /v1 API served by the Edge Function', () => {
   });
 
   test("another learner can neither read A's events nor push as A", async () => {
-    const pull = (await (await api('/v1/sync/pull?after=0', b.accessToken)).json()) as {
-      events: LearnerEvent[];
-    };
+    const res = await api('/v1/sync/pull?after=0', b.accessToken);
+    expect(res.status).toBe(200);
+    const pull = (await res.json()) as { events: LearnerEvent[] };
+    expect(pull.events.length).toBeGreaterThan(0);
     expect(pull.events.every((e) => e.learnerId === b.learner)).toBe(true);
     const push = await api('/v1/sync/push', b.accessToken, {
       learnerId: a.learner,
@@ -85,7 +92,9 @@ describe('the /v1 API served by the Edge Function', () => {
       'content-type': 'application/json',
     };
     const read = await fetch(`${apiUrl}/rest/v1/learner_events?select=learner_id`, { headers });
+    expect(read.status).toBe(200);
     const rows = (await read.json()) as { learner_id: string }[];
+    expect(rows.length).toBeGreaterThan(0);
     expect(rows.every((r) => r.learner_id === b.learner)).toBe(true);
     const write = await fetch(`${apiUrl}/rest/v1/learner_events`, {
       method: 'POST',
