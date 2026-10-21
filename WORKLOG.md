@@ -5,9 +5,9 @@ Active tasks. Read this at the start of every session. Details live in `.claude/
 
 **Statuses:** `in-progress` · `blocked` · `shipped` · `on-hold`
 
-| Task                       | Status      | Assignee | Branch                 | Next step                                                                                                      | Detail                                                    |
-| -------------------------- | ----------- | -------- | ---------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Plan 3a – backend and sync | in-progress | Claude   | `feature/backend-sync` | Final whole-branch review, then PR; owner then follows [the Supabase runbook](docs/runbooks/supabase-setup.md) | [plan](docs/superpowers/plans/2026-10-20-backend-sync.md) |
+| Task                       | Status      | Assignee | Branch                 | Next step                                                                                             | Detail                                                    |
+| -------------------------- | ----------- | -------- | ---------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Plan 3a – backend and sync | in-progress | Claude   | `feature/backend-sync` | Owner reviews and merges the PR, then follows [the Supabase runbook](docs/runbooks/supabase-setup.md) | [plan](docs/superpowers/plans/2026-10-20-backend-sync.md) |
 
 ## Archive
 
