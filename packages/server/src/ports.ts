@@ -1,4 +1,4 @@
-import type { Session } from '@shiksha/api-contract';
+import type { Branding, BrandingInput, Session } from '@shiksha/api-contract';
 import type { LearnerEvent } from '@shiksha/learner-core';
 
 export interface LearnerRow {
@@ -96,6 +96,13 @@ export interface LearnerDataRepo {
   deleteWithTombstone(learnerId: string): Promise<{ events: number }>;
   /** Which of these ids belong to students deleted on request. */
   deleted(ids: string[]): Promise<string[]>;
+}
+
+/** The platform's name and colours: one row, versioned (spec §8.1 branding). */
+export interface BrandingRepo {
+  get(): Promise<Branding>;
+  /** Save a checked change; returns the new version (the old one plus one). */
+  set(input: BrandingInput): Promise<{ version: number }>;
 }
 
 /** Counts actions per bucket in fixed windows. `false` means this one is over the limit. */

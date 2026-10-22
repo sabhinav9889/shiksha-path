@@ -288,3 +288,16 @@ describe('POST /v1/learners/deleted', () => {
     expect((await ask([randomUUID()], '198.51.100.2')).status).toBe(200);
   });
 });
+
+describe('GET /v1/branding', () => {
+  test('needs no sign-in and carries only the name, colours and version', async () => {
+    const res = await call('GET', '/v1/branding');
+    expect(res.status).toBe(200);
+    expect(await json(res)).toEqual({
+      name: { hi: 'शिक्षा पथ', en: 'Shiksha Path' },
+      primary: '#2f3ab2',
+      accent: '#b45309',
+      version: 0,
+    });
+  });
+});

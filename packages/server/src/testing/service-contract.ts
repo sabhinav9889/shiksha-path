@@ -3,6 +3,7 @@ import type { RecordingStart } from '@shiksha/api-contract';
 import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type {
+  BrandingRepo,
   Caller,
   EventRepo,
   LearnerRepo,
@@ -10,6 +11,7 @@ import type {
   RecordingRepo,
   SwitchRepo,
 } from '../ports.js';
+import { getBranding, setBranding } from '../services/branding.js';
 import { completeRecording, startRecording } from '../services/recordings.js';
 import type { MemoryRecordingStorage } from './memory-recording-storage.js';
 import { ApiFailure } from '../services/failure.js';
@@ -26,6 +28,7 @@ export interface ServiceFixture {
   switches: SwitchRepo;
   limiter: RateLimiter;
   recordings: RecordingRepo;
+  branding: BrandingRepo;
   /** Stands in for the bucket: a test "uploads" with `storage.put`. */
   storage: MemoryRecordingStorage;
   newAuthUser(): Promise<string>;
@@ -40,6 +43,16 @@ const codeOf = async (promise: Promise<unknown>): Promise<string | undefined> =>
     () => undefined,
     (error: unknown) => (error instanceof ApiFailure ? error.code : String(error)),
   );
+
+/**
+ * Rate windows are fixed clock windows: a burst that straddles a boundary splits across two.
+ * Start a burst with at least `margin` ms left in the current window.
+ */
+async function awayFromWindowEdge(windowSeconds: number, margin = 10_000): Promise<void> {
+  const windowMs = windowSeconds * 1000;
+  const left = windowMs - (Date.now() % windowMs);
+  if (left < margin) await new Promise((resolve) => setTimeout(resolve, left + 500));
+}
 
 const event = (learnerId: string): LearnerEvent =>
   createEvent({ clock: systemClock, ids: cryptoIds }, learnerId, 'language_changed', {
@@ -247,6 +260,7 @@ export function describeServiceContract(
 
     describe('rate limits', () => {
       test('the 61st push in a minute is refused, and another learner is unaffected', async () => {
+        await awayFromWindowEdge(60);
         for (let n = 0; n < 60; n += 1) {
           await pushEvents(f, authA, { learnerId: a, events: [event(a)] });
         }
@@ -258,6 +272,7 @@ export function describeServiceContract(
       });
 
       test('the 61st pull in a minute is refused', async () => {
+        await awayFromWindowEdge(60);
         for (let n = 0; n < 60; n += 1) await pullEvents(f, authA, { after: 0, limit: 10 });
         expect(await codeOf(pullEvents(f, authA, { after: 0, limit: 10 }))).toBe('RATE_LIMITED');
       });
@@ -343,6 +358,29 @@ export function describeServiceContract(
       test('the 101st start in a day is refused', async () => {
         for (let n = 0; n < 100; n += 1) await startRecording(f, authA, start());
         expect(await codeOf(startRecording(f, authA, start()))).toBe('RATE_LIMITED');
+      });
+    });
+
+    describe('branding', () => {
+      const readable = {
+        name: { hi: 'नई राह', en: 'New Path' },
+        primary: '#1f6f43',
+        accent: '#9a3412',
+      };
+
+      test('a readable change is saved and its version grows by one', async () => {
+        const before = await getBranding(f);
+        const { version } = await setBranding(f, readable);
+        expect(version).toBe(before.version + 1);
+        expect(await getBranding(f)).toEqual({ ...readable, version });
+        await setBranding(f, { name: before.name, primary: before.primary, accent: before.accent });
+      });
+
+      test('a colour white text cannot be read on is refused, and nothing changes', async () => {
+        const before = await getBranding(f);
+        const out = setBranding(f, { ...readable, primary: '#ffd400' });
+        expect(await codeOf(out)).toBe('INVALID_REQUEST');
+        expect(await getBranding(f)).toEqual(before);
       });
     });
   });

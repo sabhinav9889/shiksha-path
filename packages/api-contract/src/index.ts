@@ -7,3 +7,4 @@ export * from './me.js';
 export * from './sync.js';
 export * from './recordings.js';
 export * from './codes.js';
+export * from './branding.js';

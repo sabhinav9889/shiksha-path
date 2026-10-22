@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { activity, resetActivity } from './activity.svelte.js';
   import { appState } from './app-state.svelte.js';
+  import { applyBranding } from './runtime/branding.js';
   import { navigate, router, startRouter, type Route } from './router.svelte.js';
   import FinishScreen from './screens/finish/FinishScreen.svelte';
   import HomeScreen from './screens/home/HomeScreen.svelte';
@@ -28,6 +29,9 @@
   $effect(() => {
     if (route !== router.current) navigate(route);
   });
+
+  /** The NGO's name and colours, from the phone's copy; they follow every sync. */
+  $effect(() => applyBranding(appState.brand, document, appState.lang));
 
   /** Browser Back, a nav tab or a reload away from a run ends it, so no stale run lingers. */
   const RUN_SCREENS: Route['name'][] = [

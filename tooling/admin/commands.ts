@@ -1,8 +1,10 @@
 // The owner's admin tool until the admin panel (Plan 4): issue and reset backup codes, export and
 // delete a student's data. It runs the same services the API uses, with keys from the environment.
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { brandingInput } from '@shiksha/api-contract';
 import { z } from 'zod';
+import { PgBrandingRepo } from '../../packages/server/src/adapters/pg-branding-repo.js';
 import { PgCodeRepo } from '../../packages/server/src/adapters/pg-code-repo.js';
 import { PgLearnerDataRepo } from '../../packages/server/src/adapters/pg-learner-data-repo.js';
 import { PgLearnerRepo } from '../../packages/server/src/adapters/pg-learner-repo.js';
@@ -12,7 +14,9 @@ import { PgSwitchRepo } from '../../packages/server/src/adapters/pg-switch-repo.
 import { createSql } from '../../packages/server/src/adapters/pg.js';
 import { createSupabaseAuth } from '../../packages/server/src/adapters/supabase-auth.js';
 import { createSupabaseRecordingStorage } from '../../packages/server/src/adapters/supabase-recording-storage.js';
+import { setBranding } from '../../packages/server/src/services/branding.js';
 import { issueCode, resetCode, type CodeDeps } from '../../packages/server/src/services/codes.js';
+import type { BrandingRepo } from '../../packages/server/src/ports.js';
 import { ApiFailure } from '../../packages/server/src/services/failure.js';
 import {
   deleteLearner,
@@ -30,6 +34,7 @@ export interface AdminDeps {
   codes: CodeDeps;
   data: LearnerDataDeps;
   retention: RetentionDeps;
+  branding: BrandingRepo;
   close(): Promise<void>;
 }
 
@@ -66,6 +71,7 @@ export function makeAdminDeps(env: Record<string, string | undefined>): AdminDep
       auth,
     },
     retention: { recordings, storage, limiter: new PgRateLimiter(sql) },
+    branding: new PgBrandingRepo(sql),
     close: () => sql.end(),
   };
 }
@@ -77,6 +83,7 @@ export const USAGE = `Usage: npm run admin -- <command> [options]
   export --learner <id> --out <folder>        learner.json and the recordings, into the folder
   delete --learner <id> --yes                 Delete everything about the student, everywhere
   retention                                   Delete recordings past their time (runs nightly)
+  set-branding --file <json>                  Name {hi, en}, primary and accent colours (#rrggbb)
 
 Every command takes --dry-run (say what would happen) and --help.
 Reads SUPABASE_DB_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and CODE_PEPPER from the
@@ -199,6 +206,22 @@ const retention: Command = async (args, deps, io) => {
   return 0;
 };
 
+const brand: Command = async (args, deps, io) => {
+  const file = text(args, 'file');
+  if (!file) return usage(io, 'set-branding needs --file');
+  const input: unknown = JSON.parse(readFileSync(file, 'utf8'));
+  const checked = brandingInput.safeParse(input);
+  if (!checked.success) return usage(io, 'refused: a name or colour is not allowed (contrast 4.5)');
+  if (args.options.has('dry-run')) {
+    io.out('would set the branding');
+    return 0;
+  }
+  io.out(
+    `branding version ${(await setBranding({ branding: deps.branding }, checked.data)).version}`,
+  );
+  return 0;
+};
+
 function usage(io: AdminIo, problem: string): number {
   io.err(problem);
   io.err('run with --help for the commands');
@@ -211,6 +234,7 @@ const COMMANDS: Record<string, Command> = {
   export: exportCommand,
   delete: remove,
   retention,
+  'set-branding': brand,
 };
 
 /** Run one command; returns the exit code. Refusals from the services exit 1 with a reason. */

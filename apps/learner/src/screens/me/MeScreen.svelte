@@ -4,6 +4,7 @@
   import {
     appState,
     refreshSession,
+    reloadBranding,
     reloadSwitches,
     setLanguagePreference,
     signOut,
@@ -62,6 +63,7 @@
     else message = flush.ok ? t('me.syncDone', lang) : t('status.savedLater', lang);
     await refreshSession({ force: true });
     await reloadSwitches();
+    await reloadBranding();
     await load();
     busy = false;
   }

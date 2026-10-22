@@ -30,6 +30,7 @@ import { ContentService } from './content-service.js';
 import { createFetcher } from './fetcher.js';
 import { Prefs } from './prefs.js';
 import { httpTransport } from './http-transport.js';
+import { refreshBranding } from './branding.js';
 import { onUnmeteredNetwork } from './network.js';
 import { pullNew } from './pull.js';
 import { uploadRecordings } from './recording-upload.js';
@@ -111,6 +112,7 @@ async function deletedOnServer(
 async function syncLearner(runtime: Runtime, learnerId: string): Promise<SyncResult> {
   const flush = await runtime.flush(learnerId);
   const { added } = await pullNew(runtime, learnerId);
+  await refreshBranding(runtime); // for every profile: branding is not personal
   const api = await linkedApi(runtime, learnerId);
   const me = await refreshSwitches(runtime, api, learnerId);
   if (api && (await deletedOnServer(api, me, learnerId))) {

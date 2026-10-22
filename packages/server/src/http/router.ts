@@ -1,4 +1,5 @@
 import {
+  branding,
   codeSignIn,
   deletedCheck,
   deletedCheckResponse,
@@ -18,6 +19,7 @@ import {
 import type { Logger } from '../logger.js';
 import type {
   Auth,
+  BrandingRepo,
   CodeAuth,
   CodeRepo,
   EventRepo,
@@ -29,6 +31,7 @@ import type {
   SwitchRepo,
 } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
+import { getBranding } from '../services/branding.js';
 import { signInWithCode } from '../services/codes.js';
 import { checkDeleted } from '../services/learner-data.js';
 import { linkLearner } from '../services/link.js';
@@ -47,6 +50,7 @@ export interface HandlerDeps {
   pepper: string;
   learners: LearnerRepo;
   data: LearnerDataRepo;
+  branding: BrandingRepo;
   events: EventRepo;
   switches: SwitchRepo;
   limiter: RateLimiter;
@@ -100,6 +104,8 @@ const ROUTES: Record<string, Route> = {
     const key = await clientKey(request, deps.pepper);
     return deletedCheckResponse.parse(await checkDeleted(deps, body.learnerIds, key));
   },
+  /** Public: the name and colours are needed before anyone signs in, and are not personal. */
+  'GET /v1/branding': async (_request, _url, deps) => branding.parse(await getBranding(deps)),
   'GET /v1/me': async (request, _url, deps) =>
     meResponse.parse(await getMe(deps, (await caller(request, deps.auth)).authUserId)),
 };

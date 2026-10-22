@@ -11,7 +11,14 @@ import '@fontsource/mukta/latin-600.css';
 import { mount } from 'svelte';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App.svelte';
-import { appState, initApp, refreshSession, reloadSwitches, signOut } from './app-state.svelte.js';
+import {
+  appState,
+  initApp,
+  refreshSession,
+  reloadBranding,
+  reloadSwitches,
+  signOut,
+} from './app-state.svelte.js';
 import { navigate } from './router.svelte.js';
 import { startAutoSync } from './runtime/auto-sync.js';
 import { captureInstallPrompt, install } from './runtime/install-prompt.js';
@@ -37,9 +44,12 @@ startAutoSync({
     }
     if (added > 0) await refreshSession({ force: true });
     await reloadSwitches();
+    await reloadBranding();
   },
   target: window,
 });
+
+await reloadBranding(); // the phone's copy, before the first paint: no flash of the default
 
 const target = document.getElementById('app');
 if (target) mount(App, { target });

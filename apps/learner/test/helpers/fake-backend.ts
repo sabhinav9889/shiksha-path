@@ -1,6 +1,7 @@
 import {
   checkDeleted,
   completeRecording,
+  getBranding,
   getMe,
   linkLearner,
   pullEvents,
@@ -98,6 +99,7 @@ export function makeFakeBackend(): FakeBackend {
       startRecording: (body) => as((auth) => startRecording(repos, auth, body)),
       completeRecording: (body) => as((auth) => completeRecording(repos, auth, body)),
       codeSignIn: (body) => run(() => signInWithCode(codeDeps, body.code, 'phone-network')),
+      branding: () => run(() => getBranding(repos)),
       deletedCheck: (body) => {
         checks += 1;
         return run(() => checkDeleted(repos, body.learnerIds, 'phone-network'));

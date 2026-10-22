@@ -1,4 +1,4 @@
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeEach, describe, expect, test } from 'vitest';
@@ -29,7 +29,8 @@ describe('the admin tool', () => {
   test('--help lists every command and exits 0', async () => {
     expect(await run('--help')).toBe(0);
     const help = lines.join('\n');
-    for (const command of ['issue-code', 'reset-code', 'export', 'delete', 'retention']) {
+    const all = ['issue-code', 'reset-code', 'export', 'delete', 'retention', 'set-branding'];
+    for (const command of all) {
       expect(help).toContain(command);
     }
   });
@@ -84,6 +85,38 @@ describe('the admin tool', () => {
     expect(lines.join('\n')).toMatch(/would delete \d+ recordings?/);
     expect(await run('retention')).toBe(0);
     expect(lines.join('\n')).toMatch(/deleted \d+ recordings?, \d+ rate-limit windows?/);
+  });
+
+  test('set-branding takes a readable change from a file and refuses an unreadable one', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'shiksha-brand-'));
+    const file = (body: unknown): string => {
+      const path = join(dir, `${Math.random()}.json`);
+      writeFileSync(path, JSON.stringify(body));
+      return path;
+    };
+    try {
+      const name = { hi: 'शिक्षा पथ', en: 'Shiksha Path' };
+      expect(
+        await run('set-branding', '--file', file({ name, primary: '#ffd400', accent: '#b45309' })),
+      ).toBe(1);
+      expect(
+        await run(
+          'set-branding',
+          '--file',
+          file({ name, primary: '#1f6f43', accent: '#b45309' }),
+          '--dry-run',
+        ),
+      ).toBe(0);
+      expect(
+        await run('set-branding', '--file', file({ name, primary: '#1f6f43', accent: '#b45309' })),
+      ).toBe(0);
+      expect(lines.join('\n')).toMatch(/branding version \d+/);
+      expect(
+        await run('set-branding', '--file', file({ name, primary: '#2f3ab2', accent: '#b45309' })),
+      ).toBe(0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   test('the environment is checked, and secrets are never printed', async () => {
