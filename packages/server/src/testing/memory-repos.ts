@@ -8,6 +8,7 @@ import {
   type LearnerRow,
   type SwitchRepo,
 } from '../ports.js';
+import { memoryAudit } from './memory-audit.js';
 import { memoryBranding } from './memory-branding.js';
 import { memoryOrg, memoryStaff } from './memory-staff.js';
 import { memoryLearnerData } from './memory-learner-data.js';
@@ -96,6 +97,7 @@ export function makeMemoryRepos(): MemoryRepos {
     recordings: memoryRecordingRepo(),
     branding: memoryBranding(),
     staff: memoryStaff(),
+    audit: memoryAudit(),
     org: memoryOrg(learners),
     storage: memoryRecordingStorage(),
     newAuthUser: () => Promise.resolve(randomUUID()),

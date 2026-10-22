@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { cryptoIds, createEvent, systemClock } from '@shiksha/learner-core';
 import { afterAll, describe, expect, test } from 'vitest';
 import { PgBrandingRepo } from '../src/adapters/pg-branding-repo.js';
+import { PgAuditRepo } from '../src/adapters/pg-audit-repo.js';
 import { PgEventRepo } from '../src/adapters/pg-event-repo.js';
 import { PgOrgRepo } from '../src/adapters/pg-org-repo.js';
 import { PgStaffRepo } from '../src/adapters/pg-staff-repo.js';
@@ -39,6 +40,7 @@ async function makePgFixture(): Promise<ServiceFixture> {
     data: new PgLearnerDataRepo(sql),
     staff: new PgStaffRepo(sql),
     org: new PgOrgRepo(sql),
+    audit: new PgAuditRepo(sql),
     storage: memoryRecordingStorage(), // the real bucket is tested through the API
     async newAuthUser() {
       const id = randomUUID();

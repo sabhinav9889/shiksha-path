@@ -6,6 +6,7 @@ import {
   handle,
   jsonLogger,
   PgEventRepo,
+  PgAuditRepo,
   PgBrandingRepo,
   PgCodeRepo,
   PgLearnerDataRepo,
@@ -32,6 +33,7 @@ const sql = createSql(env('SUPABASE_DB_URL'));
 const deps = {
   auth: createSupabaseAuth(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY')),
   learners: new PgLearnerRepo(sql),
+  audit: new PgAuditRepo(sql),
   staff: new PgStaffRepo(sql),
   org: new PgOrgRepo(sql),
   data: new PgLearnerDataRepo(sql),

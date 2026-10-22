@@ -3,6 +3,7 @@ import type { RecordingStart } from '@shiksha/api-contract';
 import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type {
+  AuditRepo,
   BrandingRepo,
   Caller,
   EventRepo,
@@ -35,6 +36,7 @@ export interface ServiceFixture {
   data: LearnerDataRepo;
   staff: StaffRepo;
   org: OrgRepo;
+  audit: AuditRepo;
   /** Stands in for the bucket: a test "uploads" with `storage.put`. */
   storage: MemoryRecordingStorage;
   newAuthUser(): Promise<string>;

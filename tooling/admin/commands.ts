@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { brandingInput } from '@shiksha/api-contract';
 import { z } from 'zod';
+import { PgAuditRepo } from '../../packages/server/src/adapters/pg-audit-repo.js';
 import { PgBrandingRepo } from '../../packages/server/src/adapters/pg-branding-repo.js';
 import { PgCodeRepo } from '../../packages/server/src/adapters/pg-code-repo.js';
 import { PgStaffRepo } from '../../packages/server/src/adapters/pg-staff-repo.js';
@@ -67,6 +68,7 @@ export function makeAdminDeps(env: Record<string, string | undefined>): AdminDep
       pepper: e.CODE_PEPPER,
     },
     data: {
+      audit: new PgAuditRepo(sql),
       data: new PgLearnerDataRepo(sql),
       recordings,
       storage,

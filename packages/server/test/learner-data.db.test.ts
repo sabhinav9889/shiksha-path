@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { deleteUser, localStack, makeUser } from '../../../supabase/tests/stack.js';
+import { PgAuditRepo } from '../src/adapters/pg-audit-repo.js';
 import { PgCodeRepo } from '../src/adapters/pg-code-repo.js';
 import { PgLearnerDataRepo } from '../src/adapters/pg-learner-data-repo.js';
 import { PgLearnerRepo } from '../src/adapters/pg-learner-repo.js';
@@ -27,6 +28,7 @@ const bucket = createClient(apiUrl, serviceKey, { auth: { persistSession: false 
 );
 
 const deps = (): LearnerDataDeps => ({
+  audit: new PgAuditRepo(sql),
   data: new PgLearnerDataRepo(sql),
   recordings: new PgRecordingRepo(sql),
   storage: createSupabaseRecordingStorage(apiUrl, serviceKey),
@@ -125,6 +127,21 @@ describe('delete', () => {
     expect(await sql`select id from deleted_learners where id = ${a.id}`).toHaveLength(1);
     expect(Object.keys(await rowsNaming(b.id)).length).toBeGreaterThanOrEqual(4);
     expect((await bucket.list(b.id)).data).toHaveLength(1);
+  });
+
+  test('their audit entries stay, but no longer name them', async () => {
+    await new PgAuditRepo(sql).add({
+      staffId: null,
+      action: 'level_set',
+      learnerId: a.id,
+      details: { track: 'english' },
+    });
+    await deleteLearner(deps(), a.id);
+    expect(await sql`select 1 from audit_log where learner_id = ${a.id}`).toHaveLength(0);
+    const [row] = await sql<{ details: Record<string, string> }[]>`
+      select details from audit_log where details->>'track' = 'english'
+      order by id desc limit 1`;
+    expect(row?.details).toEqual({ track: 'english', learner: 'DELETED' });
   });
 
   test('a file with no row under the learner (a late upload) goes too', async () => {

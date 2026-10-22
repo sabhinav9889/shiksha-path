@@ -14,12 +14,15 @@ import {
   recordingCompleteResponse,
   recordingStart,
   recordingStartResponse,
+  auditPage,
+  auditQuery,
   session,
   staffClaim,
   staffMe,
 } from '@shiksha/api-contract';
 import type { Logger } from '../logger.js';
 import type {
+  AuditRepo,
   Auth,
   BrandingRepo,
   CodeAuth,
@@ -35,6 +38,7 @@ import type {
   SwitchRepo,
 } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
+import { listAudit } from '../services/audit.js';
 import { getBranding } from '../services/branding.js';
 import { signInWithCode } from '../services/codes.js';
 import { checkDeleted } from '../services/learner-data.js';
@@ -54,6 +58,7 @@ export interface HandlerDeps {
   /** CODE_PEPPER: keys the code hashes and the network hash for rate limits. */
   pepper: string;
   learners: LearnerRepo;
+  audit: AuditRepo;
   staff: StaffRepo;
   org: OrgRepo;
   data: LearnerDataRepo;
@@ -122,6 +127,11 @@ const ROUTES: Record<string, Route> = {
   'GET /v1/staff/me': async (request, _url, deps) => {
     const staff = await staffCaller(deps, await caller(request, deps.auth));
     return staffMe.parse(await getStaffMe(deps, staff));
+  },
+  'GET /v1/staff/audit': async (request, url, deps) => {
+    const staff = await staffCaller(deps, await caller(request, deps.auth));
+    const query = parseWith(auditQuery, Object.fromEntries(url.searchParams));
+    return auditPage.parse(await listAudit(deps, staff, query.before ?? null, query.limit));
   },
   'GET /v1/me': async (request, _url, deps) =>
     meResponse.parse(await getMe(deps, (await caller(request, deps.auth)).authUserId)),

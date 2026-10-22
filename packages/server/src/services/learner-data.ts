@@ -1,5 +1,6 @@
 import type { LearnerEvent } from '@shiksha/learner-core';
 import type {
+  AuditRepo,
   CodeAuth,
   LearnerDataRepo,
   RateLimiter,
@@ -12,6 +13,7 @@ import { enforce } from './limits.js';
 import { recordingPath } from './recordings.js';
 
 export interface LearnerDataDeps {
+  audit: AuditRepo;
   data: LearnerDataRepo;
   recordings: RecordingRepo;
   storage: RecordingStorage;
@@ -66,6 +68,7 @@ export async function deleteLearner(
   await deps.storage.remove(recordings.map((r) => recordingPath(learnerId, r.id)));
   for (const id of rows.authUserIds) await deps.auth.deleteUser(id);
   const { events } = await deps.data.deleteWithTombstone(learnerId);
+  await deps.audit.anonymiseLearner(learnerId); // entries stay, but no longer name them
   // A file with no row (an upload that raced the deletion) is still theirs: sweep the folder.
   await deps.storage.removePrefix(learnerId);
   return { events, recordings: recordings.length, authUsers: rows.authUserIds.length };

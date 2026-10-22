@@ -147,6 +147,26 @@ export interface StaffRepo {
   list(): Promise<StaffRow[]>;
 }
 
+export type AuditDetails = Record<string, string | number | boolean | null>;
+
+export interface AuditEntry {
+  id: number;
+  staffId: string | null;
+  action: string;
+  learnerId: string | null;
+  details: AuditDetails;
+  at: string;
+}
+
+/** Every staff action, kept until the NGO deletes it (spec §8.1 audit log). */
+export interface AuditRepo {
+  add(entry: Omit<AuditEntry, 'id' | 'at'>): Promise<void>;
+  /** Newest first, entries with an id below `before` (all when null). */
+  page(before: number | null, limit: number): Promise<AuditEntry[]>;
+  /** A learner deleted on request: their entries keep no id (privacy rule). */
+  anonymiseLearner(learnerId: string): Promise<void>;
+}
+
 /** Labs, cohorts and which cohort a learner is in. */
 export interface OrgRepo {
   saveLab(lab: { id?: string; name: string }): Promise<string>;

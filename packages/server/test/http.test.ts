@@ -329,3 +329,31 @@ describe('staff sign-in', () => {
     });
   });
 });
+
+describe('GET /v1/staff/audit', () => {
+  test('a mentor is refused; an admin reads the newest entries', async () => {
+    const lab = await deps.org.saveLab({ name: 'Lab' });
+    const cohort = await deps.org.saveCohort({ name: 'C1', labId: lab });
+    await deps.staff.save({
+      email: 'auth-c@ngo.example',
+      role: 'mentor',
+      name: 'M',
+      active: true,
+      cohortIds: [cohort],
+    });
+    await call('POST', '/v1/staff/claim', { token: 'token-c', body: {} });
+    expect((await call('GET', '/v1/staff/audit', { token: 'token-c' })).status).toBe(403);
+    const [mentor] = await deps.staff.list();
+    await deps.staff.save({ ...mentor!, role: 'admin', cohortIds: [] });
+    await deps.audit.add({
+      staffId: mentor!.id,
+      action: 'lab_saved',
+      learnerId: null,
+      details: {},
+    });
+    const res = await call('GET', '/v1/staff/audit?limit=5', { token: 'token-c' });
+    expect(res.status).toBe(200);
+    expect(await json(res)).toMatchObject({ entries: [{ action: 'lab_saved' }], next: null });
+    expect((await call('GET', '/v1/staff/audit?limit=0', { token: 'token-c' })).status).toBe(400);
+  });
+});

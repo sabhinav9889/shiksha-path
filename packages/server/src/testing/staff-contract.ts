@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { Caller } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
+import { listAudit, withAudit } from '../services/audit.js';
 import { claimStaff, inScope, staffCaller } from '../services/staff.js';
 import type { ServiceFixture } from './service-contract.js';
 
@@ -107,6 +108,81 @@ export function describeStaffContract(name: string, make: () => Promise<ServiceF
       const admin = await staffMember('admin', []);
       await inScope(f, admin, learnerA);
       await inScope(f, admin, learnerB);
+    });
+
+    describe('the audit log', () => {
+      // The log is shared by every test on a real database: look at this test's staff only.
+      const mine = async (staff: { staffId: string }, limit = 50) =>
+        (await listAudit(f, staff as never, null, limit)).entries.filter(
+          (e) => e.staffId === staff.staffId,
+        );
+
+      test('a successful action writes one entry; a failed one writes none', async () => {
+        const admin = await staffMember('admin', []);
+        await withAudit(
+          f,
+          { staff: admin, action: 'student_moved', learnerId: learnerA, details: { to: cohortB } },
+          () => f.org.setLearnerCohort(learnerA, cohortB),
+        );
+        const failing = withAudit(
+          f,
+          { staff: admin, action: 'student_moved', learnerId: learnerA, details: {} },
+          () => Promise.reject(new ApiFailure('INVALID_REQUEST')),
+        );
+        expect(await codeOf(failing)).toBe('INVALID_REQUEST');
+        const entries = await mine(admin);
+        expect(entries).toHaveLength(1);
+        expect(entries[0]).toMatchObject({
+          staffId: admin.staffId,
+          action: 'student_moved',
+          learnerId: learnerA,
+          details: { to: cohortB },
+        });
+      });
+
+      test('details may never carry a code, token or comment', async () => {
+        const admin = await staffMember('admin', []);
+        for (const key of ['code', 'token', 'comment']) {
+          const out = withAudit(
+            f,
+            { staff: admin, action: 'code_issued', learnerId: learnerA, details: { [key]: 'x' } },
+            () => Promise.resolve(),
+          );
+          expect(await codeOf(out)).toMatch(/audit details/);
+        }
+        expect(await mine(admin)).toEqual([]);
+      });
+
+      test('only an admin reads it, newest first, a page at a time', async () => {
+        const admin = await staffMember('admin', []);
+        for (const n of [1, 2, 3]) {
+          await withAudit(
+            f,
+            { staff: admin, action: 'lab_saved', learnerId: null, details: { n } },
+            () => Promise.resolve(),
+          );
+        }
+        const first = await listAudit(f, admin, null, 2);
+        expect(first.entries.map((e) => e.details.n)).toEqual([3, 2]);
+        const next = await listAudit(f, admin, first.next, 2);
+        expect(next.entries[0]?.details.n).toBe(1);
+        const mentor = await staffMember('mentor', [cohortA]);
+        expect(await codeOf(listAudit(f, mentor, null, 10))).toBe('FORBIDDEN');
+      });
+
+      test('deleting a learner anonymises their entries', async () => {
+        const admin = await staffMember('admin', []);
+        await withAudit(
+          f,
+          { staff: admin, action: 'level_set', learnerId: learnerA, details: { track: 'english' } },
+          () => Promise.resolve(),
+        );
+        await f.audit.anonymiseLearner(learnerA);
+        const [entry] = await mine(admin);
+        expect(entry?.learnerId).toBeNull();
+        expect(entry?.details).toEqual({ track: 'english', learner: 'DELETED' });
+        expect(JSON.stringify(entry)).not.toContain(learnerA);
+      });
     });
   });
 }
