@@ -3,8 +3,21 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { Caller } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
-import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
+import {
+  addDays,
+  cryptoIds,
+  createEvent,
+  istDay,
+  systemClock,
+  type LearnerEvent,
+} from '@shiksha/learner-core';
 import { listAudit, withAudit } from '../services/audit.js';
+import {
+  issueStudentCode,
+  markAttendance,
+  resetStudentCode,
+  setLevel,
+} from '../services/mentor-actions.js';
 import { listUnreviewed, recordingUrl, reviewRecording } from '../services/recording-review.js';
 import { listCohorts, studentDetail } from '../services/staff-read.js';
 import { claimStaff, inScope, staffCaller } from '../services/staff.js';
@@ -333,6 +346,88 @@ export function describeStaffContract(name: string, make: () => Promise<ServiceF
         expect((await f.recordings.due(at29)).map((r) => r.id)).not.toContain(id);
         const at31 = new Date(Date.parse(reviewedAt) + 31 * day);
         expect((await f.recordings.due(at31)).map((r) => r.id)).toContain(id);
+      });
+    });
+
+    describe("the mentor's actions", () => {
+      const today = () => istDay(new Date());
+      const entriesFor = async (staffId: string) =>
+        (await f.audit.page(null, 100)).filter((e) => e.staffId === staffId);
+
+      test('a mentor issues a code for a new student in their cohort, never another cohort', async () => {
+        const mentor = await staffMember('mentor', [cohortA]);
+        const out = await issueStudentCode(f, mentor, { name: 'नई', cohortId: cohortA });
+        expect(out.code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+        expect(await f.org.cohortOfLearner(out.learnerId)).toBe(cohortA);
+        const other = issueStudentCode(f, mentor, { name: 'X', cohortId: cohortB });
+        expect(await codeOf(other)).toBe('FORBIDDEN');
+        const log = await entriesFor(mentor.staffId);
+        expect(log.map((e) => e.action)).toEqual(['code_issued']);
+        expect(JSON.stringify(log)).not.toContain(out.code);
+      });
+
+      test('a reset by a mentor stops the old code', async () => {
+        const mentor = await staffMember('mentor', [cohortA]);
+        const issued = await issueStudentCode(f, mentor, { name: 'नई', cohortId: cohortA });
+        const reset = await resetStudentCode(f, mentor, { learnerId: issued.learnerId });
+        expect(reset.code).not.toBe(issued.code);
+        expect(await f.codes.findByLookup('x')).toBeNull(); // lookups are hashes, never the code
+        expect(await codeOf(resetStudentCode(f, mentor, { learnerId: learnerB }))).toBe(
+          'FORBIDDEN',
+        );
+      });
+
+      test('a level change is a server event in the learner log, refreshing the summary', async () => {
+        const mentor = await staffMember('mentor', [cohortA]);
+        const { eventId } = await setLevel(f, mentor, {
+          learnerId: learnerA,
+          track: 'english',
+          startLesson: 'ef1-03',
+        });
+        const { events } = await f.events.page(learnerA, 0, 100);
+        expect(events.find((e) => e.id === eventId)).toMatchObject({
+          type: 'level_set',
+          data: { track: 'english', startLesson: 'ef1-03' },
+        });
+        expect((await f.summaries.forLearners([learnerA])).has(learnerA)).toBe(true);
+        const out = setLevel(f, mentor, {
+          learnerId: learnerB,
+          track: 'english',
+          startLesson: 'x',
+        });
+        expect(await codeOf(out)).toBe('FORBIDDEN');
+        expect((await entriesFor(mentor.staffId)).map((e) => e.action)).toEqual(['level_set']);
+      });
+
+      test('attendance marks the whole cohort for a day, and marking again replaces it', async () => {
+        const mentor = await staffMember('mentor', [cohortA]);
+        const second = await learnerIn(cohortA);
+        const day = today();
+        expect(
+          await markAttendance(f, mentor, { cohortId: cohortA, day, present: [learnerA] }),
+        ).toEqual({ marked: 2 });
+        await markAttendance(f, mentor, { cohortId: cohortA, day, present: [second] });
+        const detail = await studentDetail(f, mentor, learnerA);
+        expect(detail.attendance).toEqual([{ date: day, present: false }]);
+        expect((await studentDetail(f, mentor, second)).attendance).toEqual([
+          { date: day, present: true },
+        ]);
+      });
+
+      test('attendance refuses a future day and a learner of another cohort, writing nothing', async () => {
+        const mentor = await staffMember('mentor', [cohortA]);
+        const tomorrow = addDays(today(), 1);
+        const future = markAttendance(f, mentor, { cohortId: cohortA, day: tomorrow, present: [] });
+        expect(await codeOf(future)).toBe('INVALID_REQUEST');
+        const stranger = markAttendance(f, mentor, {
+          cohortId: cohortA,
+          day: today(),
+          present: [learnerB],
+        });
+        expect(await codeOf(stranger)).toBe('FORBIDDEN');
+        expect((await studentDetail(f, mentor, learnerA)).attendance).toEqual([]);
+        const notMine = markAttendance(f, mentor, { cohortId: cohortB, day: today(), present: [] });
+        expect(await codeOf(notMine)).toBe('FORBIDDEN');
       });
     });
   });

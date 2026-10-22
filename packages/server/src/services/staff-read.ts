@@ -1,6 +1,7 @@
 import type { StaffCohorts, StudentDetail } from '@shiksha/api-contract';
 import { istDay, parseEvents, type LearnerEvent } from '@shiksha/learner-core';
 import type {
+  AttendanceRepo,
   CodeRepo,
   EventRepo,
   OrgRepo,
@@ -10,10 +11,12 @@ import type {
   SwitchRepo,
 } from '../ports.js';
 import { effectiveSwitches } from './me.js';
+import { attendanceFrom } from './mentor-actions.js';
 import { inScope, type StaffCaller } from './staff.js';
 import { needsAttention, type Attention, type Summary } from './summary.js';
 
 export interface StaffReadDeps {
+  attendance: AttendanceRepo;
   org: OrgRepo;
   summaries: SummaryRepo;
   events: EventRepo;
@@ -109,7 +112,7 @@ export async function studentDetail(
       reviewedAt: r.reviewedAt,
       comment: r.comment,
     })),
-    attendance: [] as { date: string; present: boolean }[], // Task 7 adds attendance
+    attendance: await deps.attendance.forLearner(learnerId, attendanceFrom()),
     switches,
     hasCode: code !== null,
   };

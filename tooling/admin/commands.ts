@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { PgAuditRepo } from '../../packages/server/src/adapters/pg-audit-repo.js';
 import { PgBrandingRepo } from '../../packages/server/src/adapters/pg-branding-repo.js';
 import { PgCodeRepo } from '../../packages/server/src/adapters/pg-code-repo.js';
+import { PgOrgRepo } from '../../packages/server/src/adapters/pg-org-repo.js';
 import { PgStaffRepo } from '../../packages/server/src/adapters/pg-staff-repo.js';
 import { PgLearnerDataRepo } from '../../packages/server/src/adapters/pg-learner-data-repo.js';
 import { PgLearnerRepo } from '../../packages/server/src/adapters/pg-learner-repo.js';
@@ -18,7 +19,12 @@ import { createSupabaseAuth } from '../../packages/server/src/adapters/supabase-
 import { createSupabaseRecordingStorage } from '../../packages/server/src/adapters/supabase-recording-storage.js';
 import { setBranding } from '../../packages/server/src/services/branding.js';
 import { issueCode, resetCode, type CodeDeps } from '../../packages/server/src/services/codes.js';
-import type { BrandingRepo, StaffRepo, StaffRole } from '../../packages/server/src/ports.js';
+import type {
+  BrandingRepo,
+  OrgRepo,
+  StaffRepo,
+  StaffRole,
+} from '../../packages/server/src/ports.js';
 import { ApiFailure } from '../../packages/server/src/services/failure.js';
 import {
   deleteLearner,
@@ -38,6 +44,7 @@ export interface AdminDeps {
   retention: RetentionDeps;
   branding: BrandingRepo;
   staff: StaffRepo;
+  org: OrgRepo;
   close(): Promise<void>;
 }
 
@@ -82,13 +89,14 @@ export function makeAdminDeps(env: Record<string, string | undefined>): AdminDep
     },
     branding: new PgBrandingRepo(sql),
     staff: new PgStaffRepo(sql),
+    org: new PgOrgRepo(sql),
     close: () => sql.end(),
   };
 }
 
 export const USAGE = `Usage: npm run admin -- <command> [options]
 
-  issue-code --name <name> | --learner <id>   A backup code for a student without Google
+  issue-code --name <name> [--cohort <id>] | --learner <id>   A code for a student without Google
   reset-code --learner <id>                   A new code; the old one stops working at once
   export --learner <id> --out <folder>        learner.json and the recordings, into the folder
   delete --learner <id> --yes                 Delete everything about the student, everywhere
@@ -140,6 +148,8 @@ const issue: Command = async (args, deps, io) => {
     return 0;
   }
   const out = await issueCode(deps.codes, learnerId ? { learnerId } : { name: name ?? '' });
+  const cohortId = text(args, 'cohort');
+  if (cohortId) await deps.org.setLearnerCohort(out.learnerId, cohortId);
   io.out(`learner ${out.learnerId}`);
   io.out(`code ${out.code}`);
   return 0;

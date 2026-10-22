@@ -382,3 +382,45 @@ describe("the mentor's read routes", () => {
     expect(await json(one)).toMatchObject({ student: { id: a }, hasCode: false });
   });
 });
+
+describe("the mentor's action routes", () => {
+  test('codes, level and attendance answer through HTTP, and bad input is refused', async () => {
+    const lab = await deps.org.saveLab({ name: 'Lab' });
+    const cohort = await deps.org.saveCohort({ name: 'C1', labId: lab });
+    await deps.org.setLearnerCohort(a, cohort);
+    await deps.staff.save({
+      email: 'auth-c@ngo.example',
+      role: 'mentor',
+      name: 'M',
+      active: true,
+      cohortIds: [cohort],
+    });
+    await call('POST', '/v1/staff/claim', { token: 'token-c', body: {} });
+    const issued = await call('POST', '/v1/staff/codes/issue', {
+      token: 'token-c',
+      body: { name: 'नई', cohortId: cohort },
+    });
+    expect(issued.status).toBe(200);
+    const level = await call('POST', '/v1/staff/level', {
+      token: 'token-c',
+      body: { learnerId: a, track: 'english', startLesson: 'ef1-03' },
+    });
+    expect(level.status).toBe(200);
+    const day = new Date(Date.now() + 19_800_000).toISOString().slice(0, 10);
+    const marked = await call('POST', '/v1/staff/attendance', {
+      token: 'token-c',
+      body: { cohortId: cohort, day, present: [a] },
+    });
+    expect(await json(marked)).toEqual({ marked: 2 });
+    const badDay = await call('POST', '/v1/staff/attendance', {
+      token: 'token-c',
+      body: { cohortId: cohort, day: '2026-13-40', present: [] },
+    });
+    expect(badDay.status).toBe(400);
+    const reset = await call('POST', '/v1/staff/codes/reset', {
+      token: 'token-c',
+      body: { learnerId: b },
+    });
+    expect(reset.status).toBe(403);
+  });
+});

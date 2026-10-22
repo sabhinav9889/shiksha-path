@@ -1,8 +1,16 @@
 import {
+  attendanceRequest,
+  attendanceResponse,
   branding,
+  codeIssueRequest,
+  codeIssueResponse,
+  codeResetRequest,
+  codeResetResponse,
   codeSignIn,
   deletedCheck,
   deletedCheckResponse,
+  levelRequest,
+  levelResponse,
   linkRequest,
   linkResponse,
   meResponse,
@@ -31,6 +39,7 @@ import {
 } from '@shiksha/api-contract';
 import type { Logger } from '../logger.js';
 import type {
+  AttendanceRepo,
   AuditRepo,
   Auth,
   BrandingRepo,
@@ -55,6 +64,12 @@ import { checkDeleted } from '../services/learner-data.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
 import { completeRecording, startRecording } from '../services/recordings.js';
+import {
+  issueStudentCode,
+  markAttendance,
+  resetStudentCode,
+  setLevel,
+} from '../services/mentor-actions.js';
 import { listUnreviewed, recordingUrl, reviewRecording } from '../services/recording-review.js';
 import { listCohorts, studentDetail } from '../services/staff-read.js';
 import { claimStaff, getStaffMe, staffCaller } from '../services/staff.js';
@@ -70,6 +85,7 @@ export interface HandlerDeps {
   /** CODE_PEPPER: keys the code hashes and the network hash for rate limits. */
   pepper: string;
   learners: LearnerRepo;
+  attendance: AttendanceRepo;
   audit: AuditRepo;
   summaries: SummaryRepo;
   staff: StaffRepo;
@@ -169,6 +185,26 @@ const ROUTES: Record<string, Route> = {
     const staff = await staffCaller(deps, await caller(request, deps.auth));
     const body = parseWith(reviewRequest, await jsonBody(request));
     return reviewResponse.parse(await reviewRecording(deps, staff, body));
+  },
+  'POST /v1/staff/codes/issue': async (request, _url, deps) => {
+    const staff = await staffCaller(deps, await caller(request, deps.auth));
+    const body = parseWith(codeIssueRequest, await jsonBody(request));
+    return codeIssueResponse.parse(await issueStudentCode(deps, staff, body));
+  },
+  'POST /v1/staff/codes/reset': async (request, _url, deps) => {
+    const staff = await staffCaller(deps, await caller(request, deps.auth));
+    const body = parseWith(codeResetRequest, await jsonBody(request));
+    return codeResetResponse.parse(await resetStudentCode(deps, staff, body));
+  },
+  'POST /v1/staff/level': async (request, _url, deps) => {
+    const staff = await staffCaller(deps, await caller(request, deps.auth));
+    const body = parseWith(levelRequest, await jsonBody(request));
+    return levelResponse.parse(await setLevel(deps, staff, body));
+  },
+  'POST /v1/staff/attendance': async (request, _url, deps) => {
+    const staff = await staffCaller(deps, await caller(request, deps.auth));
+    const body = parseWith(attendanceRequest, await jsonBody(request));
+    return attendanceResponse.parse(await markAttendance(deps, staff, body));
   },
   'GET /v1/me': async (request, _url, deps) =>
     meResponse.parse(await getMe(deps, (await caller(request, deps.auth)).authUserId)),

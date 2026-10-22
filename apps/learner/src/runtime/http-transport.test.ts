@@ -6,6 +6,7 @@ import { makeFakeBackend, type FakeBackend } from '../../test/helpers/fake-backe
 import { makeEnv, type TestEnv } from '../../test/helpers/installed-runtime.js';
 import { setLinked } from '../account/account.js';
 import { appState, initApp, refreshSession, signIn, signOut } from '../app-state.svelte.js';
+import { setLevel } from '@shiksha/server';
 import { pullNew } from './pull.js';
 
 let env: TestEnv;
@@ -153,4 +154,16 @@ test('when the sign-in code cannot load, sync keeps everything on the phone and 
   const out = await broken.runtime.sync(profile.id);
   expect(out).toMatchObject({ flush: { ok: false }, added: 0 });
   expect(await broken.runtime.events.pending(profile.id, 10)).toHaveLength(1);
+});
+
+test("a mentor's level change reaches the phone on its next pull", async () => {
+  const admin = { staffId: crypto.randomUUID(), role: 'admin' as const, cohortIds: [] };
+  await setLevel(backend.repos, admin, {
+    learnerId: learner,
+    track: 'english',
+    startLesson: 'ef1-03',
+  });
+  expect((await pullNew(env.runtime, learner)).added).toBe(1);
+  const session = await env.runtime.openSession(learner);
+  expect(session.progress.startLessonByTrack.english).toBe('ef1-03');
 });

@@ -9,7 +9,10 @@ import {
 } from '@shiksha/learner-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type {
+  AttendanceRepo,
   AuditRepo,
+  Auth,
+  CodeAuth,
   BrandingRepo,
   Caller,
   CodeRepo,
@@ -48,6 +51,10 @@ export interface ServiceFixture {
   audit: AuditRepo;
   summaries: SummaryRepo;
   codes: CodeRepo;
+  attendance: AttendanceRepo;
+  /** Makes, signs in and deletes the auth users behind backup codes. */
+  auth: Auth & CodeAuth;
+  pepper: string;
   /** Stands in for the bucket: a test "uploads" with `storage.put`. */
   storage: MemoryRecordingStorage;
   newAuthUser(): Promise<string>;

@@ -184,6 +184,19 @@ export interface SummaryRepo {
   forLearners(ids: string[]): Promise<Map<string, Summary>>;
 }
 
+/** Lab attendance: one mark per learner per IST day (spec §8 mentor actions). */
+export interface AttendanceRepo {
+  /** Replace the marks of these learners for `day`: present if listed, absent otherwise. */
+  markDay(input: {
+    learnerIds: string[];
+    present: ReadonlySet<string>;
+    day: string;
+    staffId: string;
+  }): Promise<number>;
+  /** A learner's marks since `fromDay` (inclusive), newest first. */
+  forLearner(learnerId: string, fromDay: string): Promise<{ date: string; present: boolean }[]>;
+}
+
 /** Labs, cohorts and which cohort a learner is in. */
 export interface OrgRepo {
   saveLab(lab: { id?: string; name: string }): Promise<string>;

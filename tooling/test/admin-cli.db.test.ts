@@ -58,6 +58,14 @@ describe('the admin tool', () => {
     expect(await run('delete', '--learner', learnerId, '--yes')).toBe(0);
   });
 
+  test('issue-code --cohort puts the new student in that cohort', async () => {
+    const cohortId = await admin.org.saveCohort({ name: `cli ${Date.now()}`, labId: null });
+    expect(await run('issue-code', '--name', 'C', '--cohort', cohortId)).toBe(0);
+    const learnerId = /learner ([0-9a-f-]{36})/.exec(lines.join('\n'))?.[1] ?? '';
+    expect(await admin.org.cohortOfLearner(learnerId)).toBe(cohortId);
+    await run('delete', '--learner', learnerId, '--yes');
+  });
+
   test('export writes learner.json and the recordings into the folder', async () => {
     await run('issue-code', '--name', 'A');
     const learnerId = /learner ([0-9a-f-]{36})/.exec(lines.join('\n'))?.[1] ?? '';

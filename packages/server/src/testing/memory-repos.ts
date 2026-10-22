@@ -9,7 +9,8 @@ import {
   type LearnerRow,
   type SwitchRepo,
 } from '../ports.js';
-import { memoryCodeRepo } from './memory-auth.js';
+import { memoryAttendance } from './memory-attendance.js';
+import { memoryAuth, memoryCodeRepo } from './memory-auth.js';
 import { memoryAudit } from './memory-audit.js';
 import { memorySummaries } from './memory-summaries.js';
 import { memoryBranding } from './memory-branding.js';
@@ -121,6 +122,9 @@ export function makeMemoryRepos(): MemoryRepos {
     },
     cleanup: () => Promise.resolve(),
     codes: undefined as unknown as CodeRepo,
+    attendance: memoryAttendance(),
+    auth: memoryAuth(),
+    pepper: 'memory-test-pepper-0123456789abcdef',
   };
   repos.codes = memoryCodeRepo(repos);
   return repos;

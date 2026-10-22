@@ -6,7 +6,10 @@ import { cryptoIds, createEvent, systemClock } from '@shiksha/learner-core';
 import { afterAll, describe, expect, test } from 'vitest';
 import { PgBrandingRepo } from '../src/adapters/pg-branding-repo.js';
 import { PgAuditRepo } from '../src/adapters/pg-audit-repo.js';
+import { PgAttendanceRepo } from '../src/adapters/pg-attendance-repo.js';
 import { PgCodeRepo } from '../src/adapters/pg-code-repo.js';
+import { createSupabaseAuth } from '../src/adapters/supabase-auth.js';
+import { localStack } from '../../../supabase/tests/stack.js';
 import { PgEventRepo } from '../src/adapters/pg-event-repo.js';
 import { PgOrgRepo } from '../src/adapters/pg-org-repo.js';
 import { PgStaffRepo } from '../src/adapters/pg-staff-repo.js';
@@ -32,6 +35,8 @@ afterAll(async () => {
 /** Real repositories on the local database; each test's users and learners are removed after. */
 async function makePgFixture(): Promise<ServiceFixture> {
   const authUsers: string[] = [];
+  const realAuth = createSupabaseAuth(localStack().apiUrl, localStack().serviceKey);
+  const codeUsers: string[] = [];
   return {
     learners: new PgLearnerRepo(sql),
     events: new PgEventRepo(sql),
@@ -45,6 +50,16 @@ async function makePgFixture(): Promise<ServiceFixture> {
     audit: new PgAuditRepo(sql),
     summaries: new PgSummaryRepo(sql),
     codes: new PgCodeRepo(sql),
+    attendance: new PgAttendanceRepo(sql),
+    pepper: 'pg-fixture-pepper-0123456789abcdef01',
+    auth: {
+      ...realAuth,
+      async createCodeUser(password: string) {
+        const user = await realAuth.createCodeUser(password);
+        codeUsers.push(user.authUserId);
+        return user;
+      },
+    },
     storage: memoryRecordingStorage(), // the real bucket is tested through the API
     async newAuthUser() {
       const id = randomUUID();
@@ -70,6 +85,11 @@ async function makePgFixture(): Promise<ServiceFixture> {
         select learner_id from learner_identities
         where auth_user_id in (select value::uuid from jsonb_array_elements_text(${sql.json(authUsers)}))`;
       for (const { learner_id } of linked) await sql`delete from learners where id = ${learner_id}`;
+      for (const id of codeUsers) {
+        await sql`delete from learners where id in
+                    (select learner_id from learner_identities where auth_user_id = ${id})`;
+        await realAuth.deleteUser(id);
+      }
       for (const id of authUsers) await sql`delete from staff where auth_user_id = ${id}`;
       for (const id of authUsers) await sql`delete from auth.users where id = ${id}`;
       await sql`delete from staff where auth_user_id is null and email like '%@ngo.example'`;
