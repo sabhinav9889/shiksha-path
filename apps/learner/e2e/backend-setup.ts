@@ -11,7 +11,11 @@ import { PgLearnerRepo } from '../../../packages/server/src/adapters/pg-learner-
 import { PgRateLimiter } from '../../../packages/server/src/adapters/pg-rate-limiter.js';
 import { PgSwitchRepo } from '../../../packages/server/src/adapters/pg-switch-repo.js';
 import { createSupabaseAuth } from '../../../packages/server/src/adapters/supabase-auth.js';
+import { PgLearnerDataRepo } from '../../../packages/server/src/adapters/pg-learner-data-repo.js';
+import { PgRecordingRepo } from '../../../packages/server/src/adapters/pg-recording-repo.js';
+import { createSupabaseRecordingStorage } from '../../../packages/server/src/adapters/supabase-recording-storage.js';
 import { issueCode } from '../../../packages/server/src/services/codes.js';
+import { deleteLearner } from '../../../packages/server/src/services/learner-data.js';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 
@@ -66,9 +70,10 @@ export async function makeGoogleUser(stack: LocalStack): Promise<TestUser> {
   return { id: created.data.user.id, email, password };
 }
 
+/** Gone already is fine: a test may have deleted the student, sign-in and all. */
 export async function deleteGoogleUser(stack: LocalStack, user: TestUser): Promise<void> {
   const admin = createClient(stack.apiUrl, stack.serviceKey, { auth: { persistSession: false } });
-  await admin.auth.admin.deleteUser(user.id);
+  await admin.auth.admin.deleteUser(user.id).catch(() => undefined);
 }
 
 /** Sign the user in and return exactly what supabase-js stores for that session. */
@@ -192,4 +197,28 @@ export async function issueBackupCode(
       if (row) await deps.auth.deleteUser(row.authUserId);
     },
   };
+}
+
+/** The NGO deletes a student on request, through the service `npm run admin -- delete` runs. */
+export async function deleteStudent(
+  stack: LocalStack,
+  sql: postgres.Sql,
+  learnerId: string,
+): Promise<void> {
+  await deleteLearner(
+    {
+      data: new PgLearnerDataRepo(sql),
+      recordings: new PgRecordingRepo(sql),
+      storage: createSupabaseRecordingStorage(stack.apiUrl, stack.serviceKey),
+      auth: createSupabaseAuth(stack.apiUrl, stack.serviceKey),
+    },
+    learnerId,
+  );
+}
+
+/** The names of the recording files the bucket holds for a learner. */
+export async function storedRecordings(stack: LocalStack, learnerId: string): Promise<string[]> {
+  const admin = createClient(stack.apiUrl, stack.serviceKey, { auth: { persistSession: false } });
+  const { data } = await admin.storage.from('recordings').list(learnerId);
+  return (data ?? []).map((o) => o.name);
 }
