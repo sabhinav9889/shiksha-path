@@ -5,6 +5,7 @@ import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
 import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
 import { listAudit, withAudit } from '../services/audit.js';
+import { listUnreviewed, recordingUrl, reviewRecording } from '../services/recording-review.js';
 import { listCohorts, studentDetail } from '../services/staff-read.js';
 import { claimStaff, inScope, staffCaller } from '../services/staff.js';
 import type { ServiceFixture } from './service-contract.js';
@@ -251,6 +252,87 @@ export function describeStaffContract(name: string, make: () => Promise<ServiceF
         expect(detail.recent.length).toBe(3);
         expect(JSON.stringify(detail)).not.toContain('@');
         expect(detail).not.toHaveProperty('code');
+      });
+    });
+
+    describe('reviewing recordings', () => {
+      async function uploaded(learnerId: string): Promise<string> {
+        const id = randomUUID();
+        await f.recordings.create({
+          id,
+          learnerId,
+          lessonId: 'ef1-02',
+          itemId: 's1',
+          mime: 'audio/webm',
+          bytes: 3,
+          durationMs: 1000,
+          recordedAt: new Date().toISOString(),
+        });
+        f.storage.put(`${learnerId}/${id}`, 3);
+        await f.recordings.markUploaded(id, new Date());
+        return id;
+      }
+
+      test("a mentor lists and plays their cohort's unreviewed recordings, not another's", async () => {
+        const [mine, theirs] = [await uploaded(learnerA), await uploaded(learnerB)];
+        const mentor = await staffMember('mentor', [cohortA]);
+        const list = await listUnreviewed(f, mentor);
+        expect(list.recordings.map((r) => r.id)).toEqual([mine]);
+        expect((await recordingUrl(f, mentor, mine)).url).toContain(`${learnerA}/${mine}`);
+        expect(await codeOf(recordingUrl(f, mentor, theirs))).toBe('FORBIDDEN');
+        expect(await codeOf(recordingUrl(f, mentor, randomUUID()))).toBe('FORBIDDEN');
+      });
+
+      test('a pending (not uploaded) recording has no URL', async () => {
+        const id = randomUUID();
+        await f.recordings.create({
+          id,
+          learnerId: learnerA,
+          lessonId: 'ef1-02',
+          itemId: 's1',
+          mime: 'audio/webm',
+          bytes: 3,
+          durationMs: 1000,
+          recordedAt: new Date().toISOString(),
+        });
+        const mentor = await staffMember('mentor', [cohortA]);
+        expect(await codeOf(recordingUrl(f, mentor, id))).toBe('INVALID_REQUEST');
+      });
+
+      test('review keeps the first time, updates the comment, and never logs the comment', async () => {
+        const id = await uploaded(learnerA);
+        const mentor = await staffMember('mentor', [cohortA]);
+        const first = await reviewRecording(f, mentor, { id, comment: 'Clear, slow down a bit' });
+        const again = await reviewRecording(f, mentor, { id, comment: 'Better now' });
+        expect(again.reviewedAt).toBe(first.reviewedAt);
+        const [row] = (await studentDetail(f, mentor, learnerA)).recordings;
+        expect(row).toMatchObject({ id, comment: 'Better now', reviewedAt: first.reviewedAt });
+        expect((await listUnreviewed(f, mentor)).recordings).toEqual([]);
+        const log = JSON.stringify(await f.audit.page(null, 100));
+        expect(log).toContain('recording_reviewed');
+        expect(log).not.toContain('slow down');
+        expect(log).not.toContain('Better now');
+      });
+
+      test('a 281-character comment is refused', async () => {
+        const id = await uploaded(learnerA);
+        const mentor = await staffMember('mentor', [cohortA]);
+        const out = reviewRecording(f, mentor, { id, comment: 'x'.repeat(281) });
+        expect(await codeOf(out)).toBe('INVALID_REQUEST');
+        expect(
+          (await reviewRecording(f, mentor, { id, comment: 'x'.repeat(280) })).reviewedAt,
+        ).toBeTruthy();
+      });
+
+      test('review starts the retention clock: gone 31 days later, kept at 29', async () => {
+        const id = await uploaded(learnerA);
+        const mentor = await staffMember('mentor', [cohortA]);
+        const { reviewedAt } = await reviewRecording(f, mentor, { id });
+        const day = 86_400_000;
+        const at29 = new Date(Date.parse(reviewedAt) + 29 * day);
+        expect((await f.recordings.due(at29)).map((r) => r.id)).not.toContain(id);
+        const at31 = new Date(Date.parse(reviewedAt) + 31 * day);
+        expect((await f.recordings.due(at31)).map((r) => r.id)).toContain(id);
       });
     });
   });

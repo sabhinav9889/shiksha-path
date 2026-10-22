@@ -55,6 +55,8 @@ export interface RecordingRow {
   status: 'pending' | 'uploaded';
   uploadedAt: string | null;
   reviewedAt: string | null;
+  /** A mentor's note on the recording (at most 280 characters), for mentors only. */
+  comment: string | null;
   /** When the upload was started (an old recording made offline can start uploading late). */
   createdAt: string;
 }
@@ -62,7 +64,7 @@ export interface RecordingRow {
 export interface RecordingRepo {
   /** `exists`: this learner already has it; `ownedByOther`: the id is someone else's. */
   create(
-    row: Omit<RecordingRow, 'status' | 'uploadedAt' | 'reviewedAt' | 'createdAt'>,
+    row: Omit<RecordingRow, 'status' | 'uploadedAt' | 'reviewedAt' | 'createdAt' | 'comment'>,
   ): Promise<'created' | 'exists' | 'ownedByOther'>;
   get(id: string): Promise<RecordingRow | null>;
   markUploaded(id: string, at: Date): Promise<void>;
@@ -70,6 +72,10 @@ export interface RecordingRepo {
   /** Rows retention should remove at `now` (Task 10). */
   due(now: Date): Promise<RecordingRow[]>;
   delete(ids: string[]): Promise<void>;
+  /** Mark reviewed (the first review time stays) and set the comment; returns the review time. */
+  review(id: string, staffId: string, comment: string | null, at: Date): Promise<string>;
+  /** Uploaded, unreviewed recordings of these learners (everyone for 'all'), oldest first. */
+  unreviewed(learnerIds: string[] | 'all'): Promise<RecordingRow[]>;
 }
 
 /** Where recordings live (spec §5.5 rule 5): S3-style, so another store is one adapter. */

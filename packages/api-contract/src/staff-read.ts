@@ -66,3 +66,30 @@ export const studentDetail = z.object({
   hasCode: z.boolean(),
 });
 export type StudentDetail = z.infer<typeof studentDetail>;
+
+export const recordingsQuery = z.strictObject({ status: z.literal('unreviewed') });
+
+export const unreviewedRecordings = z.object({
+  recordings: z.array(
+    z.object({
+      id: z.uuid(),
+      learnerId: z.uuid(),
+      learnerName: z.string(),
+      lessonId: z.string(),
+      itemId: z.string(),
+      durationMs: z.number().int(),
+      uploadedAt: z.string(),
+    }),
+  ),
+});
+export type UnreviewedRecordings = z.infer<typeof unreviewedRecordings>;
+
+export const recordingUrlQuery = z.strictObject({ id: z.uuid() });
+export const recordingUrlResponse = z.object({ url: z.string() });
+
+const MAX_COMMENT = 280;
+export const reviewRequest = z.strictObject({
+  id: z.uuid(),
+  comment: z.string().max(MAX_COMMENT).optional(),
+});
+export const reviewResponse = z.object({ reviewedAt: z.string() });

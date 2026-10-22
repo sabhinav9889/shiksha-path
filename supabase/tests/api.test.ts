@@ -256,3 +256,65 @@ describe('backup codes through the function', () => {
     await deps.auth.deleteUser(row?.auth_user_id ?? '');
   });
 });
+
+describe('a mentor reviewing a recording through the function', () => {
+  /** A claimed mentor (Google stand-in) whose one cohort holds learner A. */
+  async function mentorOfA(): Promise<{ token: string; cleanup: () => Promise<void> }> {
+    const mentor = await makeUser();
+    const [user] = await sql<
+      { email: string }[]
+    >`select email from auth.users where id = ${mentor.id}`;
+    const [cohort] = await sql<{ id: string }[]>`
+      insert into cohorts (name) values ('review cohort') returning id`;
+    const cohortId = cohort?.id ?? '';
+    await sql`update learners set cohort_id = ${cohortId} where id = ${a.learner}`;
+    const [staff] = await sql<{ id: string }[]>`
+      insert into staff (email, role, name) values (${user?.email ?? ''}, 'mentor', 'M') returning id`;
+    const staffId = staff?.id ?? '';
+    await sql`insert into staff_cohorts (staff_id, cohort_id) values (${staffId}, ${cohortId})`;
+    expect((await api('/v1/staff/claim', mentor.accessToken, {})).status).toBe(200);
+    return {
+      token: mentor.accessToken,
+      async cleanup() {
+        await sql`delete from staff where id = ${staffId}`;
+        await sql`update learners set cohort_id = null where id = ${a.learner}`;
+        await sql`delete from cohorts where id = ${cohortId}`;
+        await deleteUser(mentor.id);
+      },
+    };
+  }
+
+  async function uploadedByA(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
+    const id = randomUUID();
+    const start = await api('/v1/recordings/start', a.accessToken, {
+      id,
+      lessonId: 'ef1-02',
+      itemId: 's1',
+      mime: 'audio/webm',
+      bytes: bytes.length,
+      durationMs: 1000,
+      at: new Date().toISOString(),
+    });
+    const { uploadUrl } = (await start.json()) as { uploadUrl: string };
+    await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'content-type': 'audio/webm' },
+      body: bytes,
+    });
+    await api('/v1/recordings/complete', a.accessToken, { id });
+    return id;
+  }
+
+  test('plays it through a signed link, and reviews it', async () => {
+    const mentor = await mentorOfA();
+    const id = await uploadedByA(Uint8Array.of(5, 6, 7));
+    const link = await api(`/v1/staff/recording-url?id=${id}`, mentor.token);
+    expect(link.status).toBe(200);
+    const { url } = (await link.json()) as { url: string };
+    expect([...new Uint8Array(await (await fetch(url)).arrayBuffer())]).toEqual([5, 6, 7]);
+    const review = await api('/v1/staff/recordings/review', mentor.token, { id, comment: 'ok' });
+    expect(review.status).toBe(200);
+    expect((await api(`/v1/staff/recording-url?id=${id}`, b.accessToken)).status).toBe(403);
+    await mentor.cleanup();
+  });
+});

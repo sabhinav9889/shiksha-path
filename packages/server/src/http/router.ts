@@ -17,11 +17,17 @@ import {
   auditPage,
   auditQuery,
   session,
+  recordingsQuery,
+  recordingUrlQuery,
+  recordingUrlResponse,
+  reviewRequest,
+  reviewResponse,
   staffClaim,
   staffCohorts,
   staffMe,
   studentDetail as studentDetailResponse,
   studentQuery,
+  unreviewedRecordings,
 } from '@shiksha/api-contract';
 import type { Logger } from '../logger.js';
 import type {
@@ -49,6 +55,7 @@ import { checkDeleted } from '../services/learner-data.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
 import { completeRecording, startRecording } from '../services/recordings.js';
+import { listUnreviewed, recordingUrl, reviewRecording } from '../services/recording-review.js';
 import { listCohorts, studentDetail } from '../services/staff-read.js';
 import { claimStaff, getStaffMe, staffCaller } from '../services/staff.js';
 import { pullEvents, pushEvents } from '../services/sync.js';
@@ -147,6 +154,21 @@ const ROUTES: Record<string, Route> = {
     const staff = await staffCaller(deps, await caller(request, deps.auth));
     const { id } = parseWith(studentQuery, Object.fromEntries(url.searchParams));
     return studentDetailResponse.parse(await studentDetail(deps, staff, id));
+  },
+  'GET /v1/staff/recordings': async (request, url, deps) => {
+    const staff = await staffCaller(deps, await caller(request, deps.auth));
+    parseWith(recordingsQuery, Object.fromEntries(url.searchParams));
+    return unreviewedRecordings.parse(await listUnreviewed(deps, staff));
+  },
+  'GET /v1/staff/recording-url': async (request, url, deps) => {
+    const staff = await staffCaller(deps, await caller(request, deps.auth));
+    const { id } = parseWith(recordingUrlQuery, Object.fromEntries(url.searchParams));
+    return recordingUrlResponse.parse(await recordingUrl(deps, staff, id));
+  },
+  'POST /v1/staff/recordings/review': async (request, _url, deps) => {
+    const staff = await staffCaller(deps, await caller(request, deps.auth));
+    const body = parseWith(reviewRequest, await jsonBody(request));
+    return reviewResponse.parse(await reviewRecording(deps, staff, body));
   },
   'GET /v1/me': async (request, _url, deps) =>
     meResponse.parse(await getMe(deps, (await caller(request, deps.auth)).authUserId)),

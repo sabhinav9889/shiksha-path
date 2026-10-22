@@ -107,7 +107,7 @@ export async function studentDetail(
       recordedAt: r.recordedAt,
       status: r.status,
       reviewedAt: r.reviewedAt,
-      comment: null as string | null, // Task 6 adds review comments
+      comment: r.comment,
     })),
     attendance: [] as { date: string; present: boolean }[], // Task 7 adds attendance
     switches,
