@@ -5,6 +5,7 @@ export { issueCode, resetCode, signInWithCode, type CodeDeps } from './services/
 export { checkDeleted, deleteLearner, exportLearner } from './services/learner-data.js';
 export { getBranding, setBranding } from './services/branding.js';
 export { linkLearner } from './services/link.js';
+export { needsAttention, summarise, type Summary } from './services/summary.js';
 export {
   claimStaff,
   getStaffMe,

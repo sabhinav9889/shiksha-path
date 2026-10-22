@@ -35,6 +35,7 @@ import type {
   RecordingRepo,
   RecordingStorage,
   StaffRepo,
+  SummaryRepo,
   SwitchRepo,
 } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
@@ -59,6 +60,7 @@ export interface HandlerDeps {
   pepper: string;
   learners: LearnerRepo;
   audit: AuditRepo;
+  summaries: SummaryRepo;
   staff: StaffRepo;
   org: OrgRepo;
   data: LearnerDataRepo;

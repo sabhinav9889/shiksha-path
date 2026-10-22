@@ -9,6 +9,7 @@ import { PgAuditRepo } from '../src/adapters/pg-audit-repo.js';
 import { PgEventRepo } from '../src/adapters/pg-event-repo.js';
 import { PgOrgRepo } from '../src/adapters/pg-org-repo.js';
 import { PgStaffRepo } from '../src/adapters/pg-staff-repo.js';
+import { PgSummaryRepo } from '../src/adapters/pg-summary-repo.js';
 import { PgLearnerDataRepo } from '../src/adapters/pg-learner-data-repo.js';
 import { PgLearnerRepo } from '../src/adapters/pg-learner-repo.js';
 import { PgRateLimiter } from '../src/adapters/pg-rate-limiter.js';
@@ -41,6 +42,7 @@ async function makePgFixture(): Promise<ServiceFixture> {
     staff: new PgStaffRepo(sql),
     org: new PgOrgRepo(sql),
     audit: new PgAuditRepo(sql),
+    summaries: new PgSummaryRepo(sql),
     storage: memoryRecordingStorage(), // the real bucket is tested through the API
     async newAuthUser() {
       const id = randomUUID();

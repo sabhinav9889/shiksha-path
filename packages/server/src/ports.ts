@@ -1,5 +1,6 @@
 import type { Branding, BrandingInput, Session } from '@shiksha/api-contract';
 import type { LearnerEvent } from '@shiksha/learner-core';
+import type { Summary } from './services/summary.js';
 
 export interface LearnerRow {
   id: string;
@@ -165,6 +166,16 @@ export interface AuditRepo {
   page(before: number | null, limit: number): Promise<AuditEntry[]>;
   /** A learner deleted on request: their entries keep no id (privacy rule). */
   anonymiseLearner(learnerId: string): Promise<void>;
+}
+
+/** Per-learner progress summaries for staff screens, re-derived after every upload. */
+export interface SummaryRepo {
+  /**
+   * Re-derive one learner's summary from their whole log and store it. Refreshes of one learner
+   * never interleave, so the last one always sees every committed event.
+   */
+  refresh(learnerId: string, derive: (events: unknown[]) => Summary): Promise<Summary>;
+  forLearners(ids: string[]): Promise<Map<string, Summary>>;
 }
 
 /** Labs, cohorts and which cohort a learner is in. */
