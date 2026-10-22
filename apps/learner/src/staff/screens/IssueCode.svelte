@@ -2,6 +2,7 @@
   import type { Lang } from '../../i18n/index.js';
   import { st } from '../i18n.js';
   import { staffState } from '../staff-state.svelte.js';
+  import CodeCard from './CodeCard.svelte';
 
   /** A backup code is shown once, grouped for reading aloud, then forgotten by the page. */
   let { learnerId, hasCode, lang }: { learnerId: string; hasCode: boolean; lang: Lang } = $props();
@@ -24,30 +25,13 @@
 </script>
 
 {#if code}
-  <div class="code">
-    <p class="big" data-testid="new-code">{code}</p>
-    <p>{st('writeItDown', lang)}</p>
-    <button type="button" onclick={() => (code = null)}>{st('done', lang)}</button>
-  </div>
+  <CodeCard {code} {lang} ondone={() => (code = null)} />
 {:else}
   <button type="button" onclick={make}>{st(hasCode || issued ? 'resetCode' : 'issueCode', lang)}</button>
 {/if}
 {#if failed}<p role="alert">{st('failed', lang)}</p>{/if}
 
 <style>
-  .code {
-    padding: 16px;
-    border-radius: 14px;
-    background: var(--color-primary-soft);
-  }
-
-  .big {
-    font-size: 32px;
-    font-weight: 700;
-    letter-spacing: 3px;
-    font-family: monospace;
-  }
-
   button {
     min-height: 44px;
     border: none;

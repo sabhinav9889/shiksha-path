@@ -7,6 +7,7 @@
   import { whenWords } from '../words.js';
   import Attendance from './Attendance.svelte';
   import AttentionBadge from './AttentionBadge.svelte';
+  import NewStudent from './NewStudent.svelte';
 
   /** The mentor's cohorts; the server puts students needing attention first. */
   let { lang }: { lang: Lang } = $props();
@@ -14,11 +15,13 @@
   let failed = $state(false);
   let marking = $state<string | null>(null);
 
-  onMount(async () => {
+  async function load(): Promise<void> {
     const result = await staffState.auth?.api.cohorts();
     if (result?.ok) data = result.value;
     else failed = true;
-  });
+  }
+
+  onMount(load);
 </script>
 
 {#if failed}
@@ -51,6 +54,7 @@
           </li>
         {/each}
       </ul>
+      <NewStudent cohortId={cohort.id} {lang} onadded={load} />
     </section>
   {/each}
 {/if}
@@ -71,6 +75,10 @@
   }
 
   a {
+    display: inline-flex;
+    align-items: center;
+    min-width: 44px;
+    min-height: 44px;
     color: var(--color-primary);
     font-weight: 600;
   }

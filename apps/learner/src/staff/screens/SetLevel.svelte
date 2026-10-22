@@ -28,9 +28,15 @@
     lesson = lessons[0]?.id ?? '';
   }
 
-  onMount(async () => {
+  async function loadManifest(): Promise<void> {
     manifest = (await appState.runtime?.storage.getManifest()) ?? null;
-    pickTrack(tracks[0]?.id ?? '');
+    if (!tracks.some((t) => t.id === track)) pickTrack(tracks[0]?.id ?? '');
+  }
+
+  // The lesson packs may still be arriving when the page opens: read them again when they do.
+  onMount(() => {
+    void loadManifest();
+    return appState.runtime?.content.subscribe(() => void loadManifest());
   });
 
   async function save(): Promise<void> {

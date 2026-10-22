@@ -63,6 +63,22 @@ describe('the mentor actions', () => {
     expect(button('नया बैकअप कोड बनाएँ')).toBeTruthy();
   });
 
+  test('a new student gets a backup code in the cohort, shown once', async () => {
+    navigate({ name: 'staff', view: 'cohorts' });
+    await signedIn();
+    await fireEvent.input(await vi.waitFor(() => screen.getByLabelText('नए छात्र का नाम')), {
+      target: { value: 'अमन' },
+    });
+    await fireEvent.click(button('नया छात्र जोड़ें'));
+    const code = await vi.waitFor(() => screen.getByTestId('new-code'));
+    expect(code.textContent).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+    await fireEvent.click(button('हो गया'));
+    expect(screen.queryByTestId('new-code')).toBeNull();
+    await vi.waitFor(() => expect(screen.getAllByTestId('student-row')).toHaveLength(3));
+    const [row] = (await backend.repos.org.students([cohort])).filter((s) => s.name === 'अमन');
+    expect(row).toBeDefined();
+  });
+
   test('set level lists tracks and lessons from the phone and confirms before saving', async () => {
     navigate({ name: 'staff', view: 'student', id: priya });
     await signedIn();
@@ -84,6 +100,16 @@ describe('the mentor actions', () => {
     await vi.waitFor(() => screen.getByText('सेव हो गया'));
     const page = await backend.repos.events.page(priya, 0, 100);
     expect(JSON.stringify(page.events)).toContain('"startLesson":"apt-02"');
+  });
+
+  test('set level shows lessons that arrive after the page opened', async () => {
+    const bare = await makeEnv({ account: backend.account, install: false });
+    initApp(bare.runtime);
+    navigate({ name: 'staff', view: 'student', id: priya });
+    await signedIn();
+    await vi.waitFor(() => screen.getByText('इस फ़ोन पर अभी कोई पाठ नहीं'));
+    await bare.runtime.content.sync();
+    await vi.waitFor(() => screen.getByLabelText('विषय'));
   });
 
   test('attendance lists the cohort for today with checkboxes, saves, and says so', async () => {

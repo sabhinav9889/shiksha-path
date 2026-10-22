@@ -105,10 +105,11 @@ npx supabase functions deploy api --no-verify-jwt
 - [ ] In the Supabase table editor, set `placement_test` to off in `feature_switches`, then sync on
       the phone. The starting test card disappears. Set it back on afterwards.
 
-## 8. Backup codes, export and deletion (until the admin panel)
+## 8. The admin tool (codes, export and deletion)
 
-Until the admin panel (Plan 4), the owner does these from the repo, on a trusted computer, with
-the keys in the shell for that session only:
+Mentors issue and reset codes in the app (section 10). Export, deletion and the first admin are
+done by the owner from the repo, on a trusted computer, with the keys in the shell for that
+session only:
 
 ```sh
 export SUPABASE_DB_URL='<Session pooler connection string>'
@@ -182,6 +183,32 @@ Before restoring, save the current list of deleted students:
 `psql <live URL> -At -c 'select id from deleted_learners' > deleted.txt`. After restoring (and
 `after-restore.sql`), run `npm run admin -- delete --learner <id> --yes` for every id in
 `deleted.txt`, then delete the file.
+
+## 10. Mentors and admins
+
+**The first admin (once):** with the keys from section 8 in the shell, run
+`npm run admin -- add-staff --email <their Google email> --role admin --name "<name>"`. It prints
+only the staff id. The admin then opens `<APP_URL>/#/staff` and signs in with that Google account.
+
+**Inviting mentors:** an admin opens **सेटअप**, adds labs and cohorts, and invites each mentor by
+their Google email, ticking the cohorts they look after. The invite is claimed by the first
+Google sign-in with that email; until then it shows "अभी साइन इन नहीं किया".
+
+**What mentors can do, for their own cohorts only:** see each student's progress and who needs
+attention; listen to recordings and mark them reviewed with a short comment; add a student
+without Google and give them a backup code, or reset a code; move a student's English or aptitude
+start lesson; mark today's attendance.
+
+**What admins can do, for everyone:** everything a mentor can; set up labs, cohorts and staff;
+search, move, pause and delete students (delete asks twice and needs the name typed); turn
+features on or off for all students or one; set the name and colours (refused when hard to read);
+read the audit log.
+
+**Limits:** a mentor never sees students outside their cohorts, and cannot change setup, features,
+branding or the audit log. Nobody, admins included, can see a backup code after it is first
+shown, or a student's email. Every change is in the audit log; a deleted student's entries stay
+but no longer name them. Renaming a student, and pausing or removing a staff member, have no
+screen yet: the API supports them, and the screens follow in Plan 4b.
 
 ## Know before the pilot
 

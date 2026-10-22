@@ -13,3 +13,4 @@ so and links it; the old file is marked `superseded`.
 | [Svelte and Dexie for the learner app](app-2026-10-19-svelte-dexie.md)                           | decided |
 | [The /v1 API shape](backend-2026-10-20-api-shape.md)                                             | decided |
 | [Backup codes, recordings, deletion and backups](backend-2026-10-22-codes-recordings-backups.md) | decided |
+| [Mentors and admins: roles, scope and the audit log](backend-2026-10-23-staff.md)                | decided |

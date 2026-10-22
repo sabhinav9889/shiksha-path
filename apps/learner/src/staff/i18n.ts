@@ -80,6 +80,8 @@ const STRINGS = {
   saved: { hi: 'सेव हो गया', en: 'Saved' },
   noLessons: { hi: 'इस फ़ोन पर अभी कोई पाठ नहीं', en: 'No lessons on this phone yet' },
   markAttendance: { hi: 'हाज़िरी लगाएँ', en: 'Mark attendance' },
+  newStudentName: { hi: 'नए छात्र का नाम', en: 'New student’s name' },
+  addStudent: { hi: 'नया छात्र जोड़ें', en: 'Add a student' },
   saveAttendance: { hi: 'हाज़िरी सेव करें', en: 'Save attendance' },
 } satisfies Record<string, Record<Lang, string>>;
 
