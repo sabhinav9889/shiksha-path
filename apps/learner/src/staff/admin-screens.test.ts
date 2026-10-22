@@ -86,6 +86,31 @@ describe('the admin setup', () => {
   });
 });
 
+describe('the admin staff list', () => {
+  test('an admin pauses a mentor and changes their cohorts', async () => {
+    const id = await backend.repos.staff.save({
+      email: 'meena@ngo.example',
+      role: 'mentor',
+      name: 'मीना',
+      active: true,
+      cohortIds: [cohortA],
+    });
+    await openAdmin('setup');
+    await fireEvent.click(await vi.waitFor(() => button('मीना: बदलें')));
+    const panel = screen.getByTestId('staff-edit');
+    await fireEvent.click(within(panel).getByRole('checkbox', { name: 'शाम' }));
+    await fireEvent.click(within(panel).getByRole('checkbox', { name: 'सक्रिय' }));
+    await fireEvent.click(within(panel).getByRole('button', { name: 'सेव करें' }));
+    await vi.waitFor(async () =>
+      expect(await backend.repos.staff.byId(id)).toMatchObject({
+        active: false,
+        cohortIds: expect.arrayContaining([cohortA, cohortB]),
+      }),
+    );
+    expect(screen.getByText(/बंद है/)).toBeTruthy();
+  });
+});
+
 describe('the admin students page', () => {
   test('shows 50 at a time, then more', async () => {
     for (let n = 0; n < 50; n += 1) await student(`छात्र ${String(n).padStart(2, '0')}`, cohortA);

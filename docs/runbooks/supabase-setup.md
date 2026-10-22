@@ -199,7 +199,7 @@ attention; listen to recordings and mark them reviewed with a short comment; add
 without Google and give them a backup code, or reset a code; move a student's English or aptitude
 start lesson; mark today's attendance.
 
-**What admins can do, for everyone:** everything a mentor can; set up labs, cohorts and staff;
+**What admins can do, for everyone:** everything a mentor can; set up labs, cohorts and staff (and pause staff or change their cohorts);
 search, move, pause and delete students (delete asks twice and needs the name typed); turn
 features on or off for all students or one; set the name and colours (refused when hard to read);
 read the audit log.
@@ -207,8 +207,9 @@ read the audit log.
 **Limits:** a mentor never sees students outside their cohorts, and cannot change setup, features,
 branding or the audit log. Nobody, admins included, can see a backup code after it is first
 shown, or a student's email. Every change is in the audit log; a deleted student's entries stay
-but no longer name them. Renaming a student, and pausing or removing a staff member, have no
-screen yet: the API supports them, and the screens follow in Plan 4b.
+but no longer name them. When a mentor leaves, an admin opens **सेटअप**, taps **बदलें** beside
+them and unticks **सक्रिय**: their next request is refused. An admin cannot pause or demote
+themselves, so one admin always remains. Renaming a student has no screen yet (Plan 4b).
 
 ## Know before the pilot
 

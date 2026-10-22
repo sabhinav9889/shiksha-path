@@ -152,6 +152,27 @@ export function describeAdminContract(name: string, make: () => Promise<ServiceF
         expect(await f.org.cohortOfLearner(learnerA)).toBeUndefined();
       });
 
+      test('an admin pauses a mentor and changes their cohorts, but never demotes themselves', async () => {
+        const boss = await staffMember('admin', []);
+        const mentor = await staffMember('mentor', [cohortA]);
+        const row = await f.staff.byId(mentor.staffId);
+        if (!row) throw new Error('no mentor row');
+        const base = { id: row.id, email: row.email, name: row.name, role: row.role };
+        await admin.saveStaff(f, boss, { ...base, active: true, cohortIds: [cohortA, cohortB] });
+        expect((await f.staff.byId(row.id))?.cohortIds.sort()).toEqual([cohortA, cohortB].sort());
+        await admin.saveStaff(f, boss, { ...base, active: false, cohortIds: [] });
+        expect((await f.staff.byId(row.id))?.active).toBe(false);
+
+        const self = await f.staff.byId(boss.staffId);
+        if (!self) throw new Error('no admin row');
+        const me = { id: self.id, email: self.email, name: self.name, cohortIds: [] };
+        const pause = admin.saveStaff(f, boss, { ...me, role: 'admin', active: false });
+        expect(await codeOf(pause)).toBe('INVALID_REQUEST');
+        const demote = admin.saveStaff(f, boss, { ...me, role: 'mentor', active: true });
+        expect(await codeOf(demote)).toBe('INVALID_REQUEST');
+        expect((await f.staff.byId(boss.staffId))?.role).toBe('admin');
+      });
+
       test('inviting an email already used is refused; staff can be given cohorts', async () => {
         const boss = await staffMember('admin', []);
         const email = `${randomUUID()}@ngo.example`;

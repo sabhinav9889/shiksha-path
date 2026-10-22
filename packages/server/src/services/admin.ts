@@ -71,6 +71,9 @@ export async function saveStaff(
   },
 ): Promise<string> {
   requireAdmin(staff);
+  // An admin cannot pause or demote themselves, so at least one active admin always remains.
+  const demotesSelf = input.id === staff.staffId && (!input.active || input.role !== 'admin');
+  if (demotesSelf) throw new ApiFailure('INVALID_REQUEST');
   const clash = await deps.staff.byEmail(input.email);
   if (clash && clash.id !== input.id) throw new ApiFailure('INVALID_REQUEST');
   const action = input.id ? ('staff_changed' as const) : ('staff_invited' as const);

@@ -6,6 +6,7 @@
   import { st } from '../../i18n.js';
   import type { StaffApi } from '../../staff-api.js';
   import { staffState } from '../../staff-state.svelte.js';
+  import StaffEdit from './StaffEdit.svelte';
 
   /** Labs, cohorts and staff invites (spec §8.1 setup). */
   let { lang }: { lang: Lang } = $props();
@@ -96,6 +97,8 @@
         <li>
           <strong>{s.name}</strong> <span>{s.email}</span> · {st(s.role, lang)}
           {#if !s.claimed}<span class="muted">· {at('waitingClaim', lang)}</span>{/if}
+          {#if !s.active}<span class="muted">· {at('paused', lang)}</span>{/if}
+          <StaffEdit member={s} cohorts={setup.cohorts} {lang} onsaved={load} />
         </li>
       {/each}
     </ul>
