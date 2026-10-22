@@ -1,9 +1,17 @@
 import type { Session } from '@shiksha/api-contract';
 import { codeLookup, codePassword } from '../codes/code-crypto.js';
 import { cryptoRandom, newCode, normaliseCode } from '../codes/code-format.js';
-import type { Auth, CodeAuth, CodeRepo, LearnerRepo, RateLimiter, SwitchRepo } from '../ports.js';
+import {
+  AuthUnavailable,
+  type Auth,
+  type CodeAuth,
+  type CodeRepo,
+  type LearnerRepo,
+  type RateLimiter,
+  type SwitchRepo,
+} from '../ports.js';
 import { ApiFailure } from './failure.js';
-import { enforce } from './limits.js';
+import { enforce, refuseIfFull } from './limits.js';
 
 export interface CodeDeps {
   learners: LearnerRepo;
@@ -88,22 +96,38 @@ export async function resetCode(deps: CodeDeps, learnerId: string): Promise<{ co
   return { code: fresh.code };
 }
 
-/** Sign in with a code. Limited per network and overall before the code is even looked at. */
+async function attempt(deps: CodeDeps, typed: string): Promise<Session | null> {
+  const normalised = normaliseCode(typed);
+  if (!normalised) return null;
+  const row = await deps.codes.findByLookup(await codeLookup(deps.pepper, normalised));
+  if (!row) return null;
+  try {
+    return await deps.auth.signInWithPassword(
+      row.authEmail,
+      await codePassword(deps.pepper, normalised),
+    );
+  } catch (error) {
+    if (error instanceof AuthUnavailable) throw new ApiFailure('RATE_LIMITED'); // try later
+    throw error;
+  }
+}
+
+/**
+ * Sign in with a code. Only wrong codes count toward the limits, so a lab of students on one
+ * network all get in; but once a network (or everyone together) is at the limit, every attempt
+ * is refused before the code is looked at, so a guesser learns nothing.
+ */
 export async function signInWithCode(
   deps: CodeDeps,
   typed: string,
   clientKey: string,
 ): Promise<Session> {
-  await enforce(deps.limiter, 'code', `code:ip:${clientKey}`);
+  const network = `code:ip:${clientKey}`;
+  await refuseIfFull(deps.limiter, 'code', network);
+  await refuseIfFull(deps.limiter, 'codeAll', 'code:all');
+  const session = await attempt(deps, typed);
+  if (session) return session;
+  await enforce(deps.limiter, 'code', network);
   await enforce(deps.limiter, 'codeAll', 'code:all');
-  const normalised = normaliseCode(typed);
-  if (!normalised) throw new ApiFailure('BAD_CODE');
-  const row = await deps.codes.findByLookup(await codeLookup(deps.pepper, normalised));
-  if (!row) throw new ApiFailure('BAD_CODE');
-  const session = await deps.auth.signInWithPassword(
-    row.authEmail,
-    await codePassword(deps.pepper, normalised),
-  );
-  if (!session) throw new ApiFailure('BAD_CODE');
-  return session;
+  throw new ApiFailure('BAD_CODE');
 }

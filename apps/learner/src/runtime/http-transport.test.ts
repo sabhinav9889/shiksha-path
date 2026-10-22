@@ -60,7 +60,10 @@ describe('uploading', () => {
     [
       "the server's rate limit",
       () => {
-        backend.repos.limiter = { hit: () => Promise.resolve(false) };
+        backend.repos.limiter = {
+          hit: () => Promise.resolve(false),
+          count: () => Promise.resolve(Number.MAX_SAFE_INTEGER),
+        };
         return Promise.resolve();
       },
     ],

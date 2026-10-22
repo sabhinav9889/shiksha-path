@@ -41,6 +41,12 @@ export class PgLearnerDataRepo implements LearnerDataRepo {
     });
   }
 
+  async deletedSince(since: Date): Promise<string[]> {
+    const rows = await this.sql<{ id: string }[]>`
+      select id from deleted_learners where deleted_at >= ${since}`;
+    return rows.map((r) => r.id);
+  }
+
   async deleted(ids: string[]): Promise<string[]> {
     if (ids.length === 0) return [];
     const rows = await this.sql<{ id: string }[]>`

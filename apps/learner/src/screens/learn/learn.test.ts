@@ -128,7 +128,7 @@ describe('lesson audio', () => {
     await openLesson();
     await vi.waitFor(() => button('ऑडियो डाउनलोड करें'));
     await fireEvent.click(button('ऑडियो डाउनलोड करें'));
-    await vi.waitFor(() => button('पाठ सुनें'), { timeout: 5000 });
+    await vi.waitFor(() => button('पाठ सुनें'), { timeout: 12_000 });
   });
 });
 

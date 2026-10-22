@@ -13,5 +13,9 @@ export function memoryRateLimiter(now: () => number = Date.now): RateLimiter {
       hits.set(key, count);
       return Promise.resolve(count <= limit);
     },
+    count(bucket, windowSeconds) {
+      const windowMs = windowSeconds * MS_PER_SECOND;
+      return Promise.resolve(hits.get(`${bucket}@${Math.floor(now() / windowMs)}`) ?? 0);
+    },
   };
 }

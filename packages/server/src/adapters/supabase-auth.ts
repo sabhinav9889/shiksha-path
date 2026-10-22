@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Auth, CodeAuth } from '../ports.js';
+import { AuthUnavailable, type Auth, type CodeAuth } from '../ports.js';
 
 const NO_SESSION = { persistSession: false, autoRefreshToken: false } as const;
 const NOT_FOUND = 404;
@@ -44,7 +44,8 @@ export function createSupabaseAuth(url: string, serviceRoleKey: string): Auth & 
       // A fresh client each time, so no session is kept in the API between requests.
       const signer = createClient(url, serviceRoleKey, { auth: NO_SESSION });
       const { data, error } = await signer.auth.signInWithPassword({ email, password });
-      if (error || !data.session) return null;
+      if (error?.code === 'invalid_credentials') return null;
+      if (error || !data.session) throw new AuthUnavailable(); // busy, down or Auth's own limit
       return {
         accessToken: data.session.access_token,
         refreshToken: data.session.refresh_token,

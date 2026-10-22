@@ -70,7 +70,12 @@ export function makeAdminDeps(env: Record<string, string | undefined>): AdminDep
       storage,
       auth,
     },
-    retention: { recordings, storage, limiter: new PgRateLimiter(sql) },
+    retention: {
+      data: new PgLearnerDataRepo(sql),
+      recordings,
+      storage,
+      limiter: new PgRateLimiter(sql),
+    },
     branding: new PgBrandingRepo(sql),
     close: () => sql.end(),
   };

@@ -16,6 +16,16 @@ export const LIMITS = {
 
 export type LimitKind = keyof typeof LIMITS;
 
+/** Refuse if the bucket is already at its limit, without counting this request. */
+export async function refuseIfFull(
+  limiter: RateLimiter,
+  kind: LimitKind,
+  bucket: string,
+): Promise<void> {
+  const { limit, windowSeconds } = LIMITS[kind];
+  if ((await limiter.count(bucket, windowSeconds)) >= limit) throw new ApiFailure('RATE_LIMITED');
+}
+
 /** Count one action in `bucket`; past the limit it is refused as `RATE_LIMITED`. */
 export async function enforce(
   limiter: RateLimiter,

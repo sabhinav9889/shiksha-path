@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { normaliseCode } from '../codes/code-format.js';
+import { AuthUnavailable } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 import { issueCode, resetCode, signInWithCode, type CodeDeps } from '../services/codes.js';
 import { getMe } from '../services/me.js';
@@ -51,11 +52,31 @@ export function describeCodeContract(name: string, make: () => Promise<CodeFixtu
       expect(await codeOf(signInWithCode(f.deps, 'not a code', KEY))).toBe('BAD_CODE');
     });
 
-    test('the 11th try from one network in 15 minutes is refused, even with the right code', async () => {
+    test('after 10 wrong codes from one network in 15 minutes, even the right code is refused', async () => {
       const { code } = await issueCode(f.deps, { name: 'A' });
       for (let n = 0; n < 10; n += 1) await codeOf(signInWithCode(f.deps, 'ABCD-EFGH', KEY));
       expect(await codeOf(signInWithCode(f.deps, code, KEY))).toBe('RATE_LIMITED');
-      expect((await signInWithCode(f.deps, code, 'another-network')).accessToken).toBeTruthy();
+      expect((await signInWithCode(f.deps, code, `${KEY}-other`)).accessToken).toBeTruthy();
+    });
+
+    test('a whole lab signing in with right codes on one network is never limited', async () => {
+      const codes = [];
+      for (let n = 0; n < 12; n += 1) codes.push((await issueCode(f.deps, { name: `S${n}` })).code);
+      for (const code of codes) {
+        expect((await signInWithCode(f.deps, code, KEY)).accessToken).toBeTruthy();
+      }
+    });
+
+    test('Auth being busy or down is not a wrong code', async () => {
+      const { code } = await issueCode(f.deps, { name: 'A' });
+      const busy = {
+        ...f.deps,
+        auth: {
+          ...f.deps.auth,
+          signInWithPassword: () => Promise.reject(new AuthUnavailable()),
+        },
+      };
+      expect(await codeOf(signInWithCode(busy, code, KEY))).toBe('RATE_LIMITED');
     });
 
     test('after a reset the old code fails and its sessions stop at once', async () => {

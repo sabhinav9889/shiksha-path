@@ -6,6 +6,7 @@ import type {
   BrandingRepo,
   Caller,
   EventRepo,
+  LearnerDataRepo,
   LearnerRepo,
   RateLimiter,
   RecordingRepo,
@@ -29,6 +30,7 @@ export interface ServiceFixture {
   limiter: RateLimiter;
   recordings: RecordingRepo;
   branding: BrandingRepo;
+  data: LearnerDataRepo;
   /** Stands in for the bucket: a test "uploads" with `storage.put`. */
   storage: MemoryRecordingStorage;
   newAuthUser(): Promise<string>;
@@ -83,6 +85,15 @@ export function describeServiceContract(
     });
 
     describe('linking', () => {
+      test('a student deleted on request cannot be brought back by linking their old id', async () => {
+        const gone = randomUUID();
+        await f.data.deleteWithTombstone(gone);
+        const auth = await f.newAuthUser();
+        const out = linkLearner(f, google(auth), { profileId: gone, name: 'X' });
+        expect(await codeOf(out)).toBe('FORBIDDEN');
+        expect(await f.learners.findById(gone)).toBeNull();
+      });
+
       test('an email sign-in the server did not issue cannot create a learner', async () => {
         const auth = await f.newAuthUser();
         const profileId = randomUUID();

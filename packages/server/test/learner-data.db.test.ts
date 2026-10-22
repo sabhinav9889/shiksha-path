@@ -127,6 +127,12 @@ describe('delete', () => {
     expect((await bucket.list(b.id)).data).toHaveLength(1);
   });
 
+  test('a file with no row under the learner (a late upload) goes too', async () => {
+    await bucket.upload(`${a.id}/${randomUUID()}`, Uint8Array.of(1), { contentType: 'audio/webm' });
+    await deleteLearner(deps(), a.id);
+    expect((await bucket.list(a.id)).data).toEqual([]);
+  });
+
   test('a code student loses their code and its sign-in too', async () => {
     const codeDeps = {
       learners: new PgLearnerRepo(sql),

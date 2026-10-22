@@ -80,6 +80,8 @@ export interface RecordingStorage {
   /** The object's bytes (for an export), or null when there is none. */
   read(path: string): Promise<Uint8Array | null>;
   remove(paths: string[]): Promise<void>;
+  /** Remove every object under `<prefix>/`; returns how many went. */
+  removePrefix(prefix: string): Promise<number>;
 }
 
 /** What the server holds about one learner, for export and deletion (privacy rule). */
@@ -96,6 +98,8 @@ export interface LearnerDataRepo {
   deleteWithTombstone(learnerId: string): Promise<{ events: number }>;
   /** Which of these ids belong to students deleted on request. */
   deleted(ids: string[]): Promise<string[]>;
+  /** Students deleted on request since this moment. */
+  deletedSince(since: Date): Promise<string[]>;
 }
 
 /** The platform's name and colours: one row, versioned (spec §8.1 branding). */
@@ -108,6 +112,8 @@ export interface BrandingRepo {
 /** Counts actions per bucket in fixed windows. `false` means this one is over the limit. */
 export interface RateLimiter {
   hit(bucket: string, limit: number, windowSeconds: number): Promise<boolean>;
+  /** How many hits the current window holds, without adding one. */
+  count(bucket: string, windowSeconds: number): Promise<number>;
 }
 
 /** Who is calling: the auth user and how they signed in (`google`, or `email` for codes). */
@@ -121,6 +127,14 @@ export interface Auth {
   verify(accessToken: string): Promise<Caller | null>;
 }
 
+/** Auth could not answer (busy, down, its own limit): not the same as a wrong password. */
+export class AuthUnavailable extends Error {
+  constructor() {
+    super('auth unavailable');
+    this.name = 'AuthUnavailable';
+  }
+}
+
 /** The auth users behind backup codes: made only by the server (Plan 3b). */
 export interface CodeAuth {
   /** A new email user with a made-up address and this password. */
@@ -128,6 +142,7 @@ export interface CodeAuth {
   deleteUser(authUserId: string): Promise<void>;
   /** The auth user's email (for an export), or null when the user is gone. */
   emailOf(authUserId: string): Promise<string | null>;
+  /** Null for a wrong password; throws `AuthUnavailable` when Auth cannot answer. */
   signInWithPassword(email: string, password: string): Promise<Session | null>;
 }
 

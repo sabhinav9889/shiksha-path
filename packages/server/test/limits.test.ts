@@ -32,9 +32,9 @@ describe('the client key', () => {
   const request = (forwarded: string) =>
     new Request('https://x/v1', { headers: { 'x-forwarded-for': forwarded } });
 
-  test('is a short hash of the first forwarded address, never the address itself', async () => {
+  test('is a short hash of the proxy-added (last) forwarded address, never the address', async () => {
     const key = await clientKey(
-      request('203.0.113.7, 10.0.0.1'),
+      request('10.0.0.1, 203.0.113.7'),
       'pepper-pepper-pepper-pepper-32b',
     );
     expect(key).toMatch(/^[0-9a-f]{16}$/);
@@ -43,6 +43,13 @@ describe('the client key', () => {
       await clientKey(request('203.0.113.8'), 'pepper-pepper-pepper-pepper-32b'),
     );
     expect(key).not.toContain('203');
+  });
+
+  test('a forged entry on the left is ignored: the key follows the address the proxy added', async () => {
+    const pepper = 'pepper-pepper-pepper-pepper-32b';
+    const real = await clientKey(request('203.0.113.7'), pepper);
+    expect(await clientKey(request('1.2.3.4, 203.0.113.7'), pepper)).toBe(real);
+    expect(await clientKey(request('5.6.7.8, 203.0.113.7'), pepper)).toBe(real);
   });
 
   test('a different pepper gives a different key', async () => {

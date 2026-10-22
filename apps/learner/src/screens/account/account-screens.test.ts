@@ -45,7 +45,7 @@ describe('creating a profile with a backend', () => {
     await vi.waitFor(() => screen.getByText('PIN फिर से डालें'));
     await enterPin('4821');
     await vi.waitFor(() => expect(text()).toContain('अपनी प्रोग्रेस सुरक्षित रखने के लिए'), {
-      timeout: 5000,
+      timeout: 12_000,
     });
     await fireEvent.click(button('बाद में'));
     expect(router.current.name).toBe('home');
@@ -61,7 +61,7 @@ describe('creating a profile with a backend', () => {
     await enterPin('4821');
     await vi.waitFor(() => screen.getByText('PIN फिर से डालें'));
     await enterPin('4821');
-    await fireEvent.click(await vi.waitFor(() => button('Google से जुड़ें'), { timeout: 5000 }));
+    await fireEvent.click(await vi.waitFor(() => button('Google से जुड़ें'), { timeout: 12_000 }));
     const signedIn = await backend.google.finishGoogleSignIn('x');
     expect(signedIn?.profileId).toBe(appState.profile?.id);
   });

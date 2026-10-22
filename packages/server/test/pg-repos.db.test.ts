@@ -6,6 +6,7 @@ import { cryptoIds, createEvent, systemClock } from '@shiksha/learner-core';
 import { afterAll, describe, expect, test } from 'vitest';
 import { PgBrandingRepo } from '../src/adapters/pg-branding-repo.js';
 import { PgEventRepo } from '../src/adapters/pg-event-repo.js';
+import { PgLearnerDataRepo } from '../src/adapters/pg-learner-data-repo.js';
 import { PgLearnerRepo } from '../src/adapters/pg-learner-repo.js';
 import { PgRateLimiter } from '../src/adapters/pg-rate-limiter.js';
 import { PgRecordingRepo } from '../src/adapters/pg-recording-repo.js';
@@ -32,6 +33,7 @@ async function makePgFixture(): Promise<ServiceFixture> {
     limiter: new PgRateLimiter(sql),
     recordings: new PgRecordingRepo(sql),
     branding: new PgBrandingRepo(sql),
+    data: new PgLearnerDataRepo(sql),
     storage: memoryRecordingStorage(), // the real bucket is tested through the API
     async newAuthUser() {
       const id = randomUUID();

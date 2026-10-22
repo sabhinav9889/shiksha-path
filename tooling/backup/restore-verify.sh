@@ -53,6 +53,19 @@ count() {
 [[ "$(count "$DB_URL")" == "2/2/1" ]] || fail "the seed is not in the source"
 [[ "$(count "${DB_URL%/*}/restore_check")" == "2/2/1" ]] || { cat "$WORK/restore.log"; fail "restore"; }
 
+echo "a restore into a newer database server must still let phones pull every event"
+RESTORED="${DB_URL%/*}/restore_check"
+visible() {
+  psql "$RESTORED" -qtAX -c "select count(*) from public.learner_events
+    where learner_id in ('$L1','$L2') and tx_id < pg_snapshot_xmin(pg_current_snapshot())"
+}
+# A new server's transaction counter can be far behind the old one's: simulate that.
+psql "$RESTORED" -qtAX -c "update public.learner_events set tx_id = '900000000000'::xid8"
+[[ "$(visible)" == "0" ]] || fail "the simulation did not hide the events"
+psql "$RESTORED" -qtAX -v ON_ERROR_STOP=1 -f /repo/tooling/backup/after-restore.sql >/dev/null \
+  || fail "after-restore.sql did not run"
+[[ "$(visible)" == "2" ]] || fail "restored events are still hidden from pull"
+
 echo "checking the recording's bytes"
 age -d -i "$WORK/key.txt" "$REC_FILE" | tar -C "$WORK" -xf -
 [[ "$(od -An -tx1 "$WORK/recordings/$L1/$REC" | tr -d ' \n')" == "01020304" ]] || fail "bytes differ"

@@ -3,6 +3,20 @@ import type { RecordingStorage } from '../ports.js';
 
 const BUCKET = 'recordings';
 
+type Bucket = ReturnType<ReturnType<typeof createClient>['storage']['from']>;
+const LIST_LIMIT = 1000;
+
+/** Every object under `<prefix>/` (one learner's folder holds far fewer than the limit). */
+async function removeFolder(bucket: Bucket, prefix: string): Promise<number> {
+  const { data, error } = await bucket.list(prefix, { limit: LIST_LIMIT });
+  if (error) throw new Error('could not read the bucket');
+  const paths = data.map((o) => `${prefix}/${o.name}`);
+  if (paths.length === 0) return 0;
+  const removed = await bucket.remove(paths);
+  if (removed.error) throw new Error('could not remove recordings');
+  return paths.length;
+}
+
 /** The private `recordings` bucket in Supabase Storage, reached with the service role. */
 export function createSupabaseRecordingStorage(
   url: string,
@@ -39,6 +53,7 @@ export function createSupabaseRecordingStorage(
       if (error) throw new Error('could not sign a download');
       return forPhone(data.signedUrl);
     },
+    removePrefix: (prefix) => removeFolder(bucket, prefix),
     async read(path) {
       const { data, error } = await bucket.download(path);
       return error ? null : new Uint8Array(await data.arrayBuffer());

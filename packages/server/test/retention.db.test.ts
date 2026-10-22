@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { PgLearnerDataRepo } from '../src/adapters/pg-learner-data-repo.js';
 import { PgRateLimiter } from '../src/adapters/pg-rate-limiter.js';
 import { PgRecordingRepo } from '../src/adapters/pg-recording-repo.js';
 import { createSql } from '../src/adapters/pg.js';
@@ -42,6 +43,7 @@ async function recording(
 }
 
 const deps = () => ({
+  data: new PgLearnerDataRepo(sql),
   recordings: new PgRecordingRepo(sql),
   storage,
   limiter: new PgRateLimiter(sql),
@@ -99,6 +101,15 @@ describe('retention', () => {
     await recording(a, { uploaded: 5 });
     await runRetention(deps(), NOW);
     expect((await runRetention(deps(), NOW)).recordings).toBe(0);
+  });
+
+  test("a file uploaded after its student was deleted is swept from that student's folder", async () => {
+    const gone = randomUUID();
+    await sql`insert into deleted_learners (id) values (${gone})`;
+    storage.put(`${gone}/${randomUUID()}`, 3);
+    await runRetention(deps(), new Date());
+    expect(storage.paths()).toEqual([]);
+    await sql`delete from deleted_learners where id = ${gone}`;
   });
 
   test('rate-limit windows older than a day are pruned', async () => {

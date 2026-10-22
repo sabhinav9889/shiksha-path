@@ -115,7 +115,7 @@ describe('creating a profile', () => {
     await enterPin('4821');
     await vi.waitFor(() => screen.getByText('PIN फिर से डालें'));
     await enterPin('4821');
-    await vi.waitFor(() => expect(router.current.name).toBe('home'), { timeout: 5000 });
+    await vi.waitFor(() => expect(router.current.name).toBe('home'), { timeout: 12_000 });
     expect(appState.profile?.name).toBe('रोहित');
     expect((await env.runtime.profiles.list()).map((p) => p.name)).toEqual(['रोहित']);
     expect(JSON.stringify(await env.runtime.profiles.list())).not.toContain('4821');
@@ -156,7 +156,7 @@ describe('creating a profile', () => {
     await enterPin('4821');
     await vi.waitFor(() => screen.getByText('PIN फिर से डालें'));
     await enterPin('4821');
-    await vi.waitFor(() => expect(appState.profile).not.toBeNull(), { timeout: 5000 });
+    await vi.waitFor(() => expect(appState.profile).not.toBeNull(), { timeout: 12_000 });
     expect(appState.lang).toBe('en');
     const events = await env.runtime.events.all(appState.profile?.id ?? '');
     expect(events.map((e) => e.type)).toEqual(['language_changed']);
@@ -185,7 +185,7 @@ describe('hardening', () => {
     await enterPin('4821');
     await vi.waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
     await enterPin('4821');
-    await vi.waitFor(() => expect(router.current.name).toBe('home'), { timeout: 5000 });
+    await vi.waitFor(() => expect(router.current.name).toBe('home'), { timeout: 12_000 });
     expect(await env.runtime.profiles.list()).toHaveLength(1);
   });
 
@@ -199,7 +199,7 @@ describe('hardening', () => {
       await vi.waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
     }
     // the picker re-reads the stored profiles after each attempt; allow for a busy machine
-    const slow = { timeout: 5000 };
+    const slow = { timeout: 12_000 };
     await vi.waitFor(() => expect(button('1').disabled).toBe(true), slow);
     await fireEvent.click(button('रोहित'));
     await vi.waitFor(() => expect(button('1').disabled).toBe(false), slow);

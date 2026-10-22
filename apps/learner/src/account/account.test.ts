@@ -290,7 +290,10 @@ describe('the code screen', () => {
 
   test('too many tries says to wait', async () => {
     const profile = await env.addProfile('रोहित');
-    backend.repos.limiter = { hit: () => Promise.resolve(false) };
+    backend.repos.limiter = {
+      hit: () => Promise.resolve(false),
+      count: () => Promise.resolve(Number.MAX_SAFE_INTEGER),
+    };
     render(CodeEntry, { lang: 'hi', profileId: profile.id });
     await fireEvent.input(field(), { target: { value: 'ABCD-EFGH' } });
     await fireEvent.click(screen.getByRole('button', { name: 'कोड से जुड़ें' }));

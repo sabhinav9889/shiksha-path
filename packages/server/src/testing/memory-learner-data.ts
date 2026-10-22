@@ -40,5 +40,6 @@ export function memoryLearnerData(state: State): LearnerDataRepo {
       return { events: events.length };
     },
     deleted: (ids) => Promise.resolve(ids.filter((id) => tombstones.has(id))),
+    deletedSince: () => Promise.resolve([...tombstones]),
   };
 }

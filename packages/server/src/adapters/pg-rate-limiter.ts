@@ -16,6 +16,15 @@ export class PgRateLimiter implements RateLimiter {
     return (rows[0]?.hits ?? Number.POSITIVE_INFINITY) <= limit;
   }
 
+  async count(bucket: string, windowSeconds: number): Promise<number> {
+    const rows = await this.sql<{ hits: number }[]>`
+      select hits from rate_limits
+      where bucket = ${bucket}
+        and window_start =
+          to_timestamp(floor(extract(epoch from now()) / ${windowSeconds}) * ${windowSeconds})`;
+    return rows[0]?.hits ?? 0;
+  }
+
   /** Remove windows that ended long ago; returns how many rows went. */
   async prune(olderThanSeconds: number): Promise<number> {
     const result = await this.sql`

@@ -169,7 +169,9 @@ Then open **Actions → Backup → Run workflow** once, and check that two files
 
 **Restore drill (once a term):** on the NGO computer, download the newest `db-*.dump.age`. Run
 `age -d -i shiksha-backup-key.txt db-<date>.dump.age > db.dump`, then
-`pg_restore --no-owner --no-privileges -d <a test database URL> db.dump`. Recordings come back the
+`pg_restore --no-owner --no-privileges -d <a test database URL> db.dump`. Then run
+`psql <the same URL> -f tooling/backup/after-restore.sql` (without it, phones see none of the
+restored progress). Recordings come back the
 same way: `age -d ... recordings-<date>.tar.age | tar -xf -`. CI runs the same check on a local
 copy (`tooling/backup/restore-check.sh`) on every pull request.
 

@@ -19,6 +19,11 @@ export function memoryRecordingStorage(): MemoryRecordingStorage {
       return Promise.resolve(size === undefined ? null : new Uint8Array(size));
     },
     signDownload: (path, seconds) => Promise.resolve(`memory://read/${path}?ttl=${seconds}`),
+    removePrefix: (prefix) => {
+      const gone = [...objects.keys()].filter((p) => p.startsWith(`${prefix}/`));
+      for (const path of gone) objects.delete(path);
+      return Promise.resolve(gone.length);
+    },
     remove: (paths) => {
       for (const path of paths) objects.delete(path);
       return Promise.resolve();
