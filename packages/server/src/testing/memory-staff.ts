@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { LearnerRow, OrgRepo, StaffRepo, StaffRow } from '../ports.js';
+import type { LearnerRow, OrgRepo, StaffRepo, StaffRow, StudentRow } from '../ports.js';
 
 export function memoryStaff(): StaffRepo {
   const rows = new Map<string, StaffRow>();
@@ -32,10 +32,22 @@ export function memoryStaff(): StaffRepo {
   };
 }
 
-export function memoryOrg(learners: Map<string, LearnerRow>): OrgRepo {
+export function memoryOrg(learners: Map<string, LearnerRow>): OrgRepo & {
+  setDeactivated(learnerId: string, value: boolean): void;
+} {
   const labs = new Map<string, string>();
   const cohorts = new Map<string, { id: string; name: string; labId: string | null }>();
   const cohortOf = new Map<string, string | null>();
+  const deactivated = new Set<string>();
+  const today = new Date().toISOString().slice(0, 10);
+  const row = (l: LearnerRow): StudentRow => ({
+    id: l.id,
+    name: l.name,
+    cohortId: cohortOf.get(l.id) ?? null,
+    deactivated: deactivated.has(l.id),
+    linkedOn: today,
+    lastSyncedAt: null,
+  });
   return {
     saveLab({ id = randomUUID(), name }) {
       labs.set(id, name);
@@ -51,6 +63,17 @@ export function memoryOrg(learners: Map<string, LearnerRow>): OrgRepo {
     },
     cohortOfLearner: (learnerId) =>
       Promise.resolve(learners.has(learnerId) ? (cohortOf.get(learnerId) ?? null) : undefined),
+    setDeactivated(learnerId, value) {
+      if (value) deactivated.add(learnerId);
+      else deactivated.delete(learnerId);
+    },
+    students: (ids) =>
+      Promise.resolve(
+        [...learners.values()]
+          .map(row)
+          .filter((s) => ids === 'all' || (s.cohortId !== null && ids.includes(s.cohortId))),
+      ),
+    student: (id) => Promise.resolve(learners.has(id) ? row(learners.get(id) as LearnerRow) : null),
     cohorts: (ids) =>
       Promise.resolve([...cohorts.values()].filter((c) => ids === 'all' || ids.includes(c.id))),
   };

@@ -1,4 +1,22 @@
-import type { OrgRepo } from '../ports.js';
+import type { OrgRepo, StudentRow } from '../ports.js';
+
+interface Row {
+  id: string;
+  name: string;
+  cohort_id: string | null;
+  deactivated: boolean;
+  linked_on: string;
+  last_synced: Date | null;
+}
+
+const toStudent = (r: Row): StudentRow => ({
+  id: r.id,
+  name: r.name,
+  cohortId: r.cohort_id,
+  deactivated: r.deactivated,
+  linkedOn: r.linked_on,
+  lastSyncedAt: r.last_synced?.toISOString() ?? null,
+});
 import type { Sql } from './pg.js';
 
 export class PgOrgRepo implements OrgRepo {
@@ -42,5 +60,33 @@ export class PgOrgRepo implements OrgRepo {
         (select value::uuid from jsonb_array_elements_text(${this.sql.json(ids === 'all' ? [] : ids)}))
       order by name`;
     return rows.map((r) => ({ id: r.id, name: r.name, labId: r.lab_id }));
+  }
+
+  private select(where: 'all' | 'cohorts' | 'one', value: string[] | string) {
+    const list = this.sql.json(Array.isArray(value) ? value : [value]);
+    return this.sql<Row[]>`
+      select l.id, l.name, l.cohort_id, l.deactivated_at is not null as deactivated,
+             to_char(l.created_at at time zone 'Asia/Kolkata', 'YYYY-MM-DD') as linked_on,
+             (select max(e.received_at) from learner_events e where e.learner_id = l.id)
+               as last_synced
+      from learners l
+      where ${where} = 'all'
+         or (${where} = 'cohorts' and l.cohort_id in
+               (select value::uuid from jsonb_array_elements_text(${list})))
+         or (${where} = 'one' and l.id in
+               (select value::uuid from jsonb_array_elements_text(${list})))
+      order by l.name`;
+  }
+
+  async students(cohortIds: string[] | 'all'): Promise<StudentRow[]> {
+    const rows = await (cohortIds === 'all'
+      ? this.select('all', [])
+      : this.select('cohorts', cohortIds));
+    return rows.map(toStudent);
+  }
+
+  async student(learnerId: string): Promise<StudentRow | null> {
+    const [row] = await this.select('one', learnerId);
+    return row ? toStudent(row) : null;
   }
 }

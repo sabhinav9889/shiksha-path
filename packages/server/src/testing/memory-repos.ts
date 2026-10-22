@@ -2,12 +2,14 @@ import { randomUUID } from 'node:crypto';
 import type { LearnerEvent } from '@shiksha/learner-core';
 import {
   LinkConflict,
+  type CodeRepo,
   type EventRepo,
   type LearnerRepo,
   type LearnerDataRepo,
   type LearnerRow,
   type SwitchRepo,
 } from '../ports.js';
+import { memoryCodeRepo } from './memory-auth.js';
 import { memoryAudit } from './memory-audit.js';
 import { memorySummaries } from './memory-summaries.js';
 import { memoryBranding } from './memory-branding.js';
@@ -87,7 +89,7 @@ export function makeMemoryRepos(): MemoryRepos {
     overrides: (learnerId) => Promise.resolve(Object.fromEntries(overrides.get(learnerId) ?? [])),
   };
 
-  return {
+  const repos: MemoryRepos = {
     identities,
     learnerRows: learners,
     data: memoryLearnerData({ learners, identities, eventRepo, overrides }),
@@ -118,7 +120,10 @@ export function makeMemoryRepos(): MemoryRepos {
       return Promise.resolve();
     },
     cleanup: () => Promise.resolve(),
+    codes: undefined as unknown as CodeRepo,
   };
+  repos.codes = memoryCodeRepo(repos);
+  return repos;
 }
 
 export const makeMemoryFixture = (): Promise<ServiceFixture> => Promise.resolve(makeMemoryRepos());

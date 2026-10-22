@@ -185,6 +185,20 @@ export interface OrgRepo {
   setLearnerCohort(learnerId: string, cohortId: string | null): Promise<void>;
   cohortOfLearner(learnerId: string): Promise<string | null | undefined>;
   cohorts(ids: string[] | 'all'): Promise<{ id: string; name: string; labId: string | null }[]>;
+  /** Learners in these cohorts (everyone for 'all'), for staff screens. */
+  students(cohortIds: string[] | 'all'): Promise<StudentRow[]>;
+  student(learnerId: string): Promise<StudentRow | null>;
+}
+
+export interface StudentRow {
+  id: string;
+  name: string;
+  cohortId: string | null;
+  deactivated: boolean;
+  /** IST day the learner was created (linked): "inactive" counts from here before any activity. */
+  linkedOn: string;
+  /** When the server last received an event from them. */
+  lastSyncedAt: string | null;
 }
 
 /** Verifies an access token; the identity comes from here, never from a request body. */

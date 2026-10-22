@@ -357,3 +357,28 @@ describe('GET /v1/staff/audit', () => {
     expect((await call('GET', '/v1/staff/audit?limit=0', { token: 'token-c' })).status).toBe(400);
   });
 });
+
+describe("the mentor's read routes", () => {
+  test('a learner token is NOT_STAFF; a bad id is INVALID_REQUEST; a real id answers', async () => {
+    expect((await call('GET', '/v1/staff/cohorts', { token: 'token-a' })).status).toBe(403);
+    const lab = await deps.org.saveLab({ name: 'Lab' });
+    const cohort = await deps.org.saveCohort({ name: 'C1', labId: lab });
+    await deps.org.setLearnerCohort(a, cohort);
+    await deps.staff.save({
+      email: 'auth-c@ngo.example',
+      role: 'mentor',
+      name: 'M',
+      active: true,
+      cohortIds: [cohort],
+    });
+    await call('POST', '/v1/staff/claim', { token: 'token-c', body: {} });
+    const list = await call('GET', '/v1/staff/cohorts', { token: 'token-c' });
+    expect(list.status).toBe(200);
+    expect(await json(list)).toMatchObject({ cohorts: [{ id: cohort, students: [{ id: a }] }] });
+    expect((await call('GET', '/v1/staff/student?id=nope', { token: 'token-c' })).status).toBe(400);
+    expect((await call('GET', `/v1/staff/student?id=${b}`, { token: 'token-c' })).status).toBe(403);
+    const one = await call('GET', `/v1/staff/student?id=${a}`, { token: 'token-c' });
+    expect(one.status).toBe(200);
+    expect(await json(one)).toMatchObject({ student: { id: a }, hasCode: false });
+  });
+});

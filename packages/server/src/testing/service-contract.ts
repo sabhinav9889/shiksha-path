@@ -12,6 +12,7 @@ import type {
   AuditRepo,
   BrandingRepo,
   Caller,
+  CodeRepo,
   EventRepo,
   LearnerDataRepo,
   LearnerRepo,
@@ -46,6 +47,7 @@ export interface ServiceFixture {
   org: OrgRepo;
   audit: AuditRepo;
   summaries: SummaryRepo;
+  codes: CodeRepo;
   /** Stands in for the bucket: a test "uploads" with `storage.put`. */
   storage: MemoryRecordingStorage;
   newAuthUser(): Promise<string>;

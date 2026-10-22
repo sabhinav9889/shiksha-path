@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { Caller } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
+import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
 import { listAudit, withAudit } from '../services/audit.js';
+import { listCohorts, studentDetail } from '../services/staff-read.js';
 import { claimStaff, inScope, staffCaller } from '../services/staff.js';
 import type { ServiceFixture } from './service-contract.js';
 
@@ -182,6 +184,73 @@ export function describeStaffContract(name: string, make: () => Promise<ServiceF
         expect(entry?.learnerId).toBeNull();
         expect(entry?.details).toEqual({ track: 'english', learner: 'DELETED' });
         expect(JSON.stringify(entry)).not.toContain(learnerA);
+      });
+    });
+
+    describe("the mentor's read API", () => {
+      const ids = { clock: systemClock, ids: cryptoIds };
+      const wrong = (learnerId: string, lessonId: string): LearnerEvent =>
+        createEvent(ids, learnerId, 'item_answered', {
+          source: { kind: 'lesson', lessonId },
+          itemId: 'q1',
+          outcome: 'wrong',
+        });
+
+      test('a mentor lists only their cohort; an admin lists both', async () => {
+        const mentor = await staffMember('mentor', [cohortA]);
+        const mine = await listCohorts(f, mentor);
+        expect(mine.cohorts.map((c) => c.id)).toEqual([cohortA]);
+        expect(mine.cohorts[0]?.students.map((s) => s.id)).toEqual([learnerA]);
+        const admin = await staffMember('admin', []);
+        const all = await listCohorts(f, admin);
+        expect(all.cohorts.map((c) => c.id).sort()).toEqual([cohortA, cohortB].sort());
+      });
+
+      test('students who need attention come first', async () => {
+        const quietOne = await learnerIn(cohortA);
+        await f.events.insertMany(quietOne, [wrong(quietOne, 'ef1-01')]);
+        await f.summaries.refresh(quietOne, () => ({
+          lessonsDone: 0,
+          lessonsThisWeek: 0,
+          streak: 0,
+          lastActiveDay: '2020-01-01',
+          currentLesson: null,
+          lowScores: false,
+          stuckLesson: null,
+        }));
+        const mentor = await staffMember('mentor', [cohortA]);
+        const [cohort] = (await listCohorts(f, mentor)).cohorts;
+        expect(cohort?.students[0]).toMatchObject({ id: quietOne, attention: ['inactive'] });
+      });
+
+      test("another cohort's student, or an unknown id, is FORBIDDEN alike", async () => {
+        const mentor = await staffMember('mentor', [cohortA]);
+        expect(await codeOf(studentDetail(f, mentor, learnerB))).toBe('FORBIDDEN');
+        expect(await codeOf(studentDetail(f, mentor, randomUUID()))).toBe('FORBIDDEN');
+      });
+
+      test('the detail lists weak lessons by wrong answers and carries no email or code', async () => {
+        const e1 = wrong(learnerA, 'ef1-02');
+        await f.events.insertMany(learnerA, [
+          e1,
+          e1,
+          wrong(learnerA, 'ef1-02'),
+          wrong(learnerA, 'ef1-01'),
+        ]);
+        const mentor = await staffMember('mentor', [cohortA]);
+        const detail = await studentDetail(f, mentor, learnerA);
+        expect(detail.student).toMatchObject({
+          id: learnerA,
+          cohortId: cohortA,
+          deactivated: false,
+        });
+        expect(detail.weakLessons).toEqual([
+          { lessonId: 'ef1-02', wrong: 2 },
+          { lessonId: 'ef1-01', wrong: 1 },
+        ]);
+        expect(detail.recent.length).toBe(3);
+        expect(JSON.stringify(detail)).not.toContain('@');
+        expect(detail).not.toHaveProperty('code');
       });
     });
   });
