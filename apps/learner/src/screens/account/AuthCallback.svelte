@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { linkProfile, type LinkOutcome } from '../../account/link-flow.js';
-  import { completeRestore, isRestoring, type RestoreOutcome } from '../../account/restore-flow.js';
+  import { finishSignIn } from '../../account/finish-sign-in.js';
   import { appState } from '../../app-state.svelte.js';
   import { t, type StringKey } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
@@ -10,19 +9,6 @@
   let done = $state(false);
 
   const lang = $derived(appState.lang);
-
-  function linkMessage(outcome: LinkOutcome): StringKey {
-    if (outcome.kind === 'linked') return 'account.linked';
-    if (outcome.kind === 'adopted') return 'account.adopted';
-    return outcome.kind === 'elsewhere' ? 'account.elsewhere' : 'account.failed';
-  }
-
-  const RESTORE_MESSAGES: Record<RestoreOutcome['kind'], StringKey> = {
-    restored: 'account.restored',
-    onPhone: 'account.alreadyHere',
-    none: 'account.notFound',
-    failed: 'account.failed',
-  };
 
   /** Google has sent the learner back here: finish signing in, then link or restore. */
   onMount(async () => {
@@ -33,14 +19,7 @@
       navigate({ name: 'profiles' });
       return;
     }
-    const { profileId } = signedIn;
-    try {
-      message = (await isRestoring(runtime, profileId))
-        ? RESTORE_MESSAGES[(await completeRestore(runtime, profileId)).kind]
-        : linkMessage(await linkProfile(runtime, profileId));
-    } catch {
-      message = 'account.failed'; // never leave the learner on "connecting…" with no way on
-    }
+    message = await finishSignIn(runtime, signedIn.profileId);
     done = true;
   });
 </script>

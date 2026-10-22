@@ -25,10 +25,15 @@ export function captureInstallPrompt(target: Pick<EventTarget, 'addEventListener
       const event = offered;
       if (!event) return 'dismissed';
       offered = null;
-      await event.prompt();
-      const { outcome } = await event.userChoice;
-      notify();
-      return outcome === 'accepted' ? 'accepted' : 'dismissed';
+      try {
+        await event.prompt();
+        const { outcome } = await event.userChoice;
+        return outcome === 'accepted' ? 'accepted' : 'dismissed';
+      } catch {
+        return 'dismissed'; // the browser refused to show it: the learner can install later
+      } finally {
+        notify();
+      }
     },
     subscribe(listener) {
       listeners.add(listener);

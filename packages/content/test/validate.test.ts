@@ -172,3 +172,21 @@ describe('validateContent', () => {
     expect(errors(await check(files))).toEqual([]);
   });
 });
+
+describe('the placement test', () => {
+  test('refuses a speaking item: speech in the placement test is never saved or scored', async () => {
+    const files: FileMap = { ...validFixture(), 'placement/audio/hello.mp3': 'mp3' };
+    const speak = `  - id: ps1
+    type: speak_compare
+    prompt: { hi: 'बोलें', en: 'Say it' }
+    text: Hello.
+    model_audio: audio/hello.mp3`;
+    files['placement/placement.yaml'] = String(files['placement/placement.yaml']).replace(
+      '    start_rules:\n      - { min_score: 0, start_lesson: apt-01 }',
+      `${speak.trimEnd().replace(/^/gm, '    ')}\n    start_rules:\n      - { min_score: 0, start_lesson: apt-01 }`,
+    );
+    expect(errors(await check(files))).toEqual([
+      'placement/placement.yaml: item ps1 is a speaking item; the placement test cannot use one',
+    ]);
+  });
+});

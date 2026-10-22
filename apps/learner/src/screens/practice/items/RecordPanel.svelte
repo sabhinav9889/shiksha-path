@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, tick } from 'svelte';
+  import { onDestroy, tick, untrack } from 'svelte';
   import { RecorderError, MAX_RECORDING_MS, type Recorder, type RecordingResult } from '../../../audio/recorder.js';
   import { recordingObjectUrl } from '../../../audio/recording-source.js';
   import { t, type Lang } from '../../../i18n/index.js';
@@ -19,7 +19,8 @@
 
   let { lang, recorder, locked, onrecord, onnext }: Props = $props();
 
-  let phase = $state<Phase>(recorder?.isSupported() ? 'idle' : 'unsupported');
+  // An item's recorder never changes while it is on screen: read it once.
+  let phase = $state<Phase>(untrack(() => recorder?.isSupported()) ? 'idle' : 'unsupported');
   let secondsLeft = $state(FULL_SECONDS);
   let last: RecordingResult | null = null;
   let src = $state<string | null>(null);
@@ -67,6 +68,15 @@
       if (secondsLeft <= 0) void finish();
     }, MS_PER_SECOND);
   }
+
+  /** A locked screen or a phone call hides the page: stop and save, as the 30 s limit does. */
+  $effect(() => {
+    const onHidden = (): void => {
+      if (document.visibilityState === 'hidden') void finish();
+    };
+    document.addEventListener('visibilitychange', onHidden);
+    return () => document.removeEventListener('visibilitychange', onHidden);
+  });
 
   /** Stop and save before the learner can do anything else with this item. */
   async function finish(): Promise<void> {

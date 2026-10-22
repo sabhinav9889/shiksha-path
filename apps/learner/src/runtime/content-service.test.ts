@@ -119,6 +119,20 @@ describe("keeping the open lesson's audio and counting changes", () => {
   });
 });
 
+describe('a change only to the manifest', () => {
+  test('a new track title alone still raises the version, so the session reopens', async () => {
+    const service = makeService();
+    await service.sync();
+    const before = service.version;
+    await fixture.rebuild((files) => {
+      files['tracks.yaml'] = String(files['tracks.yaml']).replace('अंग्रेज़ी', 'इंग्लिश');
+    });
+    await service.sync();
+    expect(service.version).toBeGreaterThan(before);
+    expect(JSON.stringify(await storage.getManifest())).toContain('इंग्लिश');
+  });
+});
+
 describe('audio in use when a sync finishes', () => {
   test('a lesson opened while a sync is running keeps its audio', async () => {
     const service = makeService();

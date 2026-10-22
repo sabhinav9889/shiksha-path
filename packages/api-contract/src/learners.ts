@@ -17,3 +17,14 @@ export const linkResponse = z.object({
   created: z.boolean(),
 });
 export type LinkResponse = z.infer<typeof linkResponse>;
+
+const MAX_DELETED_CHECK = 20;
+
+/** Which of these learners were deleted on request? Public; a phone asks about its own profiles. */
+export const deletedCheck = z.strictObject({
+  learnerIds: z.array(z.uuid()).min(1).max(MAX_DELETED_CHECK),
+});
+export type DeletedCheck = z.infer<typeof deletedCheck>;
+
+export const deletedCheckResponse = z.object({ deleted: z.array(z.uuid()) });
+export type DeletedCheckResponse = z.infer<typeof deletedCheckResponse>;

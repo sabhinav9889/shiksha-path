@@ -5,9 +5,9 @@ Active tasks. Read this at the start of every session. Details live in `.claude/
 
 **Statuses:** `in-progress` · `blocked` · `shipped` · `on-hold`
 
-| Task                       | Status      | Assignee | Branch                 | Next step                                                                                             | Detail                                                    |
-| -------------------------- | ----------- | -------- | ---------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Plan 3a – backend and sync | in-progress | Claude   | `feature/backend-sync` | Owner reviews and merges the PR, then follows [the Supabase runbook](docs/runbooks/supabase-setup.md) | [plan](docs/superpowers/plans/2026-10-20-backend-sync.md) |
+| Task                               | Status      | Assignee | Branch                   | Next step                                                                                        | Detail                                                      |
+| ---------------------------------- | ----------- | -------- | ------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| Plan 3b – backend and sync, part 2 | in-progress | Claude   | `feature/backend-sync-2` | Final whole-branch review, then PR; owner then follows the new runbook sections (codes, backups) | [plan](docs/superpowers/plans/2026-10-22-backend-sync-2.md) |
 
 ## Archive
 
@@ -20,3 +20,5 @@ Shipped tasks move here with their merge date.
 - Plan 2b – learner app · merged 2026-10-19 (PR #8 plan, PR #9 app)
 - Plan 2c – learner app, part 2 · merged 2026-10-20 (PR #10 plan, PR #11 app)
 - Plan 3a plan, AGENTS.md and GEMINI.md · merged 2026-10-20 (PR #12)
+- Plan 3a – backend and sync · merged 2026-10-21 (PR #13)
+- Plan 3b plan · merged 2026-10-22 (PR #14)

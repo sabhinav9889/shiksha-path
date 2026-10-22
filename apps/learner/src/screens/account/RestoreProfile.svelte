@@ -3,12 +3,16 @@
   import { appState } from '../../app-state.svelte.js';
   import { t, type Lang } from '../../i18n/index.js';
   import PinPad from '../profiles/PinPad.svelte';
+  import CodeEntry from './CodeEntry.svelte';
 
   let { lang, oncancel }: { lang: Lang; oncancel: () => void } = $props();
 
   let firstPin = $state('');
   let error = $state('');
   let busy = $state(false);
+  /** Google, or a mentor's backup code (spec §5.3); with a code, the hidden profile waits here. */
+  let via = $state<'google' | 'code'>('google');
+  let waitingForCode = $state<string | null>(null);
 
   /** A new PIN for this phone, entered twice; then Google sign-in finds the learner. */
   async function submit(pin: string): Promise<void> {
@@ -25,7 +29,8 @@
     if (!runtime) return;
     busy = true;
     try {
-      await startRestore(runtime, pin); // the browser now goes to Google and comes back
+      const provisional = await startRestore(runtime, pin, via); // Google: the browser leaves
+      if (via === 'code') waitingForCode = provisional;
     } catch {
       error = t('account.failed', lang);
       busy = false;
@@ -35,10 +40,19 @@
 
 <section class="restore">
   <h1>{t('account.restore', lang)}</h1>
-  <p class="prompt">{t(firstPin ? 'create.pinConfirm' : 'account.restorePin', lang)}</p>
-  <PinPad {lang} {error} disabled={busy} onsubmit={submit} />
-  {#if busy}
-    <p class="muted">{t('account.working', lang)}</p>
+  {#if waitingForCode}
+    <CodeEntry {lang} profileId={waitingForCode} />
+  {:else}
+    <p class="prompt">{t(firstPin ? 'create.pinConfirm' : 'account.restorePin', lang)}</p>
+    <PinPad {lang} {error} disabled={busy} onsubmit={submit} />
+    {#if busy && via === 'google'}
+      <p class="muted">{t('account.working', lang)}</p>
+    {/if}
+    {#if !firstPin && via === 'google'}
+      <button type="button" class="link" onclick={() => (via = 'code')}>
+        {t('account.haveCode', lang)}
+      </button>
+    {/if}
   {/if}
   <button type="button" class="link" onclick={oncancel}>{t('create.cancel', lang)}</button>
 </section>

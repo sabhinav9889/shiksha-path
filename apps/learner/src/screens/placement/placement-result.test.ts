@@ -157,3 +157,18 @@ describe('with the English-only option switched off', () => {
     expect(text()).not.toContain('आपकी English अच्छी है');
   });
 });
+
+describe('when accepting English only fails', () => {
+  test('it says so and the choice is offered again', async () => {
+    await signedIn();
+    await place(5);
+    env.runtime.events.append = () => Promise.reject(new Error('disk full'));
+    const session = appState.session;
+    if (session) session.setLanguage = () => Promise.reject(new Error('disk full'));
+    render(PlacementResult);
+    await fireEvent.click(await vi.waitFor(() => button('हाँ, सिर्फ़ English')));
+    await vi.waitFor(() => screen.getByText('कुछ गड़बड़ हुई। फिर से कोशिश करें।'));
+    expect(button('हाँ, सिर्फ़ English')).toBeTruthy();
+    expect(appState.lang).toBe('hi');
+  });
+});

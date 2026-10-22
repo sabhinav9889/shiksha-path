@@ -31,11 +31,22 @@ export function localStack(): Stack {
 const admin = () =>
   createClient(localStack().apiUrl, localStack().serviceKey, { auth: { persistSession: false } });
 
-/** A confirmed local test user (email and password exist only on the local stack) and its token. */
-export async function makeUser(): Promise<{ id: string; accessToken: string }> {
+/**
+ * A confirmed local test user and its token. It stands in for a Google account (`provider:
+ * google`, set by the admin API, which only the server can do); `email` makes a plain email user.
+ */
+export async function makeUser(
+  provider: 'google' | 'email' = 'google',
+): Promise<{ id: string; accessToken: string }> {
   const email = `${randomUUID()}@test.local`;
   const password = `pw-${randomUUID()}`;
-  const created = await admin().auth.admin.createUser({ email, password, email_confirm: true });
+  const app_metadata = provider === 'google' ? { provider } : {};
+  const created = await admin().auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    app_metadata,
+  });
   if (created.error || !created.data.user) throw new Error('could not create a test user');
   const client = createClient(localStack().apiUrl, localStack().anonKey, {
     auth: { persistSession: false },

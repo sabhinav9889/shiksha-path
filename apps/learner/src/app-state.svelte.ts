@@ -11,6 +11,8 @@ import { activity, audioInUse, resetActivity } from './activity.svelte.js';
 import { uiLang, type Lang } from './i18n/index.js';
 import { apiFor, isLinked } from './account/account.js';
 import type { Runtime } from './runtime/runtime.js';
+import { DEFAULT_BRANDING, type Branding } from '@shiksha/api-contract';
+import { loadBranding } from './runtime/branding.js';
 import { ALL_ON, loadSwitches, refreshSwitches, type Switches } from './runtime/switches.js';
 
 interface AppState {
@@ -21,6 +23,8 @@ interface AppState {
   lang: Lang;
   /** What the server lets this learner use; every feature is on until it says otherwise. */
   switches: Switches;
+  /** The platform's name and colours, for the whole phone (spec §8.1 branding). */
+  brand: Branding;
 }
 
 export const appState = $state<AppState>({
@@ -29,6 +33,7 @@ export const appState = $state<AppState>({
   session: null,
   lang: 'hi',
   switches: { ...ALL_ON },
+  brand: structuredClone(DEFAULT_BRANDING),
 });
 
 /** The content version the open session was built from; -1 when there is none. */
@@ -81,6 +86,12 @@ export async function signIn(profileId: string, pin: string): Promise<void> {
   appState.switches = switches;
   openedAtVersion = session ? version : -1;
   void updateSwitches(); // the cached values show at once; the server's follow when online
+}
+
+/** Show the branding stored on the phone (before the first paint, and after each sync). */
+export async function reloadBranding(): Promise<void> {
+  const runtime = appState.runtime;
+  if (runtime) appState.brand = await loadBranding(runtime);
 }
 
 /** Show the signed-in learner's switches as stored on the phone. */

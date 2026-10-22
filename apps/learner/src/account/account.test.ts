@@ -1,13 +1,16 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto';
 import { createEvent, deriveProgress, type LearnerEvent } from '@shiksha/learner-core';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { makeFakeBackend } from '../../test/helpers/fake-backend.js';
 import { makeEnv, type TestEnv } from '../../test/helpers/installed-runtime.js';
 import { initApp, signIn, signOut } from '../app-state.svelte.js';
 import { navigate, router } from '../router.svelte.js';
 import AuthCallback from '../screens/account/AuthCallback.svelte';
+import CodeEntry from '../screens/account/CodeEntry.svelte';
+import { signInWithCode } from './code-sign-in.js';
+import { finishSignIn } from './finish-sign-in.js';
 import { isLinked } from './account.js';
 import { linkProfile } from './link-flow.js';
 import { completeRestore, restoreEvents, startRestore } from './restore-flow.js';
@@ -220,5 +223,94 @@ describe('the sign-in callback page', () => {
     );
     expect(screen.getByRole('button', { name: 'आगे' })).toBeTruthy();
     vi.restoreAllMocks();
+  });
+});
+
+describe('backup codes', () => {
+  test('a fresh profile signed in with a code takes over that learner', async () => {
+    const { learnerId, code } = await backend.issueCode('कोड वाली');
+    const fresh = await env.addProfile('नया', '4321');
+    await env.runtime.events.append(event(fresh.id, 'language_changed'));
+    expect(await signInWithCode(env.runtime, fresh.id, code)).toBe('ok');
+    expect(await finishSignIn(env.runtime, fresh.id, 'code')).toBe('account.codeAdopted');
+    expect((await env.runtime.profiles.get(learnerId))?.name).toBe('कोड वाली');
+    await signIn(learnerId, '4321');
+    expect(await isLinked(env.runtime, learnerId)).toBe(true);
+  });
+
+  test('restore with a code on an empty phone brings the progress back', async () => {
+    const { learnerId, code } = await backend.issueCode('कोड वाली');
+    const lesson = event(learnerId, 'lesson_completed');
+    await backend.repos.events.insertMany(learnerId, [lesson]);
+    const provisional = await startRestore(env.runtime, '9876', 'code');
+    expect(await backend.google.accessToken(provisional)).toBeNull(); // no Google trip
+    expect(await signInWithCode(env.runtime, provisional, code.toLowerCase())).toBe('ok');
+    expect(await finishSignIn(env.runtime, provisional, 'code')).toBe('account.restored');
+    await signIn(learnerId, '9876');
+    expect(
+      deriveProgress(await env.runtime.events.all(learnerId)).completedLessons.has('ef1-01'),
+    ).toBe(true);
+  });
+
+  test('a wrong code changes nothing', async () => {
+    const profile = await env.addProfile('रोहित');
+    expect(await signInWithCode(env.runtime, profile.id, 'ABCD-EFGH')).toBe('BAD_CODE');
+    expect(await backend.google.accessToken(profile.id)).toBeNull();
+    expect(await isLinked(env.runtime, profile.id)).toBe(false);
+  });
+
+  test('offline it is OFFLINE, and the code is never written anywhere on the phone', async () => {
+    const { code } = await backend.issueCode('A');
+    const profile = await env.addProfile('रोहित');
+    backend.setOnline(false);
+    expect(await signInWithCode(env.runtime, profile.id, code)).toBe('OFFLINE');
+    backend.setOnline(true);
+    expect(await signInWithCode(env.runtime, profile.id, code)).toBe('ok');
+    const stored = JSON.stringify([
+      await env.runtime.events.getMeta(`linked:${profile.id}`),
+      Object.values(sessionStorage),
+      Object.values(localStorage),
+    ]);
+    expect(stored).not.toContain(code);
+    expect(stored).not.toContain(code.replace('-', ''));
+  });
+});
+
+describe('the code screen', () => {
+  const field = () => screen.getByLabelText('अपना कोड लिखें') as HTMLInputElement;
+
+  test('a wrong code says so and the field is cleared', async () => {
+    const profile = await env.addProfile('रोहित');
+    render(CodeEntry, { lang: 'hi', profileId: profile.id });
+    await fireEvent.input(field(), { target: { value: 'ABCD-EFGH' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'कोड से जुड़ें' }));
+    await vi.waitFor(() => screen.getByText('यह कोड सही नहीं है'));
+    expect(field().value).toBe('');
+  });
+
+  test('too many tries says to wait', async () => {
+    const profile = await env.addProfile('रोहित');
+    backend.repos.limiter = {
+      hit: () => Promise.resolve(false),
+      count: () => Promise.resolve(Number.MAX_SAFE_INTEGER),
+    };
+    render(CodeEntry, { lang: 'hi', profileId: profile.id });
+    await fireEvent.input(field(), { target: { value: 'ABCD-EFGH' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'कोड से जुड़ें' }));
+    await vi.waitFor(() => screen.getByText('बहुत कोशिशें हुईं, थोड़ी देर बाद फिर करें'));
+  });
+
+  test('a right code finishes linking and leads to the picker, with the code gone from the page', async () => {
+    const { code } = await backend.issueCode('कोड वाली');
+    const profile = await env.addProfile('नया');
+    render(CodeEntry, { lang: 'hi', profileId: profile.id });
+    await fireEvent.input(field(), { target: { value: code } });
+    await fireEvent.click(screen.getByRole('button', { name: 'कोड से जुड़ें' }));
+    await vi.waitFor(() =>
+      screen.getByText('कोड से जुड़ गया – आपकी पुरानी प्रोग्रेस इस फ़ोन पर आ गई'),
+    );
+    expect(document.body.innerHTML).not.toContain(code);
+    await fireEvent.click(screen.getByRole('button', { name: 'आगे' }));
+    expect(router.current.name).toBe('profiles');
   });
 });

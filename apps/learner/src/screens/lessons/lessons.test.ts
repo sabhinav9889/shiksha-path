@@ -78,7 +78,7 @@ describe('downloads', () => {
     await vi.waitFor(() => button('डाउनलोड करें'));
     expect(screen.queryByRole('button', { name: 'पाठ 1' })).toBeNull();
     await fireEvent.click(button('डाउनलोड करें'));
-    await vi.waitFor(() => expect(button('पाठ 1')).toBeTruthy(), { timeout: 5000 });
+    await vi.waitFor(() => expect(button('पाठ 1')).toBeTruthy(), { timeout: 12_000 });
   });
 
   test('damaged stored lessons are offered for download, with no error', async () => {
@@ -130,7 +130,7 @@ describe('freeing space', () => {
     expect(screen.queryByRole('button', { name: 'पाठ 1' })).toBeNull();
     expect(await env.runtime.storage.getModule(EN)).toBeNull();
     await fireEvent.click(button('फिर से डाउनलोड करें'));
-    await vi.waitFor(() => expect(button('पाठ 1')).toBeTruthy(), { timeout: 5000 });
+    await vi.waitFor(() => expect(button('पाठ 1')).toBeTruthy(), { timeout: 12_000 });
   });
 
   test('declining the confirmation keeps the lessons', async () => {

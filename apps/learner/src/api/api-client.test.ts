@@ -83,6 +83,14 @@ describe('createApiClient', () => {
     expect(await odd.api.me()).toEqual({ ok: false, error: 'INTERNAL' });
   });
 
+  test('a rate-limited answer is RATE_LIMITED, so the caller keeps the work for later', async () => {
+    const { api } = client(() => answer(429, { error: 'RATE_LIMITED' }));
+    expect(await api.push({ learnerId, events: [{}] })).toEqual({
+      ok: false,
+      error: 'RATE_LIMITED',
+    });
+  });
+
   test('no network is OFFLINE', async () => {
     const { api } = client(() => Promise.reject(new TypeError('Failed to fetch')));
     expect(await api.me()).toEqual({ ok: false, error: 'OFFLINE' });

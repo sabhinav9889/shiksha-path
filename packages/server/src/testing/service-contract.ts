@@ -1,17 +1,38 @@
 import { randomUUID } from 'node:crypto';
+import type { RecordingStart } from '@shiksha/api-contract';
 import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import type { EventRepo, LearnerRepo, SwitchRepo } from '../ports.js';
+import type {
+  BrandingRepo,
+  Caller,
+  EventRepo,
+  LearnerDataRepo,
+  LearnerRepo,
+  RateLimiter,
+  RecordingRepo,
+  SwitchRepo,
+} from '../ports.js';
+import { getBranding, setBranding } from '../services/branding.js';
+import { completeRecording, startRecording } from '../services/recordings.js';
+import type { MemoryRecordingStorage } from './memory-recording-storage.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
 import { pullEvents, pushEvents } from '../services/sync.js';
+
+const google = (authUserId: string): Caller => ({ authUserId, provider: 'google' });
 
 /** Repositories plus the set-up a test needs that the read-only ports do not offer. */
 export interface ServiceFixture {
   learners: LearnerRepo;
   events: EventRepo;
   switches: SwitchRepo;
+  limiter: RateLimiter;
+  recordings: RecordingRepo;
+  branding: BrandingRepo;
+  data: LearnerDataRepo;
+  /** Stands in for the bucket: a test "uploads" with `storage.put`. */
+  storage: MemoryRecordingStorage;
   newAuthUser(): Promise<string>;
   setAllStudents(key: string, enabled: boolean): Promise<void>;
   setOverride(learnerId: string, key: string, enabled: boolean): Promise<void>;
@@ -24,6 +45,16 @@ const codeOf = async (promise: Promise<unknown>): Promise<string | undefined> =>
     () => undefined,
     (error: unknown) => (error instanceof ApiFailure ? error.code : String(error)),
   );
+
+/**
+ * Rate windows are fixed clock windows: a burst that straddles a boundary splits across two.
+ * Start a burst with at least `margin` ms left in the current window.
+ */
+async function awayFromWindowEdge(windowSeconds: number, margin = 10_000): Promise<void> {
+  const windowMs = windowSeconds * 1000;
+  const left = windowMs - (Date.now() % windowMs);
+  if (left < margin) await new Promise((resolve) => setTimeout(resolve, left + 500));
+}
 
 const event = (learnerId: string): LearnerEvent =>
   createEvent({ clock: systemClock, ids: cryptoIds }, learnerId, 'language_changed', {
@@ -45,8 +76,8 @@ export function describeServiceContract(
     beforeEach(async () => {
       f = await makeFixture();
       [authA, authB] = [await f.newAuthUser(), await f.newAuthUser()];
-      a = (await linkLearner(f, authA, { profileId: randomUUID(), name: 'A' })).learnerId;
-      b = (await linkLearner(f, authB, { profileId: randomUUID(), name: 'B' })).learnerId;
+      a = (await linkLearner(f, google(authA), { profileId: randomUUID(), name: 'A' })).learnerId;
+      b = (await linkLearner(f, google(authB), { profileId: randomUUID(), name: 'B' })).learnerId;
     });
 
     afterEach(async () => {
@@ -54,21 +85,70 @@ export function describeServiceContract(
     });
 
     describe('linking', () => {
+      test('a student deleted on request cannot be brought back by linking their old id', async () => {
+        const gone = randomUUID();
+        await f.data.deleteWithTombstone(gone);
+        const auth = await f.newAuthUser();
+        const out = linkLearner(f, google(auth), { profileId: gone, name: 'X' });
+        expect(await codeOf(out)).toBe('FORBIDDEN');
+        expect(await f.learners.findById(gone)).toBeNull();
+      });
+
+      test('an email sign-in the server did not issue cannot create a learner', async () => {
+        const auth = await f.newAuthUser();
+        const profileId = randomUUID();
+        const out = linkLearner(
+          f,
+          { authUserId: auth, provider: 'email' },
+          { profileId, name: 'X' },
+        );
+        expect(await codeOf(out)).toBe('FORBIDDEN');
+        expect(await f.learners.findById(profileId)).toBeNull();
+      });
+
+      test('two links at once for one identity: one creates it, the other finds it', async () => {
+        const auth = await f.newAuthUser();
+        const profileId = randomUUID();
+        const body = { profileId, name: 'A' };
+        const both = await Promise.all([
+          linkLearner(f, google(auth), body),
+          linkLearner(f, google(auth), body),
+        ]);
+        expect(both.map((r) => r.created).sort()).toEqual([false, true]);
+        expect(both.every((r) => r.learnerId === profileId)).toBe(true);
+      });
+
+      test('two identities racing for one profile id: one wins, the other is PROFILE_TAKEN', async () => {
+        const [one, two] = [await f.newAuthUser(), await f.newAuthUser()];
+        const body = { profileId: randomUUID(), name: 'A' };
+        const results = await Promise.allSettled([
+          linkLearner(f, google(one), body),
+          linkLearner(f, google(two), body),
+        ]);
+        const codes = results.map((r) =>
+          r.status === 'fulfilled' ? 'ok' : (r.reason as { code?: string }).code,
+        );
+        expect(codes.sort()).toEqual(['PROFILE_TAKEN', 'ok']);
+      });
+
       test('a new identity creates a learner with the phone profile id', async () => {
         const auth = await f.newAuthUser();
         const profileId = randomUUID();
-        const out = await linkLearner(f, auth, { profileId, name: 'प्रिया' });
+        const out = await linkLearner(f, google(auth), { profileId, name: 'प्रिया' });
         expect(out).toEqual({ learnerId: profileId, name: 'प्रिया', created: true });
       });
 
       test('an identity already linked gets its own learner back, whatever profile id is sent', async () => {
-        const again = await linkLearner(f, authA, { profileId: randomUUID(), name: 'Other' });
+        const again = await linkLearner(f, google(authA), {
+          profileId: randomUUID(),
+          name: 'Other',
+        });
         expect(again).toEqual({ learnerId: a, name: 'A', created: false });
       });
 
       test("nobody can claim another learner's id", async () => {
         const auth = await f.newAuthUser();
-        expect(await codeOf(linkLearner(f, auth, { profileId: a, name: 'X' }))).toBe(
+        expect(await codeOf(linkLearner(f, google(auth), { profileId: a, name: 'X' }))).toBe(
           'PROFILE_TAKEN',
         );
         expect((await f.learners.findById(a))?.name).toBe('A');
@@ -186,6 +266,132 @@ export function describeServiceContract(
         );
         expect(await codeOf(pullEvents(f, stranger, { after: 0, limit: 10 }))).toBe('NOT_LINKED');
         expect(await codeOf(getMe(f, stranger))).toBe('NOT_LINKED');
+      });
+    });
+
+    describe('rate limits', () => {
+      test('the 61st push in a minute is refused, and another learner is unaffected', async () => {
+        await awayFromWindowEdge(60);
+        for (let n = 0; n < 60; n += 1) {
+          await pushEvents(f, authA, { learnerId: a, events: [event(a)] });
+        }
+        const over = pushEvents(f, authA, { learnerId: a, events: [event(a)] });
+        expect(await codeOf(over)).toBe('RATE_LIMITED');
+        expect(
+          (await pushEvents(f, authB, { learnerId: b, events: [event(b)] })).accepted,
+        ).toHaveLength(1);
+      });
+
+      test('the 61st pull in a minute is refused', async () => {
+        await awayFromWindowEdge(60);
+        for (let n = 0; n < 60; n += 1) await pullEvents(f, authA, { after: 0, limit: 10 });
+        expect(await codeOf(pullEvents(f, authA, { after: 0, limit: 10 }))).toBe('RATE_LIMITED');
+      });
+
+      test('the 11th link in an hour by one sign-in is refused', async () => {
+        for (let n = 0; n < 9; n += 1) {
+          // the set-up's own link was the first
+          await linkLearner(f, google(authA), { profileId: randomUUID(), name: 'A' });
+        }
+        const over = linkLearner(f, google(authA), { profileId: randomUUID(), name: 'A' });
+        expect(await codeOf(over)).toBe('RATE_LIMITED');
+      });
+
+      test('two hits at once never both take the last slot', async () => {
+        const bucket = `test:${randomUUID()}`;
+        await f.limiter.hit(bucket, 2, 60);
+        const both = await Promise.all([
+          f.limiter.hit(bucket, 2, 60),
+          f.limiter.hit(bucket, 2, 60),
+        ]);
+        expect(both.filter(Boolean)).toHaveLength(1);
+      });
+    });
+
+    describe('recordings', () => {
+      const start = (over: Partial<RecordingStart> = {}): RecordingStart => ({
+        id: randomUUID(),
+        lessonId: 'ef1-02',
+        itemId: 's1',
+        mime: 'audio/webm',
+        bytes: 2048,
+        durationMs: 3000,
+        at: '2026-10-22T10:00:00.000Z',
+        ...over,
+      });
+
+      test('start, upload, complete: the object sits under the learner and is uploaded', async () => {
+        const body = start();
+        const out = await startRecording(f, authA, body);
+        expect(out.uploadUrl).toBeTruthy();
+        expect(out.token).toBeTruthy();
+        f.storage.put(`${a}/${body.id}`, 2048);
+        expect(await completeRecording(f, authA, { id: body.id })).toEqual({ status: 'uploaded' });
+        expect((await f.recordings.get(body.id))?.status).toBe('uploaded');
+        expect((await f.recordings.listByLearner(a)).map((r) => r.id)).toEqual([body.id]);
+      });
+
+      test('starting again: nothing to do once uploaded, a fresh URL while pending', async () => {
+        const body = start();
+        await startRecording(f, authA, body);
+        expect((await startRecording(f, authA, body)).uploadUrl).toBeTruthy();
+        f.storage.put(`${a}/${body.id}`, 2048);
+        await completeRecording(f, authA, { id: body.id });
+        expect(await startRecording(f, authA, body)).toEqual({ uploadUrl: null, token: null });
+      });
+
+      test("nobody starts or completes another learner's recording", async () => {
+        const body = start();
+        await startRecording(f, authA, body);
+        expect(await codeOf(startRecording(f, authB, body))).toBe('FORBIDDEN');
+        f.storage.put(`${a}/${body.id}`, 2048);
+        expect(await codeOf(completeRecording(f, authB, { id: body.id }))).toBe('FORBIDDEN');
+        expect((await f.recordings.get(body.id))?.status).toBe('pending');
+      });
+
+      test('complete needs the object, within the size limit', async () => {
+        const body = start();
+        await startRecording(f, authA, body);
+        expect(await codeOf(completeRecording(f, authA, { id: body.id }))).toBe('INVALID_REQUEST');
+        f.storage.put(`${a}/${body.id}`, 1_048_577);
+        expect(await codeOf(completeRecording(f, authA, { id: body.id }))).toBe('INVALID_REQUEST');
+        expect(await codeOf(completeRecording(f, authA, { id: randomUUID() }))).toBe(
+          'INVALID_REQUEST',
+        );
+      });
+
+      test('with speaking practice off for the learner, uploads are refused', async () => {
+        await f.setOverride(a, 'speaking_practice', false);
+        expect(await codeOf(startRecording(f, authA, start()))).toBe('FEATURE_OFF');
+        expect((await startRecording(f, authB, start())).uploadUrl).toBeTruthy();
+      });
+
+      test('the 101st start in a day is refused', async () => {
+        for (let n = 0; n < 100; n += 1) await startRecording(f, authA, start());
+        expect(await codeOf(startRecording(f, authA, start()))).toBe('RATE_LIMITED');
+      });
+    });
+
+    describe('branding', () => {
+      const readable = {
+        name: { hi: 'नई राह', en: 'New Path' },
+        primary: '#1f6f43',
+        accent: '#9a3412',
+      };
+
+      test('a readable change is saved and its version grows by one', async () => {
+        const before = await getBranding(f);
+        const { version } = await setBranding(f, readable);
+        expect(version).toBe(before.version + 1);
+        expect(await getBranding(f)).toEqual({ ...readable, version });
+        await setBranding(f, { name: before.name, primary: before.primary, accent: before.accent });
+      });
+
+      test('a colour white text cannot be read on is refused, and nothing changes', async () => {
+        const before = await getBranding(f);
+        const out = setBranding(f, { ...readable, primary: '#ffd400' });
+        expect(await codeOf(out)).toBe('INVALID_REQUEST');
+        expect(await getBranding(f)).toEqual(before);
       });
     });
   });

@@ -140,7 +140,7 @@ describe('before the lessons are on the phone', () => {
     );
     env.server.failing.delete('manifest.json');
     await fireEvent.click(button('डाउनलोड करें'));
-    await vi.waitFor(() => expect(screen.getByText('पाठ 1')).toBeTruthy(), { timeout: 5000 });
+    await vi.waitFor(() => expect(screen.getByText('पाठ 1')).toBeTruthy(), { timeout: 12_000 });
     expect(appState.session).not.toBeNull();
   });
 

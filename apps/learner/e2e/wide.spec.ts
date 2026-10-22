@@ -16,6 +16,7 @@ async function assertSideNav(page: Page, width: number): Promise<void> {
 
 for (const [width, height, rail] of [
   [768, 1024, 96],
+  [1024, 768, 220],
   [1280, 800, 220],
 ] as const) {
   test(`at ${width} px every screen fits and the navigation is a ${rail} px side bar`, async ({

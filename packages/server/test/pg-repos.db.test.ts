@@ -4,8 +4,13 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cryptoIds, createEvent, systemClock } from '@shiksha/learner-core';
 import { afterAll, describe, expect, test } from 'vitest';
+import { PgBrandingRepo } from '../src/adapters/pg-branding-repo.js';
 import { PgEventRepo } from '../src/adapters/pg-event-repo.js';
+import { PgLearnerDataRepo } from '../src/adapters/pg-learner-data-repo.js';
 import { PgLearnerRepo } from '../src/adapters/pg-learner-repo.js';
+import { PgRateLimiter } from '../src/adapters/pg-rate-limiter.js';
+import { PgRecordingRepo } from '../src/adapters/pg-recording-repo.js';
+import { memoryRecordingStorage } from '../src/testing/memory-recording-storage.js';
 import { PgSwitchRepo } from '../src/adapters/pg-switch-repo.js';
 import { createSql } from '../src/adapters/pg.js';
 import { describeServiceContract, type ServiceFixture } from '../src/testing/service-contract.js';
@@ -25,6 +30,11 @@ async function makePgFixture(): Promise<ServiceFixture> {
     learners: new PgLearnerRepo(sql),
     events: new PgEventRepo(sql),
     switches: new PgSwitchRepo(sql),
+    limiter: new PgRateLimiter(sql),
+    recordings: new PgRecordingRepo(sql),
+    branding: new PgBrandingRepo(sql),
+    data: new PgLearnerDataRepo(sql),
+    storage: memoryRecordingStorage(), // the real bucket is tested through the API
     async newAuthUser() {
       const id = randomUUID();
       await sql`insert into auth.users (id, instance_id, aud, role, email)
@@ -113,6 +123,35 @@ describe('Postgres specifics', () => {
       expect(code, file).not.toContain('.unsafe(');
       const outsideTags = code.replace(/\b(sql|tx)(<[^`]*?>)?`[\s\S]*?`/g, ''); // tagged, optionally typed;
       expect(outsideTags, file).not.toContain('${');
+    }
+  });
+});
+
+describe('pull visibility', () => {
+  test('a pull never passes an event whose transaction has not committed yet', async () => {
+    const learner = randomUUID();
+    await sql`insert into learners (id, name) values (${learner}, 'race')`;
+    const repo = new PgEventRepo(sql);
+    const event = () =>
+      createEvent({ clock: systemClock, ids: cryptoIds }, learner, 'language_changed', {
+        preference: 'hi_en',
+      });
+    const slow = await sql.reserve();
+    try {
+      const first = event();
+      await slow`begin`;
+      await slow`insert into learner_events (id, learner_id, type, at, data)
+        values (${first.id}, ${learner}, ${first.type}, ${first.at}, ${slow.json(first.data)})`;
+      const second = event();
+      await repo.insertMany(learner, [second]); // commits, with a higher seq
+      expect((await repo.page(learner, 0, 100)).events).toEqual([]);
+      await slow`commit`;
+      const page = await repo.page(learner, 0, 100);
+      expect(page.events.map((e) => e.id)).toEqual([first.id, second.id]);
+    } finally {
+      await slow`rollback`.catch(() => undefined); // never hand back an open transaction
+      slow.release();
+      await sql`delete from learners where id = ${learner}`;
     }
   });
 });

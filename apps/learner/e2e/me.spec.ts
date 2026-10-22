@@ -18,7 +18,7 @@ test('language, storage and an offline sync are shown plainly', async ({ page, c
   await context.setOffline(true);
   await page.getByRole('button', { name: 'अभी sync करें' }).click();
   await expect(page.getByRole('status')).toContainText('फ़ोन में सेव');
-  await page.getByRole('button', { name: /English only/ }).click();
+  await page.getByRole('button', { name: /सिर्फ़ English/ }).click();
   await expect(page.getByRole('heading', { name: 'Language' })).toBeVisible();
 });
 

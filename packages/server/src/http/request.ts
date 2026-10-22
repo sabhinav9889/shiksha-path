@@ -1,15 +1,40 @@
 import { MAX_BODY_BYTES } from '@shiksha/api-contract';
-import type { Auth } from '../ports.js';
+import type { Auth, Caller } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 
 const BEARER = /^Bearer\s+(\S+)$/i;
 
 /** The verified identity of the caller, from the access token only. */
-export async function caller(request: Request, auth: Auth): Promise<string> {
+export async function caller(request: Request, auth: Auth): Promise<Caller> {
   const token = BEARER.exec(request.headers.get('authorization') ?? '')?.[1];
   const verified = token ? await auth.verify(token) : null;
   if (!verified) throw new ApiFailure('UNAUTHENTICATED');
-  return verified.authUserId;
+  return verified;
+}
+
+/** Read the body, stopping as soon as it passes the limit (a chunked body has no length). */
+async function readCapped(request: Request): Promise<string> {
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > MAX_BODY_BYTES) {
+      await reader.cancel();
+      throw new ApiFailure('TOO_LARGE');
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(size);
+  let at = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, at);
+    at += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
 }
 
 /** The JSON body, refusing anything larger than the API reads. */
@@ -17,8 +42,7 @@ export async function jsonBody(request: Request): Promise<unknown> {
   if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) {
     throw new ApiFailure('TOO_LARGE');
   }
-  const text = await request.text();
-  if (new TextEncoder().encode(text).length > MAX_BODY_BYTES) throw new ApiFailure('TOO_LARGE');
+  const text = await readCapped(request);
   try {
     return JSON.parse(text) as unknown;
   } catch {

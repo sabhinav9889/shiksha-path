@@ -54,6 +54,7 @@ export class PgEventRepo implements EventRepo {
     const rows = await this.sql<EventRow[]>`
       select seq::text as seq, id, learner_id, type, at, data from learner_events
       where learner_id = ${learnerId} and seq > ${after}
+        and tx_id < pg_snapshot_xmin(pg_current_snapshot())
       order by seq
       limit ${limit}`;
     return { events: rows.map(toEvent) };

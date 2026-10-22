@@ -2,13 +2,15 @@ import { randomUUID } from 'node:crypto';
 import { cryptoIds, createEvent, systemClock } from '@shiksha/learner-core';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { handle, type HandlerDeps } from '../src/http/router.js';
-import type { Auth } from '../src/ports.js';
+import { memoryLogger, type MemoryLogger } from '../src/logger.js';
+import { memoryAuth, memoryCodeRepo } from '../src/testing/memory-auth.js';
 import { linkLearner } from '../src/services/link.js';
 import { makeMemoryRepos } from '../src/testing/memory-repos.js';
 
 const APP = 'https://app.example.org';
 const BASE = 'https://x.supabase.co/functions/v1/api';
 let deps: HandlerDeps;
+let logger: MemoryLogger;
 let a: string;
 let b: string;
 
@@ -19,12 +21,34 @@ beforeEach(async () => {
     'token-b': 'auth-b',
     'token-c': 'auth-c',
   };
-  const auth: Auth = {
-    verify: (t) => Promise.resolve(tokens[t] ? { authUserId: tokens[t] } : null),
+  const auth = {
+    ...memoryAuth(),
+    verify: (t: string) =>
+      Promise.resolve(tokens[t] ? { authUserId: tokens[t], provider: 'google' } : null),
   };
-  deps = { ...repos, auth, allowedOrigins: [APP] };
-  a = (await linkLearner(repos, 'auth-a', { profileId: randomUUID(), name: 'A' })).learnerId;
-  b = (await linkLearner(repos, 'auth-b', { profileId: randomUUID(), name: 'B' })).learnerId;
+  logger = memoryLogger();
+  deps = {
+    ...repos,
+    auth,
+    codes: memoryCodeRepo(repos),
+    pepper: 'test-pepper-0123456789abcdef0123456789',
+    allowedOrigins: [APP],
+    logger,
+  };
+  a = (
+    await linkLearner(
+      repos,
+      { authUserId: 'auth-a', provider: 'google' },
+      { profileId: randomUUID(), name: 'A' },
+    )
+  ).learnerId;
+  b = (
+    await linkLearner(
+      repos,
+      { authUserId: 'auth-b', provider: 'google' },
+      { profileId: randomUUID(), name: 'B' },
+    )
+  ).learnerId;
 });
 
 function call(
@@ -168,5 +192,112 @@ describe('CORS', () => {
     expect(res.status).toBe(204);
     expect(res.headers.get('access-control-allow-methods')).toBe('GET, POST, OPTIONS');
     expect(res.headers.get('access-control-allow-headers')).toBe('authorization, content-type');
+  });
+});
+
+describe('streamed bodies', () => {
+  test('a body with no content-length is cut off once it passes the limit', async () => {
+    const CHUNK = 16_384;
+    let pulled = 0;
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulled += CHUNK;
+        controller.enqueue(new Uint8Array(CHUNK).fill(32)); // spaces: valid JSON padding
+        if (pulled > 2_000_000) controller.close();
+      },
+    });
+    const request = new Request(`${BASE}/v1/sync/push`, {
+      method: 'POST',
+      headers: { authorization: 'Bearer token-a', 'content-type': 'application/json' },
+      body: stream,
+      duplex: 'half',
+    } as RequestInit);
+    const res = await handle(request, deps);
+    expect(res.status).toBe(413);
+    expect(pulled).toBeLessThanOrEqual(262_145 + 65_536);
+  });
+});
+
+describe('logging', () => {
+  test('every request logs one line with its route, status and time', async () => {
+    await call('GET', '/v1/me', { token: 'token-a' });
+    await call('GET', '/v1/me');
+    expect(logger.entries).toHaveLength(2);
+    expect(logger.entries[0]).toMatchObject({ level: 'info', route: 'GET /v1/me', status: 200 });
+    expect(logger.entries[1]).toMatchObject({ route: 'GET /v1/me', status: 401 });
+    expect(logger.entries[1]?.code).toBe('UNAUTHENTICATED');
+    expect(typeof logger.entries[0]?.ms).toBe('number');
+  });
+
+  test('a server failure logs at error level as INTERNAL', async () => {
+    deps.learners.findByAuthUser = () => Promise.reject(new Error('db down: secret details'));
+    const res = await call('GET', '/v1/me', { token: 'token-a' });
+    expect(res.status).toBe(500);
+    expect(logger.entries.at(-1)).toMatchObject({ level: 'error', code: 'INTERNAL', status: 500 });
+    expect(JSON.stringify(logger.entries)).not.toContain('secret details');
+  });
+
+  test('nothing personal or secret is ever logged', async () => {
+    await call('POST', '/v1/learners/link', {
+      token: 'token-c',
+      body: { profileId: randomUUID(), name: 'Priya Sharma' },
+    });
+    await call('POST', '/v1/sync/push', { token: 'token-a', body: { learnerId: a, events: [] } });
+    const logged = JSON.stringify(logger.entries);
+    for (const secret of ['Priya', 'token-c', 'token-a', 'profileId', 'events']) {
+      expect(logged).not.toContain(secret);
+    }
+    expect(logged).not.toMatch(/name|email/);
+  });
+
+  test('an unknown route logs too', async () => {
+    await call('GET', '/v1/nope', { token: 'token-a' });
+    expect(logger.entries.at(-1)).toMatchObject({ route: 'GET /v1/nope', status: 404 });
+  });
+});
+
+describe('POST /v1/learners/deleted', () => {
+  const ask = (learnerIds: unknown, ip = '203.0.113.20') =>
+    handle(
+      new Request(`${BASE}/v1/learners/deleted`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
+        body: JSON.stringify({ learnerIds }),
+      }),
+      deps,
+    );
+
+  test('needs no sign-in and answers only for the ids asked about', async () => {
+    const gone = randomUUID();
+    await deps.data.deleteWithTombstone(gone);
+    const res = await ask([gone, a]);
+    expect([res.status, await json(res)]).toEqual([200, { deleted: [gone] }]);
+  });
+
+  test('refuses more than 20 ids, or ids that are not ids', async () => {
+    const many = Array.from({ length: 21 }, () => randomUUID());
+    expect((await ask(many)).status).toBe(400);
+    expect((await ask(['nope'])).status).toBe(400);
+    expect((await ask([])).status).toBe(400);
+  });
+
+  test('the 31st question in an hour from one network is refused', async () => {
+    for (let n = 0; n < 30; n += 1)
+      expect((await ask([randomUUID()], '198.51.100.1')).status).toBe(200);
+    expect((await ask([randomUUID()], '198.51.100.1')).status).toBe(429);
+    expect((await ask([randomUUID()], '198.51.100.2')).status).toBe(200);
+  });
+});
+
+describe('GET /v1/branding', () => {
+  test('needs no sign-in and carries only the name, colours and version', async () => {
+    const res = await call('GET', '/v1/branding');
+    expect(res.status).toBe(200);
+    expect(await json(res)).toEqual({
+      name: { hi: 'शिक्षा पथ', en: 'Shiksha Path' },
+      primary: '#2f3ab2',
+      accent: '#b45309',
+      version: 0,
+    });
   });
 });

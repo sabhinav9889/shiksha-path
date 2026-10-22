@@ -1,4 +1,5 @@
 // Loaded only when a learner links or restores (dynamic import), to keep first load small.
+import type { Session } from '@shiksha/api-contract';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { ShikshaDb } from '../storage/db.js';
 import { IdbAuthStorage } from './auth-storage.js';
@@ -37,6 +38,8 @@ export interface GoogleAuth {
   finishGoogleSignIn(url: string): Promise<{ profileId: string } | null>;
   accessToken(profileId: string): Promise<string | null>;
   signOutGoogle(profileId: string): Promise<void>;
+  /** Keep a session the server gave (a backup code sign-in) as this profile's sign-in. */
+  adoptSession(profileId: string, session: Session): Promise<void>;
   /** Carry a profile's sign-in session over to another profile id (after taking over a learner). */
   moveSession(fromProfileId: string, toProfileId: string): Promise<void>;
 }
@@ -81,12 +84,29 @@ export function createGoogleAuth(deps: AuthDeps): GoogleAuth {
     async signOutGoogle(profileId) {
       await clientFor(profileId).auth.signOut({ scope: 'local' });
     },
+    ...sessionKeeping(deps.db, clientFor),
+  };
+}
+
+/** Keeping a session the server gave, and carrying one over to another profile id. */
+function sessionKeeping(
+  db: ShikshaDb,
+  clientFor: (profileId: string) => SupabaseClient,
+): Pick<GoogleAuth, 'adoptSession' | 'moveSession'> {
+  return {
+    async adoptSession(profileId, given) {
+      const { error } = await clientFor(profileId).auth.setSession({
+        access_token: given.accessToken,
+        refresh_token: given.refreshToken,
+      });
+      if (error) throw new Error('could not keep the session');
+    },
     async moveSession(fromProfileId, toProfileId) {
-      const rows = await deps.db.auth.where('key').startsWith(`${fromProfileId}:`).toArray();
+      const rows = await db.auth.where('key').startsWith(`${fromProfileId}:`).toArray();
       for (const row of rows) {
         const name = row.key.slice(fromProfileId.length + 1);
-        await deps.db.auth.put({ key: `${toProfileId}:${name}`, value: row.value });
-        await deps.db.auth.delete(row.key);
+        await db.auth.put({ key: `${toProfileId}:${name}`, value: row.value });
+        await db.auth.delete(row.key);
       }
     },
   };

@@ -24,8 +24,22 @@ export class IdbRecordingStore implements RecordingStore {
   }
 
   async summary(learnerId: string): Promise<{ count: number; bytes: number }> {
+    const waiting = await this.pendingUpload(learnerId);
+    return { count: waiting.length, bytes: waiting.reduce((n, r) => n + r.bytes.length, 0) };
+  }
+
+  async pendingUpload(learnerId: string): Promise<Recording[]> {
     const all = await this.db.recordings.where('learnerId').equals(learnerId).toArray();
-    return { count: all.length, bytes: all.reduce((n, r) => n + r.bytes.length, 0) };
+    return all.filter((r) => !r.uploadedAt);
+  }
+
+  /** The server has it: keep the details, drop the bytes. */
+  async markUploaded(id: string, at: string): Promise<void> {
+    await this.db.recordings.update(id, { bytes: new Uint8Array(0), uploadedAt: at });
+  }
+
+  async removeLearner(learnerId: string): Promise<void> {
+    await this.db.recordings.where('learnerId').equals(learnerId).delete();
   }
 
   async delete(id: string): Promise<void> {

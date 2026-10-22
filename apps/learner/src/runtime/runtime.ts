@@ -13,8 +13,9 @@ import {
   type ProfileStore,
   type StorageEstimator,
 } from '@shiksha/learner-core';
-import { apiFor, isLinked, type AccountDeps } from '../account/account.js';
-import { createApiClient, type ApiClient } from '../api/api-client.js';
+import { linkedApi, type AccountDeps } from '../account/account.js';
+import { wipeDeleted } from '../account/forget.js';
+import { createApiClient, type ApiClient, type ApiResult } from '../api/api-client.js';
 import { apiConfig } from '../api/config.js';
 import { createRecorder, type Recorder } from '../audio/recorder.js';
 import { ShikshaDb } from '../storage/db.js';
@@ -29,11 +30,23 @@ import { ContentService } from './content-service.js';
 import { createFetcher } from './fetcher.js';
 import { Prefs } from './prefs.js';
 import { httpTransport } from './http-transport.js';
+import { refreshBranding } from './branding.js';
+import { onUnmeteredNetwork } from './network.js';
 import { pullNew } from './pull.js';
+import { uploadRecordings } from './recording-upload.js';
 import { refreshSwitches } from './switches.js';
 import { noServerTransport } from './transport.js';
 
 const ALL_PENDING = Number.MAX_SAFE_INTEGER;
+
+/** What a sync did: events up, events down, and recordings (only on Wi-Fi by itself). */
+export interface SyncResult {
+  flush: FlushResult;
+  added: number;
+  recordings: { uploaded: number; left: number };
+  /** The NGO deleted this student on request: the phone's copy is gone now. */
+  wiped: boolean;
+}
 
 export interface Runtime {
   storage: BundleStorage;
@@ -54,12 +67,14 @@ export interface Runtime {
    * Upload, fetch events made on other phones, then refresh the feature switches.
    * `added` > 0 means progress changed.
    */
-  sync(learnerId: string): Promise<{ flush: FlushResult; added: number }>;
+  sync(learnerId: string): Promise<SyncResult>;
   /** Google sign-in and /v1; null on a phone-only build. */
   account: AccountDeps | null;
   /** Store events that came from the server as already uploaded; returns how many were new. */
   appendSent(events: LearnerEvent[]): Promise<number>;
   removeLearnerEvents(learnerId: string): Promise<void>;
+  /** Remove every setting kept for a profile on this phone. */
+  removeLearnerMeta(learnerId: string): Promise<void>;
 }
 
 interface RuntimeOptions {
@@ -83,27 +98,31 @@ function defaultAccount(db: ShikshaDb): AccountDeps | null {
   };
 }
 
-/**
- * The /v1 client for a profile connected to Google; null otherwise, or when the sign-in code
- * cannot load (offline before it was ever cached). Null means nothing is sent: events wait.
- */
-async function linkedApi(runtime: Runtime, learnerId: string): Promise<ApiClient | null> {
-  if (!(await isLinked(runtime, learnerId))) return null;
-  try {
-    return await apiFor(runtime, learnerId);
-  } catch {
-    return null;
-  }
+/** A refused sign-in is a deletion only if the server says this learner was deleted on request. */
+async function deletedOnServer(
+  api: ApiClient,
+  me: ApiResult<unknown> | null,
+  learnerId: string,
+): Promise<boolean> {
+  if (!me || me.ok || (me.error !== 'UNAUTHENTICATED' && me.error !== 'NOT_LINKED')) return false;
+  const answer = await api.deletedCheck({ learnerIds: [learnerId] });
+  return answer.ok && answer.value.deleted.includes(learnerId);
 }
 
-async function syncLearner(
-  runtime: Runtime,
-  learnerId: string,
-): Promise<{ flush: FlushResult; added: number }> {
+async function syncLearner(runtime: Runtime, learnerId: string): Promise<SyncResult> {
   const flush = await runtime.flush(learnerId);
   const { added } = await pullNew(runtime, learnerId);
-  await refreshSwitches(runtime, await linkedApi(runtime, learnerId), learnerId);
-  return { flush, added };
+  await refreshBranding(runtime); // for every profile: branding is not personal
+  const api = await linkedApi(runtime, learnerId);
+  const me = await refreshSwitches(runtime, api, learnerId);
+  if (api && (await deletedOnServer(api, me, learnerId))) {
+    await wipeDeleted(runtime, learnerId);
+    return { flush, added, recordings: { uploaded: 0, left: 0 }, wiped: true };
+  }
+  const recordings = onUnmeteredNetwork()
+    ? await uploadRecordings(runtime, learnerId)
+    : { uploaded: 0, left: (await runtime.recordings.pendingUpload(learnerId)).length };
+  return { flush, added, recordings, wiped: false };
 }
 
 /** Wires the browser adapters to the core's ports. One per app (tests make their own). */
@@ -151,6 +170,7 @@ export function createRuntime(opts: RuntimeOptions = {}): Runtime {
     account,
     appendSent: (list) => events.appendSent(list),
     removeLearnerEvents: (learnerId) => events.removeLearner(learnerId),
+    removeLearnerMeta: (learnerId) => events.removeMetaFor(learnerId),
   };
   return runtime;
 }

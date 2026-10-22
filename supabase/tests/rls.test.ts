@@ -102,9 +102,11 @@ describe('nobody writes through the database API', () => {
     ['cohorts (delete)', 'delete from cohorts'],
     ['feature_switches (delete)', 'delete from feature_switches'],
     ['feature_overrides (delete)', 'delete from feature_overrides'],
-  ])('a student changes nothing in %s', async (_table, statement) => {
-    const changed = await asUser(sql, a.authId, (tx) => tx.unsafe(statement));
-    expect(changed.count).toBe(0);
+  ])('a student changes nothing in %s: it is refused outright', async (_table, statement) => {
+    // Plan 3b removed the write grants, so these no longer even reach RLS.
+    await expect(asUser(sql, a.authId, (tx) => tx.unsafe(statement))).rejects.toThrow(
+      /permission denied/,
+    );
   });
 
   test.each([
@@ -136,8 +138,62 @@ describe('nobody writes through the database API', () => {
 });
 
 describe('an anonymous caller sees nothing', () => {
-  test.each(TABLES)('%s', async (table) => {
-    const rows = await asAnon(sql, (tx) => tx.unsafe(`select * from ${table}`));
-    expect(rows.length).toBe(0);
+  // Plan 3b removed every grant to anon, so the read is refused before RLS is even asked.
+  test.each(TABLES)('%s: refused outright', async (table) => {
+    await expect(asAnon(sql, (tx) => tx.unsafe(`select * from ${table}`))).rejects.toThrow(
+      /permission denied/,
+    );
+  });
+});
+
+describe('database hardening', () => {
+  const TABLES = [
+    'cohorts',
+    'learners',
+    'learner_identities',
+    'learner_events',
+    'feature_switches',
+    'feature_overrides',
+  ];
+
+  test('anon holds no privilege and authenticated may only select', async () => {
+    const grants = await sql<{ grantee: string; table_name: string; privilege_type: string }[]>`
+      select grantee, table_name, privilege_type from information_schema.role_table_grants
+      where table_schema = 'public' and grantee in ('anon', 'authenticated')
+        and table_name = any(${TABLES})`;
+    expect(grants.filter((g) => g.grantee === 'anon')).toEqual([]);
+    expect(
+      grants.filter((g) => g.grantee === 'authenticated' && g.privilege_type !== 'SELECT'),
+    ).toEqual([]);
+  });
+
+  test('GraphQL is not installed', async () => {
+    const rows = await sql`select 1 from pg_extension where extname = 'pg_graphql'`;
+    expect(rows).toHaveLength(0);
+  });
+});
+
+describe('recordings rows', () => {
+  test('each student reads only their own recordings, and the bucket is private', async () => {
+    for (const learner of [a, b]) {
+      await sql`insert into recordings (id, learner_id, lesson_id, item_id, mime, bytes,
+                                       duration_ms, recorded_at)
+                values (${randomUUID()}, ${learner.id}, 'ef1-02', 's1', 'audio/webm', 10, 1000,
+                        now())`;
+    }
+    for (const [mine, theirs] of [
+      [a, b],
+      [b, a],
+    ] as const) {
+      await asUser(sql, mine.authId, async (tx) => {
+        const rows = await tx`select learner_id from recordings`;
+        expect(rows.map((r) => r.learner_id)).toEqual([mine.id]);
+        expect(await tx`select 1 from recordings where learner_id = ${theirs.id}`).toHaveLength(0);
+      });
+    }
+    const [bucket] = await sql<{ public: boolean; file_size_limit: number }[]>`
+      select public, file_size_limit::int as file_size_limit from storage.buckets
+      where id = 'recordings'`;
+    expect(bucket).toEqual({ public: false, file_size_limit: 1048576 });
   });
 });

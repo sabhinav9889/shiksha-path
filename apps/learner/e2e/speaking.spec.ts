@@ -12,10 +12,15 @@ async function setUp(page: import('@playwright/test').Page): Promise<void> {
 }
 
 test('without microphone permission the learner is told why and can carry on', async ({ page }) => {
+  // The browser refuses permission, exactly as when the learner taps "Block".
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = () =>
+      Promise.reject(new DOMException('Permission denied', 'NotAllowedError'));
+  });
   await setUp(page);
   await page.getByRole('button', { name: 'रिकॉर्ड करें' }).click();
-  await expect(page.getByRole('alert')).toContainText(
-    /माइक्रोफ़ोन की अनुमति नहीं मिली|रिकॉर्डिंग नहीं हो पाई/,
+  await expect(page.getByRole('alert')).toHaveText(
+    'माइक्रोफ़ोन की अनुमति नहीं मिली। आप इसे छोड़कर आगे बढ़ सकते हैं।',
   );
   await next(page);
   await expect(page.getByRole('heading', { name: 'पाठ 2 पूरा!' })).toBeVisible();

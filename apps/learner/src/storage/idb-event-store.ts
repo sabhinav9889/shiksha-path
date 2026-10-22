@@ -47,6 +47,12 @@ export class IdbEventStore implements EventStore {
     return added;
   }
 
+  /** Remove every setting kept for a profile (keys end in `:<profileId>`). */
+  async removeMetaFor(profileId: string): Promise<void> {
+    const suffix = `:${profileId}`;
+    await this.db.meta.filter((row) => row.key.endsWith(suffix)).delete();
+  }
+
   /** Remove a learner's events from this phone (the profile was replaced or removed). */
   async removeLearner(learnerId: string): Promise<void> {
     await this.db.events.where('learnerId').equals(learnerId).delete();

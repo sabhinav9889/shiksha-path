@@ -2,13 +2,16 @@ import { expect, test, type Page } from '@playwright/test';
 import {
   database,
   deleteGoogleUser,
+  deleteStudent,
   holdGoogleRedirect,
+  issueBackupCode,
   learnerOf,
   localStack,
   makeGoogleUser,
   phoneEventIds,
   returnFromGoogle,
   serverEventIds,
+  storedRecordings,
   type TestUser,
 } from './backend-setup.js';
 import { enterPin, playLesson, signIn } from './helpers.js';
@@ -127,4 +130,85 @@ test('progress is backed up, restored on a new phone, and follows the server', a
   expect((await serverEventIds(sql, learner)).sort()).toEqual([...onPhone2].sort());
   expect(onPhone2.length).toBeGreaterThan(onPhone.length);
   await phone2.close();
+});
+
+test('a student with a backup code brings their profile to a new phone', async ({
+  browser,
+  baseURL,
+}) => {
+  const issued = await issueBackupCode(stack, sql, 'कोड वाली');
+  const phone = await browser.newContext({
+    baseURL: baseURL ?? '',
+    viewport: { width: 360, height: 640 },
+    locale: 'hi-IN',
+  });
+  try {
+    const page = await phone.newPage();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'पुरानी प्रोफ़ाइल वापस लाएँ' }).click();
+    await page.getByRole('button', { name: 'मेरे पास कोड है' }).click();
+    await enterPin(page, '2468');
+    await enterPin(page, '2468');
+    await page.getByLabel('अपना कोड लिखें').fill(issued.code.toLowerCase());
+    await page.getByRole('button', { name: 'कोड से जुड़ें' }).click();
+    await expect(page.getByRole('status')).toHaveText('आपकी प्रोफ़ाइल और प्रोग्रेस वापस आ गई', {
+      timeout: 20_000,
+    });
+    await page.getByRole('button', { name: 'आगे', exact: true }).click();
+    await signIn(page, 'कोड वाली', '2468');
+  } finally {
+    await phone.close();
+    await issued.cleanup();
+  }
+});
+
+test('a recording uploads on Wi-Fi, and a deleted student is wiped from their phone', async ({
+  page,
+}) => {
+  // The phone reports Wi-Fi (Chrome on Android has this; desktop Chrome does not say).
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'connection', { value: { type: 'wifi' } });
+  });
+  await page.goto('/');
+  await page.getByLabel('आपका नाम').fill('रिया');
+  await page.getByRole('button', { name: 'आगे', exact: true }).click();
+  await enterPin(page, '1357');
+  await enterPin(page, '1357');
+  await page.getByRole('button', { name: 'बाद में' }).click();
+  await expect(page.getByRole('button', { name: 'शुरू करें', exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
+
+  // Record on the speaking item with the fake microphone.
+  await reachSpeakingItem(page);
+  await page.getByRole('button', { name: 'रिकॉर्ड करें' }).click();
+  await page.waitForTimeout(1500);
+  await page.getByRole('button', { name: 'रोकें' }).click();
+  await expect(page.getByText('रिकॉर्डिंग सेव हो गई')).toBeVisible();
+  await next(page);
+  await expect(page.getByRole('heading', { name: 'पाठ 2 पूरा!' })).toBeVisible();
+  await page.getByRole('button', { name: 'होम पर जाएँ' }).click();
+
+  // Connect, then sync on Wi-Fi: the recording reaches the bucket.
+  await holdGoogleRedirect(page);
+  await page.getByRole('button', { name: 'Google से जुड़ें' }).click();
+  await returnFromGoogle(page, stack, user);
+  await expect(page.getByRole('status')).toHaveText('Google से जुड़ गया', { timeout: 20_000 });
+  await page.getByRole('button', { name: 'आगे', exact: true }).click();
+  await signIn(page, 'रिया', '1357');
+  await syncOnMe(page, UPLOADED);
+  const learner = await learnerOf(sql, user);
+  await expect.poll(() => storedRecordings(stack, learner)).toHaveLength(1);
+  const [row] = await sql<{ status: string }[]>`
+    select status from public.recordings where learner_id = ${learner}`;
+  expect(row?.status).toBe('uploaded');
+
+  // The NGO deletes the student on request; the next sync wipes the phone's copy.
+  await deleteStudent(stack, sql, learner);
+  await page.getByRole('button', { name: 'अभी sync करें' }).click();
+  await expect(page.getByText('यह प्रोफ़ाइल NGO के कहने पर हटा दी गई')).toBeVisible({
+    timeout: 20_000,
+  });
+  await expect(page.getByRole('button', { name: 'रिया', exact: true })).toHaveCount(0);
+  expect(await phoneEventIds(page, learner)).toEqual([]);
 });

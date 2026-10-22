@@ -141,3 +141,16 @@ describe('skipping and interrupting', () => {
     expect(activity.current).toBeNull();
   });
 });
+
+describe('when skipping fails', () => {
+  test('it says so plainly and the learner can try again', async () => {
+    await open();
+    const session = appState.session;
+    if (!session) throw new Error('no session');
+    session.skipPlacement = () => Promise.reject(new Error('disk full'));
+    await fireEvent.click(await vi.waitFor(() => button('छोड़ें, शुरू से पढ़ूँगा')));
+    await fireEvent.click(button('हाँ, छोड़ें'));
+    await vi.waitFor(() => screen.getByText('कुछ गड़बड़ हुई। फिर से कोशिश करें।'));
+    expect(router.current.name).not.toBe('home');
+  });
+});

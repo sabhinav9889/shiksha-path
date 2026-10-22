@@ -4,23 +4,28 @@
   import {
     appState,
     refreshSession,
+    reloadBranding,
     reloadSwitches,
     setLanguagePreference,
     signOut,
   } from '../../app-state.svelte.js';
   import { errorMessage, t } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
-  import { linkSignedInProfile as link } from '../../account/link-signed-in.js';
-  import { install } from '../../runtime/install-prompt.js';
   import { browserStorageEstimator } from '../../storage/estimator.js';
   import { loadMe, type MeData } from './me-data.js';
+  import RecordingsCard from './RecordingsCard.svelte';
+  import MeActions from './MeActions.svelte';
   import StorageCard from './StorageCard.svelte';
   import SyncCard from './SyncCard.svelte';
 
-  type Choice = { id: LanguagePreference; label: string; sub: 'me.langHiEnSub' | 'me.langEnSub' };
+  type Choice = {
+    id: LanguagePreference;
+    label: 'me.langHiEn' | 'me.langEn';
+    sub: 'me.langHiEnSub' | 'me.langEnSub';
+  };
   const LANGUAGES: Choice[] = [
-    { id: 'hi_en', label: 'हिंदी + English', sub: 'me.langHiEnSub' },
-    { id: 'en_only', label: 'English only', sub: 'me.langEnSub' },
+    { id: 'hi_en', label: 'me.langHiEn', sub: 'me.langHiEnSub' },
+    { id: 'en_only', label: 'me.langEn', sub: 'me.langEnSub' },
   ];
 
   /** English only can be switched off for a learner (spec §8.1); then there is nothing to pick. */
@@ -31,7 +36,6 @@
   let data = $state<MeData | null>(null);
   let busy = $state(false);
   let message = $state('');
-  let canInstall = $state(install.prompt?.available() ?? false);
 
   const lang = $derived(appState.lang);
   const name = $derived(appState.profile?.name ?? '');
@@ -44,7 +48,6 @@
 
   onMount(() => {
     void load();
-    return install.prompt?.subscribe(() => (canInstall = install.prompt?.available() ?? false));
   });
 
   async function choose(preference: LanguagePreference): Promise<void> {
@@ -57,15 +60,23 @@
     if (!runtime || !profile || busy) return;
     busy = true;
     message = '';
-    const result = await runtime.content.sync();
-    const { flush } = await runtime.sync(profile.id);
-    if (!result.ok) message = errorMessage(result.error, lang);
-    else message = flush.ok ? t('me.syncDone', lang) : t('status.savedLater', lang);
-    await refreshSession({ force: true });
-    await reloadSwitches();
-    await load();
-    busy = false;
+    try {
+      const result = await runtime.content.sync();
+      const { flush, wiped } = await runtime.sync(profile.id);
+      if (wiped) return leave(); // the NGO deleted this student: the picker says so
+      if (!result.ok) message = errorMessage(result.error, lang);
+      else message = flush.ok ? t('me.syncDone', lang) : t('status.savedLater', lang);
+      await refreshSession({ force: true });
+      await reloadSwitches();
+      await reloadBranding();
+      await load();
+    } catch {
+      message = t('status.savedLater', lang); // nothing is lost: it all waits on the phone
+    } finally {
+      busy = false;
+    }
   }
+
 
   /** Nobody stays signed in: the picker is the only place left, and Back cannot return. */
   function leave(): void {
@@ -91,7 +102,7 @@
             class:selected={data.language === choice.id}
             onclick={() => choose(choice.id)}
           >
-            <strong>{choice.label}</strong>
+            <strong>{t(choice.label, lang)}</strong>
             <span>{t(choice.sub, lang)}</span>
           </button>
         {/each}
@@ -100,23 +111,10 @@
 
     <SyncCard {lang} sync={data.sync} {busy} {message} onsync={syncNow} />
     <StorageCard {lang} {data} />
+    {#if data.linked}<RecordingsCard {lang} />{/if}
   {/if}
 
-  <section class="card links">
-    {#if data?.linked === true}
-      <p>{t('account.linkedRow', lang)}</p>
-    {:else if data?.linked === false}
-      <button type="button" onclick={link}>{t('account.link', lang)}</button>
-    {/if}
-    {#if canInstall}
-      <button type="button" onclick={() => void install.prompt?.prompt()}>
-        {t('me.install', lang)}
-      </button>
-    {/if}
-    <button type="button" onclick={leave}>{t('me.switch', lang)}</button>
-    <button type="button" class="danger" onclick={leave}>{t('me.signOut', lang)}</button>
-    <p>{t('me.signOutNote', lang)}</p>
-  </section>
+  <MeActions {lang} linked={data?.linked ?? null} />
 </section>
 
 <style>
@@ -197,25 +195,5 @@
 
   .choices span {
     font-size: 12px;
-  }
-
-  .links button {
-    min-height: 52px;
-    border: none;
-    border-bottom: 1px solid var(--color-line);
-    background: none;
-    color: var(--color-ink);
-    font-size: 15px;
-    text-align: left;
-  }
-
-  .links .danger {
-    color: var(--color-wrong);
-  }
-
-  .links p {
-    margin: 0;
-    color: var(--color-muted);
-    font-size: 13px;
   }
 </style>

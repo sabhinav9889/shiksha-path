@@ -1,5 +1,6 @@
 import { FEATURE_KEYS, type FeatureKey } from '@shiksha/api-contract';
-import type { ApiClient } from '../api/api-client.js';
+import type { MeResponse } from '@shiksha/api-contract';
+import type { ApiClient, ApiResult } from '../api/api-client.js';
 import type { Runtime } from './runtime.js';
 
 export type Switches = Record<FeatureKey, boolean>;
@@ -34,13 +35,16 @@ export async function loadSwitches(runtime: Runtime, learnerId: string): Promise
   return raw ? fromCache(raw) : { ...ALL_ON };
 }
 
-/** Ask /v1/me for the learner's switches and keep them; on any failure the cache stays. */
+/** Ask /v1/me for the learner's switches and keep them; on any failure the cache stays. Returns
+ * the answer (null when there is no server), so a sync can tell a refused sign-in. */
 export async function refreshSwitches(
   runtime: Runtime,
   client: ApiClient | null,
   learnerId: string,
-): Promise<void> {
-  const me = await client?.me();
-  if (!me?.ok) return;
-  await runtime.events.setMeta(switchesKey(learnerId), JSON.stringify(me.value.switches));
+): Promise<ApiResult<MeResponse> | null> {
+  const me = (await client?.me()) ?? null;
+  if (me?.ok) {
+    await runtime.events.setMeta(switchesKey(learnerId), JSON.stringify(me.value.switches));
+  }
+  return me;
 }

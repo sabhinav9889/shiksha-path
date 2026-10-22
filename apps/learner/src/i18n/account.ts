@@ -43,5 +43,25 @@ export const accountStrings = {
     hi: 'यह प्रोफ़ाइल इस फ़ोन पर पहले से है। उसे उसके PIN से खोलें।',
     en: 'This profile is already on this phone. Open it with its PIN.',
   },
+  'account.haveCode': { hi: 'मेरे पास कोड है', en: 'I have a code' },
+  'account.codeLabel': { hi: 'अपना कोड लिखें', en: 'Type your code' },
+  'account.codeSubmit': { hi: 'कोड से जुड़ें', en: 'Sign in with code' },
+  'account.badCode': { hi: 'यह कोड सही नहीं है', en: 'This code is not right' },
+  'account.tooMany': {
+    hi: 'बहुत कोशिशें हुईं, थोड़ी देर बाद फिर करें',
+    en: 'Too many tries. Try again in a while.',
+  },
+  'account.codeAdopted': {
+    hi: 'कोड से जुड़ गया – आपकी पुरानी प्रोग्रेस इस फ़ोन पर आ गई',
+    en: 'Signed in with your code – your earlier progress is now on this phone',
+  },
+  'account.codeElsewhere': {
+    hi: 'यह कोड दूसरी प्रोफ़ाइल का है',
+    en: 'This code belongs to another profile',
+  },
+  'account.wiped': {
+    hi: 'यह प्रोफ़ाइल NGO के कहने पर हटा दी गई',
+    en: 'This profile was removed at the NGO’s request',
+  },
   'account.continue': { hi: 'आगे', en: 'Continue' },
 } satisfies Record<string, Localized>;

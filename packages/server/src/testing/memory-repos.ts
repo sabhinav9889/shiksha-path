@@ -1,6 +1,18 @@
 import { randomUUID } from 'node:crypto';
 import type { LearnerEvent } from '@shiksha/learner-core';
-import type { EventRepo, LearnerRepo, LearnerRow, SwitchRepo } from '../ports.js';
+import {
+  LinkConflict,
+  type EventRepo,
+  type LearnerRepo,
+  type LearnerDataRepo,
+  type LearnerRow,
+  type SwitchRepo,
+} from '../ports.js';
+import { memoryBranding } from './memory-branding.js';
+import { memoryLearnerData } from './memory-learner-data.js';
+import { memoryRateLimiter } from './memory-rate-limiter.js';
+import { memoryRecordingRepo } from './memory-recording-repo.js';
+import { memoryRecordingStorage } from './memory-recording-storage.js';
 import type { ServiceFixture } from './service-contract.js';
 
 const SEED_KEYS = [
@@ -12,8 +24,15 @@ const SEED_KEYS = [
   'community_feed',
 ];
 
+/** The memory repos, plus the identity map the memory code repo shares (auth user → learner). */
+export type MemoryRepos = ServiceFixture & {
+  identities: Map<string, string>;
+  learnerRows: Map<string, LearnerRow>;
+  data: LearnerDataRepo;
+};
+
 /** In-memory repositories with the same behaviour as the Postgres ones. */
-export function makeMemoryRepos(): ServiceFixture {
+export function makeMemoryRepos(): MemoryRepos {
   const learners = new Map<string, LearnerRow>();
   const identities = new Map<string, string>();
   const events: (LearnerEvent & { seq: number })[] = [];
@@ -29,7 +48,7 @@ export function makeMemoryRepos(): ServiceFixture {
     findById: (id) => Promise.resolve(learners.get(id) ?? null),
     createLinked: ({ id, name, authUserId }) => {
       if (learners.has(id) || identities.has(authUserId)) {
-        return Promise.reject(new Error('already exists'));
+        return Promise.reject(new LinkConflict());
       }
       learners.set(id, { id, name });
       identities.set(authUserId, id);
@@ -66,9 +85,16 @@ export function makeMemoryRepos(): ServiceFixture {
   };
 
   return {
+    identities,
+    learnerRows: learners,
+    data: memoryLearnerData({ learners, identities, eventRepo, overrides }),
     learners: learnerRepo,
     events: eventRepo,
     switches: switchRepo,
+    limiter: memoryRateLimiter(),
+    recordings: memoryRecordingRepo(),
+    branding: memoryBranding(),
+    storage: memoryRecordingStorage(),
     newAuthUser: () => Promise.resolve(randomUUID()),
     setAllStudents: (key, enabled) => {
       allStudents.set(key, enabled);

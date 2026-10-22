@@ -51,3 +51,14 @@ describe('captureInstallPrompt', () => {
     expect(await captureInstallPrompt(new EventTarget()).prompt()).toBe('dismissed');
   });
 });
+
+describe('when the browser fails to show the prompt', () => {
+  test('it counts as dismissed and never throws', async () => {
+    const target = new EventTarget();
+    const install = captureInstallPrompt(target);
+    const event = promptEvent('accepted');
+    event.prompt = vi.fn(() => Promise.reject(new Error('not allowed')));
+    target.dispatchEvent(event);
+    await expect(install.prompt()).resolves.toBe('dismissed');
+  });
+});

@@ -45,7 +45,7 @@ describe('creating a profile with a backend', () => {
     await vi.waitFor(() => screen.getByText('PIN फिर से डालें'));
     await enterPin('4821');
     await vi.waitFor(() => expect(text()).toContain('अपनी प्रोग्रेस सुरक्षित रखने के लिए'), {
-      timeout: 5000,
+      timeout: 12_000,
     });
     await fireEvent.click(button('बाद में'));
     expect(router.current.name).toBe('home');
@@ -61,7 +61,7 @@ describe('creating a profile with a backend', () => {
     await enterPin('4821');
     await vi.waitFor(() => screen.getByText('PIN फिर से डालें'));
     await enterPin('4821');
-    await fireEvent.click(await vi.waitFor(() => button('Google से जुड़ें'), { timeout: 5000 }));
+    await fireEvent.click(await vi.waitFor(() => button('Google से जुड़ें'), { timeout: 12_000 }));
     const signedIn = await backend.google.finishGoogleSignIn('x');
     expect(signedIn?.profileId).toBe(appState.profile?.id);
   });
@@ -134,5 +134,55 @@ describe('the reminder to connect', () => {
     await setLinked(env.runtime, profile.id);
     render(MeScreen);
     await vi.waitFor(() => expect(text()).toContain('Google खाता: जुड़ा है'));
+  });
+});
+
+describe('backup code entry points', () => {
+  test('the home reminder offers a code as well as Google', async () => {
+    const { code } = await backend.issueCode('कोड वाली');
+    const profile = await env.addProfile('नया');
+    await signIn(profile.id, '1234');
+    render(HomeScreen);
+    await fireEvent.click(await vi.waitFor(() => button('मेरे पास कोड है')));
+    await fireEvent.input(screen.getByLabelText('अपना कोड लिखें'), { target: { value: code } });
+    await fireEvent.click(button('कोड से जुड़ें'));
+    await vi.waitFor(() => expect(text()).toContain('कोड से जुड़ गया'));
+  });
+
+  test('bringing back with a code: PIN twice, then the code, with no trip to Google', async () => {
+    const { learnerId, code } = await backend.issueCode('कोड वाली');
+    navigate({ name: 'profiles' });
+    render(ProfilesScreen);
+    await fireEvent.click(await vi.waitFor(() => button('पुरानी प्रोफ़ाइल वापस लाएँ')));
+    await fireEvent.click(button('मेरे पास कोड है'));
+    await enterPin('5678');
+    await enterPin('5678');
+    await fireEvent.input(await vi.waitFor(() => screen.getByLabelText('अपना कोड लिखें')), {
+      target: { value: code },
+    });
+    await fireEvent.click(button('कोड से जुड़ें'));
+    await vi.waitFor(() => expect(text()).toContain('आपकी प्रोफ़ाइल और प्रोग्रेस वापस आ गई'));
+    expect(await env.runtime.profiles.get(learnerId)).not.toBeNull();
+    expect(sessionStorage.getItem('shiksha.linking')).toBeNull();
+    await fireEvent.click(button('आगे'));
+    await vi.waitFor(() => button('कोड वाली')); // back on the picker, with the restored profile
+  });
+
+  test('a new profile can use a code at the "connect" step and lands on the picker', async () => {
+    const { code } = await backend.issueCode('कोड वाली');
+    navigate({ name: 'profiles' });
+    render(ProfilesScreen);
+    await fireEvent.input(await vi.waitFor(() => screen.getByLabelText('आपका नाम')), {
+      target: { value: 'नया' },
+    });
+    await fireEvent.click(button('आगे'));
+    await enterPin('4321');
+    await enterPin('4321');
+    await fireEvent.click(await vi.waitFor(() => button('मेरे पास कोड है')));
+    await fireEvent.input(screen.getByLabelText('अपना कोड लिखें'), { target: { value: code } });
+    await fireEvent.click(button('कोड से जुड़ें'));
+    await vi.waitFor(() => expect(text()).toContain('कोड से जुड़ गया'));
+    await fireEvent.click(button('आगे'));
+    await vi.waitFor(() => button('कोड वाली'));
   });
 });

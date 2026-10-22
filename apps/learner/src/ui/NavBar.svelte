@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { appState } from '../app-state.svelte.js';
   import { t, type Lang } from '../i18n/index.js';
   import { routeHref, type Route } from '../router.svelte.js';
   import Icon from './Icon.svelte';
@@ -13,7 +14,7 @@
 </script>
 
 <nav aria-label={t('nav.label', lang)}>
-  <span class="brand">{t('app.name', lang)}</span>
+  <span class="brand">{appState.brand.name[lang]}</span>
   {#each tabs as tab (tab.label)}
     <a
       href={routeHref(tab.route)}

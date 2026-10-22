@@ -63,6 +63,17 @@
     }
   }
 
+  /** Skipping writes one event; if that fails the learner stays here and is told plainly. */
+  async function skip(): Promise<void> {
+    skipping = false;
+    error = '';
+    try {
+      await skipPlacementRun();
+    } catch {
+      error = t('profiles.generalError', lang);
+    }
+  }
+
   async function next(): Promise<void> {
     if (!run || !answered || busy) return;
     if (run.answered.length < total) {
@@ -128,7 +139,7 @@
         message={t('placement.skipConfirm', lang)}
         yes={t('placement.skipYes', lang)}
         no={t('placement.skipNo', lang)}
-        onyes={skipPlacementRun}
+        onyes={skip}
         onno={() => (skipping = false)}
       />
     {/if}

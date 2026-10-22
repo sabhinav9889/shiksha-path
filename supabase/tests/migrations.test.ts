@@ -1,15 +1,16 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, describe, expect, test } from 'vitest';
 import { connect } from './db.js';
 
 const sql = connect();
 const ROOT = join(process.cwd(), 'supabase');
-const UP = readFileSync(join(ROOT, 'migrations/20261020000001_learners_and_events.sql'), 'utf8');
-const DOWN = readFileSync(
-  join(ROOT, 'rollbacks/20261020000001_learners_and_events.down.sql'),
-  'utf8',
-);
+const read = (dir: string) => (name: string) => readFileSync(join(ROOT, dir, name), 'utf8');
+/** Every migration in order, and every rollback in reverse order: each has its pair. */
+const UPS = readdirSync(join(ROOT, 'migrations')).sort().map(read('migrations'));
+const DOWNS = readdirSync(join(ROOT, 'rollbacks')).sort().reverse().map(read('rollbacks'));
+const UP = UPS.join('\n');
+const DOWN = DOWNS.join('\n');
 const SEED = readFileSync(join(ROOT, 'seed.sql'), 'utf8');
 
 afterAll(async () => {
@@ -36,8 +37,13 @@ describe('the schema', () => {
     expect(missing.map((r) => r.table_name)).toEqual([]);
   });
 
-  test('the up migration can run twice, and down then up works', async () => {
+  test('every migration has a rollback', () => {
+    expect(DOWNS).toHaveLength(UPS.length);
+  });
+
+  test('the up migrations can run twice, and down then up works', async () => {
     // Static files from the repo, not user input.
+    await sql.unsafe(UP);
     await sql.unsafe(UP);
     await sql.unsafe(DOWN);
     const left =

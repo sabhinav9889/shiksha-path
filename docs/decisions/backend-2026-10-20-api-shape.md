@@ -26,3 +26,15 @@ own learner ids and SQL migrations. Supabase gives us Postgres, Auth and Edge Fu
 - The same modules can later run on Node (Cloud Run, a VM) with a different wrapper.
 - Every request costs one Auth call to verify the token; acceptable at pilot scale.
 - The bundle must be rebuilt before serving or deploying the function (`npm run functions:build`).
+
+## Later changes (Plan 3b)
+
+- **Pull visibility:** `seq` is taken at insert, not at commit, so a pull returns only events
+  whose transaction is older than every transaction still running
+  (`tx_id < pg_snapshot_xmin(pg_current_snapshot())`). A cursor can then never pass an event that
+  commits later.
+- **Who may create a learner:** only a Google sign-in. Email sign-ins exist for backup codes,
+  which the server creates itself. Supabase cannot keep email login while refusing self sign-up,
+  so sign-up stays on with confirmation required, and `Auth.verify` reports the provider from
+  admin-only `app_metadata`.
+- **Grants:** `anon` has none and `authenticated` only `select`; GraphQL is not installed.

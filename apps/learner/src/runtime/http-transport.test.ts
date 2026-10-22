@@ -58,6 +58,16 @@ describe('uploading', () => {
     ['an expired sign-in', () => backend.google.signOutGoogle(learner)],
     ['no network', () => Promise.resolve(backend.setOnline(false))],
     [
+      "the server's rate limit",
+      () => {
+        backend.repos.limiter = {
+          hit: () => Promise.resolve(false),
+          count: () => Promise.resolve(Number.MAX_SAFE_INTEGER),
+        };
+        return Promise.resolve();
+      },
+    ],
+    [
       'a server error',
       () => {
         backend.repos.events.insertMany = () => Promise.reject(new Error('db down'));

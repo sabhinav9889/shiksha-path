@@ -26,6 +26,19 @@ export async function apiFor(runtime: Runtime, profileId: string): Promise<ApiCl
   return runtime.account.makeApi(() => auth.accessToken(profileId));
 }
 
+/**
+ * The /v1 client for a profile connected to Google; null otherwise, or when the sign-in code
+ * cannot load (offline before it was ever cached). Null means nothing is sent: work waits.
+ */
+export async function linkedApi(runtime: Runtime, profileId: string): Promise<ApiClient | null> {
+  if (!(await isLinked(runtime, profileId))) return null;
+  try {
+    return await apiFor(runtime, profileId);
+  } catch {
+    return null;
+  }
+}
+
 /** Start Google sign-in for a profile; the browser leaves and comes back to the callback page. */
 export async function startLinking(runtime: Runtime, profileId: string): Promise<void> {
   const auth = await runtime.account?.loadAuth();
