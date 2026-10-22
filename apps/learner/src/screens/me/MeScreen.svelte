@@ -18,10 +18,14 @@
   import StorageCard from './StorageCard.svelte';
   import SyncCard from './SyncCard.svelte';
 
-  type Choice = { id: LanguagePreference; label: string; sub: 'me.langHiEnSub' | 'me.langEnSub' };
+  type Choice = {
+    id: LanguagePreference;
+    label: 'me.langHiEn' | 'me.langEn';
+    sub: 'me.langHiEnSub' | 'me.langEnSub';
+  };
   const LANGUAGES: Choice[] = [
-    { id: 'hi_en', label: 'हिंदी + English', sub: 'me.langHiEnSub' },
-    { id: 'en_only', label: 'English only', sub: 'me.langEnSub' },
+    { id: 'hi_en', label: 'me.langHiEn', sub: 'me.langHiEnSub' },
+    { id: 'en_only', label: 'me.langEn', sub: 'me.langEnSub' },
   ];
 
   /** English only can be switched off for a learner (spec §8.1); then there is nothing to pick. */
@@ -56,17 +60,23 @@
     if (!runtime || !profile || busy) return;
     busy = true;
     message = '';
-    const result = await runtime.content.sync();
-    const { flush, wiped } = await runtime.sync(profile.id);
-    if (wiped) return leave(); // the NGO deleted this student: the picker says so
-    if (!result.ok) message = errorMessage(result.error, lang);
-    else message = flush.ok ? t('me.syncDone', lang) : t('status.savedLater', lang);
-    await refreshSession({ force: true });
-    await reloadSwitches();
-    await reloadBranding();
-    await load();
-    busy = false;
+    try {
+      const result = await runtime.content.sync();
+      const { flush, wiped } = await runtime.sync(profile.id);
+      if (wiped) return leave(); // the NGO deleted this student: the picker says so
+      if (!result.ok) message = errorMessage(result.error, lang);
+      else message = flush.ok ? t('me.syncDone', lang) : t('status.savedLater', lang);
+      await refreshSession({ force: true });
+      await reloadSwitches();
+      await reloadBranding();
+      await load();
+    } catch {
+      message = t('status.savedLater', lang); // nothing is lost: it all waits on the phone
+    } finally {
+      busy = false;
+    }
   }
+
 
   /** Nobody stays signed in: the picker is the only place left, and Back cannot return. */
   function leave(): void {
@@ -92,7 +102,7 @@
             class:selected={data.language === choice.id}
             onclick={() => choose(choice.id)}
           >
-            <strong>{choice.label}</strong>
+            <strong>{t(choice.label, lang)}</strong>
             <span>{t(choice.sub, lang)}</span>
           </button>
         {/each}

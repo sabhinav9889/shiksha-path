@@ -124,6 +124,19 @@ function uniqueQuizItemIds(content: Content): ContentIssue[] {
   return [...fromTestOuts, ...fromPlacement];
 }
 
+/** The app never saves or scores speech in the placement test, so it may not ask for any. */
+function noSpeakingInPlacement(content: Content): ContentIssue[] {
+  return (content.placement?.sections ?? [])
+    .flatMap((s) => s.items)
+    .filter((item) => item.type === 'speak_compare')
+    .map((item) =>
+      error(
+        PLACEMENT_FILE,
+        `item ${item.id} is a speaking item; the placement test cannot use one`,
+      ),
+    );
+}
+
 /** Track ids and module order values are unique. */
 function uniqueTracksAndModuleOrders(content: Content): ContentIssue[] {
   const tracks = duplicates(content.tracks.map((t) => t.id)).map((id) =>
@@ -167,6 +180,7 @@ export async function validateContent(
     ...audio.flat(),
     ...sections.flatMap((s) => placementSection(content, s, opts.preview)),
     ...uniqueQuizItemIds(content),
+    ...noSpeakingInPlacement(content),
     ...uniqueTracksAndModuleOrders(content),
     ...lessonWarnings(content, opts.preview),
     ...pendingQuizWarnings(content, opts.preview),

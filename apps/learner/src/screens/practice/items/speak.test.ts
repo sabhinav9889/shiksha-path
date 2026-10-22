@@ -91,6 +91,16 @@ describe('recording', () => {
     expect(onanswer).toHaveBeenCalledWith({ kind: 'spoken' });
   });
 
+  test('locking the screen or a call (the page goes hidden) stops and saves the recording', async () => {
+    const { onrecord } = renderView(fakeRecorder());
+    await fireEvent.click(button('रिकॉर्ड करें'));
+    await vi.waitFor(() => button('रोकें'));
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+    await vi.waitFor(() => expect(onrecord).toHaveBeenCalledWith(RESULT));
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  });
+
   test('recording stops by itself at 30 seconds and is still saved', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
     const { onrecord } = renderView(fakeRecorder());

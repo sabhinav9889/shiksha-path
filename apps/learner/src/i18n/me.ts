@@ -20,6 +20,8 @@ export const meStrings = {
     hi: 'हटाने के लिए अपना PIN डालें। Google से जुड़ी प्रोफ़ाइल बाद में वापस लाई जा सकती है।',
     en: 'Enter your PIN to remove it. A profile connected to Google can be brought back later.',
   },
+  'me.langHiEn': { hi: 'हिंदी + English', en: 'Hindi + English' },
+  'me.langEn': { hi: 'सिर्फ़ English', en: 'English only' },
   'me.recordingsUpload': { hi: 'रिकॉर्डिंग अपलोड करें', en: 'Upload recordings' },
   'me.recordingsWaiting': {
     hi: '{count} रिकॉर्डिंग अपलोड होनी हैं',

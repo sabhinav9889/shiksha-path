@@ -36,9 +36,18 @@
     return lessons.find((l) => l.id === id)?.title[lang] ?? id;
   }
 
+  let failed = $state(false);
+
+  /** If saving the choice fails, nothing changed: say so and offer it again. */
   async function accept(): Promise<void> {
     suggesting = false;
-    await setLanguagePreference('en_only');
+    failed = false;
+    try {
+      await setLanguagePreference('en_only');
+    } catch {
+      failed = true;
+      suggesting = true;
+    }
   }
 
   function start(): void {
@@ -65,6 +74,9 @@
     {#if suggesting && appState.switches.english_only_option}
       <div class="card suggest">
         <p>{t('placementResult.suggest', lang)}</p>
+        {#if failed}
+          <p role="alert">{t('profiles.generalError', lang)}</p>
+        {/if}
         <button type="button" class="primary" onclick={accept}>
           {t('placementResult.yes', lang)}
         </button>

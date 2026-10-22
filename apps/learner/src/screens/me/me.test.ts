@@ -50,8 +50,11 @@ describe('language', () => {
   test('switching to English only changes the interface and is recorded', async () => {
     const id = await open();
     expect(button(/हिंदी \+ English/).getAttribute('aria-pressed')).toBe('true');
-    await fireEvent.click(button(/English only/));
+    await fireEvent.click(button(/सिर्फ़ English/));
     await vi.waitFor(() => expect(text()).toContain('Language'));
+    // the names come from the catalogue, in the interface's language
+    expect(button(/Hindi \+ English/)).toBeTruthy();
+    expect(button(/English only/).getAttribute('aria-pressed')).toBe('true');
     expect(appState.lang).toBe('en');
     const events = (await env.runtime.events.all(id)).filter((e) => e.type === 'language_changed');
     expect(events.at(-1)?.data).toEqual({ preference: 'en_only' });
@@ -187,6 +190,16 @@ describe('with the English-only option switched off', () => {
     await signIn(profile.id, '1234');
     render(MeScreen);
     await vi.waitFor(() => button(/हिंदी \+ English/));
-    expect(screen.queryByRole('button', { name: /English only/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /सिर्फ़ English/ })).toBeNull();
+  });
+});
+
+describe('when a sync breaks', () => {
+  test('the button comes back and the learner is told the work is saved on the phone', async () => {
+    await open();
+    env.runtime.sync = () => Promise.reject(new Error('broken'));
+    await fireEvent.click(button(/अभी sync करें/));
+    await vi.waitFor(() => expect(text()).toContain('फ़ोन में सेव · इंटरनेट मिलते ही अपलोड'));
+    expect(button(/अभी sync करें/).disabled).toBe(false);
   });
 });

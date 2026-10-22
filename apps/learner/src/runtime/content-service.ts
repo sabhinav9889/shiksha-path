@@ -81,13 +81,17 @@ export class ContentService {
 
   private async doSync(): Promise<SyncReport> {
     const skipModules = await this.deps.prefs.removedModules();
+    const manifestBefore = JSON.stringify(await this.deps.storage.getManifest());
     const report = await syncContent({
       ...this.deps,
       skipModules,
       keepAudio: () => this.keepAudio(),
     });
     const installed = [...report.modules, report.placement].some((r) => r?.status === 'installed');
-    if (installed || report.removedAudio > 0) this.changes += 1;
+    // A new title or track order changes only the manifest, yet the screens show it.
+    const manifestChanged =
+      JSON.stringify(await this.deps.storage.getManifest()) !== manifestBefore;
+    if (installed || manifestChanged || report.removedAudio > 0) this.changes += 1;
     return report;
   }
 
