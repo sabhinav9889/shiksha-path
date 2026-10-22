@@ -63,6 +63,8 @@ export const studentDetail = z.object({
   ),
   attendance: z.array(z.object({ date: z.string(), present: z.boolean() })),
   switches: z.record(z.enum(FEATURE_KEYS), z.boolean()),
+  /** Only the switches set for this student, overriding the all-students value. */
+  overrides: z.partialRecord(z.enum(FEATURE_KEYS), z.boolean()),
   hasCode: z.boolean(),
 });
 export type StudentDetail = z.infer<typeof studentDetail>;

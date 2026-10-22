@@ -231,14 +231,19 @@ export async function setBrandingAdmin(
 /** Labs, cohorts and staff for the setup screen. */
 export async function getSetup(deps: AdminDeps, staff: StaffCaller): Promise<AdminSetup> {
   requireAdmin(staff);
-  const [labs, cohorts, members] = await Promise.all([
+  const [labs, cohorts, members, all] = await Promise.all([
     deps.org.labs(),
     deps.org.cohorts('all'),
     deps.staff.list(),
+    deps.switches.allStudents(),
   ]);
   return {
     labs,
     cohorts,
     staff: members.map(({ authUserId, ...m }) => ({ ...m, claimed: authUserId !== null })),
+    switches: Object.fromEntries(FEATURE_KEYS.map((key) => [key, all[key] ?? true])) as Record<
+      FeatureKey,
+      boolean
+    >,
   };
 }

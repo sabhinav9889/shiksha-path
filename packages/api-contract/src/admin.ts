@@ -40,6 +40,8 @@ export const adminSetup = z.object({
       cohortIds: z.array(z.uuid()),
     }),
   ),
+  /** The all-students value of every feature switch. */
+  switches: z.record(z.enum(FEATURE_KEYS), z.boolean()),
 });
 export type AdminSetup = z.infer<typeof adminSetup>;
 

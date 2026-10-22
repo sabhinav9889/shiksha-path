@@ -86,6 +86,65 @@
     background: var(--color-bg);
   }
 
+  /* Shared by the admin screens, which keep no styles of their own. */
+  .staff :global(.admin label) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .staff :global(.admin label.check) {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .staff :global(.admin input:not([type='checkbox'])),
+  .staff :global(.admin select) {
+    min-height: 44px;
+    padding: 0 10px;
+    border: 1px solid var(--color-line);
+    border-radius: 10px;
+  }
+
+  .staff :global(.admin form),
+  .staff :global(.admin .row) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: end;
+    margin: 10px 0;
+  }
+
+  .staff :global(.admin button) {
+    min-height: 44px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 12px;
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .staff :global(.admin button:disabled) {
+    opacity: 0.5;
+  }
+
+  .staff :global(.admin ul) {
+    list-style: none;
+    padding: 0;
+  }
+
+  .staff :global(.admin li) {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .staff :global(.admin .muted) {
+    color: var(--color-muted);
+    font-size: 14px;
+  }
+
   .signin {
     display: flex;
     flex-direction: column;

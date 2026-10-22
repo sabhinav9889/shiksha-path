@@ -10,7 +10,7 @@ import type {
   SummaryRepo,
   SwitchRepo,
 } from '../ports.js';
-import { effectiveSwitches } from './me.js';
+import { effectiveSwitches, knownSwitches } from './me.js';
 import { attendanceFrom } from './mentor-actions.js';
 import { inScope, type StaffCaller } from './staff.js';
 import { needsAttention, type Attention, type Summary } from './summary.js';
@@ -87,11 +87,12 @@ export async function studentDetail(
   await inScope(deps, staff, learnerId);
   const row = await deps.org.student(learnerId);
   if (!row) throw new Error('a learner in scope has no row');
-  const [summaries, page, recordings, switches, code] = await Promise.all([
+  const [summaries, page, recordings, switches, overrides, code] = await Promise.all([
     deps.summaries.forLearners([learnerId]),
     deps.events.page(learnerId, 0, ALL),
     deps.recordings.listByLearner(learnerId),
     effectiveSwitches(deps.switches, learnerId),
+    deps.switches.overrides(learnerId),
     deps.codes.forLearner(learnerId),
   ]);
   const events = parseEvents(page.events).events;
@@ -114,6 +115,7 @@ export async function studentDetail(
     })),
     attendance: await deps.attendance.forLearner(learnerId, attendanceFrom()),
     switches,
+    overrides: knownSwitches(overrides),
     hasCode: code !== null,
   };
 }

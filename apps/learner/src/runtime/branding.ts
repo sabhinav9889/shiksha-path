@@ -1,4 +1,4 @@
-import { branding, DEFAULT_BRANDING, type Branding } from '@shiksha/api-contract';
+import { branding, DEFAULT_BRANDING, primaryShades, type Branding } from '@shiksha/api-contract';
 import type { Lang } from '../i18n/index.js';
 import type { Runtime } from './runtime.js';
 
@@ -29,7 +29,10 @@ export async function refreshBranding(runtime: Runtime): Promise<void> {
 
 /** Put the colours on the page and the name in the tab. Fonts and layout never change. */
 export function applyBranding(brand: Branding, doc: Document, lang: Lang): void {
+  const shades = primaryShades(brand.primary);
   doc.documentElement.style.setProperty('--color-primary', brand.primary);
+  doc.documentElement.style.setProperty('--color-primary-dark', shades.dark);
+  doc.documentElement.style.setProperty('--color-primary-soft', shades.soft);
   doc.documentElement.style.setProperty('--color-accent', brand.accent);
   doc.title = brand.name[lang];
 }
