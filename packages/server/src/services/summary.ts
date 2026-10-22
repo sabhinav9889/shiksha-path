@@ -17,6 +17,8 @@ export interface Summary {
   currentLesson: string | null;
   lowScores: boolean;
   stuckLesson: string | null;
+  /** The IST day this was worked out (absent in summaries saved before it was added). */
+  asOf?: string;
 }
 
 export type Attention = 'inactive' | 'stuck' | 'low_scores';
@@ -81,6 +83,22 @@ export function summarise(raw: readonly unknown[], today: string): Summary {
     currentLesson: last && !progress.completedLessons.has(last) ? last : null,
     lowScores: lowScores(completed),
     stuckLesson: stuckLesson(started, progress.completedLessons),
+    asOf: today,
+  };
+}
+
+/**
+ * A summary saved at the last upload, as it stands today. Nothing happened since that upload,
+ * so a streak still runs only if the last active day was today or yesterday, and "this week"
+ * still counts only if the summary was worked out in the current week.
+ */
+export function asOfToday(summary: Summary, today: string): Summary {
+  const last = summary.lastActiveDay;
+  const counted = summary.asOf ?? last;
+  return {
+    ...summary,
+    streak: last && last >= addDays(today, -1) ? summary.streak : 0,
+    lessonsThisWeek: counted && counted >= weekStart(today) ? summary.lessonsThisWeek : 0,
   };
 }
 

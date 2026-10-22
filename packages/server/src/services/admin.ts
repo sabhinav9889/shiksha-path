@@ -15,7 +15,7 @@ import { setBranding } from './branding.js';
 import { ApiFailure } from './failure.js';
 import { deleteLearner, type LearnerDataDeps } from './learner-data.js';
 import { inScope, type StaffCaller } from './staff.js';
-import { needsAttention, type Attention, type Summary } from './summary.js';
+import { asOfToday, needsAttention, type Attention, type Summary } from './summary.js';
 import { istDay } from '@shiksha/learner-core';
 
 export interface AdminDeps extends LearnerDataDeps {
@@ -151,7 +151,8 @@ export async function searchStudents(
   }
 }
 
-function withAttention(row: StudentRow, summary: Summary | null, today: string): Listed {
+function withAttention(row: StudentRow, saved: Summary | null, today: string): Listed {
+  const summary = saved && asOfToday(saved, today);
   const attention: Attention[] = summary ? needsAttention(summary, row.linkedOn, today) : [];
   return { ...row, summary, attention };
 }

@@ -13,7 +13,7 @@ import type {
 import { effectiveSwitches, knownSwitches } from './me.js';
 import { attendanceFrom } from './mentor-actions.js';
 import { inScope, type StaffCaller } from './staff.js';
-import { needsAttention, type Attention, type Summary } from './summary.js';
+import { asOfToday, needsAttention, type Attention, type Summary } from './summary.js';
 
 export interface StaffReadDeps {
   attendance: AttendanceRepo;
@@ -29,7 +29,8 @@ const RECENT = 50;
 const WEAK = 5;
 const ALL = Number.MAX_SAFE_INTEGER;
 
-function studentLine(row: StudentRow, summary: Summary | undefined, today: string) {
+function studentLine(row: StudentRow, saved: Summary | undefined, today: string) {
+  const summary = saved && asOfToday(saved, today);
   return {
     id: row.id,
     name: row.name,

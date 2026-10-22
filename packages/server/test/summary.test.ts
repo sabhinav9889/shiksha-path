@@ -6,7 +6,7 @@ import {
 } from '@shiksha/learner-core';
 import { fixedClock, sequentialIds } from '@shiksha/learner-core/testing';
 import { describe, expect, test } from 'vitest';
-import { needsAttention, summarise } from '../src/services/summary.js';
+import { asOfToday, needsAttention, summarise } from '../src/services/summary.js';
 
 /** Events at given IST days (10:00 IST = 04:30 UTC). */
 function log() {
@@ -98,5 +98,37 @@ describe('needsAttention', () => {
   test('stuck and low scores are flagged too', () => {
     const s = { ...quiet, lastActiveDay: '2026-10-21', stuckLesson: 'ef1-03', lowScores: true };
     expect(needsAttention(s, '2026-10-01', '2026-10-21')).toEqual(['stuck', 'low_scores']);
+  });
+});
+
+describe('asOfToday', () => {
+  const l = log();
+  for (const day of ['2026-10-19', '2026-10-20', '2026-10-21']) {
+    l.add('item_answered', answer(`ef1-${day.slice(-2)}`), day);
+    l.add('lesson_completed', done(`ef1-${day.slice(-2)}`), day);
+  }
+  const atUpload = summarise(l.events, '2026-10-21'); // Wednesday: 3 this week, 3-day streak
+
+  test('the same day, or the next, keeps streak and this week', () => {
+    expect(atUpload).toMatchObject({ streak: 3, lessonsThisWeek: 3 });
+    expect(asOfToday(atUpload, '2026-10-22')).toMatchObject({ streak: 3, lessonsThisWeek: 3 });
+  });
+
+  test('two days later the streak is over, the week still counts', () => {
+    expect(asOfToday(atUpload, '2026-10-23')).toMatchObject({ streak: 0, lessonsThisWeek: 3 });
+  });
+
+  test('a lesson finished on a day with no answers still counts by the upload day', () => {
+    const late = log();
+    late.add('item_answered', answer('ef1-01'), '2026-10-18'); // Sunday
+    late.add('lesson_completed', done('ef1-01'), '2026-10-19'); // Monday, just after midnight
+    const saved = summarise(late.events, '2026-10-19');
+    expect(saved.lessonsThisWeek).toBe(1);
+    expect(asOfToday(saved, '2026-10-20').lessonsThisWeek).toBe(1);
+  });
+
+  test('in a later week nothing counts as this week', () => {
+    expect(asOfToday(atUpload, '2026-11-02')).toMatchObject({ streak: 0, lessonsThisWeek: 0 });
+    expect(asOfToday(atUpload, '2026-11-02').lessonsDone).toBe(3);
   });
 });
