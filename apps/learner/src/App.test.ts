@@ -25,6 +25,16 @@ describe('App', () => {
   });
 });
 
+describe('the staff section', () => {
+  test('opens without a student profile, loaded on demand', async () => {
+    navigate({ name: 'staff', view: 'cohorts' });
+    render(App);
+    await vi.waitFor(() =>
+      expect(screen.getByText(/मेंटर और एडमिन अपने NGO Google खाते से साइन इन करें/)).toBeTruthy(),
+    );
+  });
+});
+
 describe('leaving a run without finishing it', () => {
   const stub = { kind: 'review', run: { entries: [], answered: [] } } as never;
 

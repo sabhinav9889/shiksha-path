@@ -1,4 +1,4 @@
-import type { UnreviewedRecordings } from '@shiksha/api-contract';
+import type { UnreviewedRecordings } from '@shiksha/api-contract/staff';
 import type { AuditRepo, OrgRepo, RecordingRepo, RecordingStorage } from '../ports.js';
 import { withAudit } from './audit.js';
 import { ApiFailure } from './failure.js';

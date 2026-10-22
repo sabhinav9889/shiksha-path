@@ -13,7 +13,7 @@ import {
   studentsPage,
   studentsQuery,
   switchRequest,
-} from '@shiksha/api-contract';
+} from '@shiksha/api-contract/staff';
 import * as admin from '../services/admin.js';
 import { staffCaller } from '../services/staff.js';
 import { caller, jsonBody, parseWith } from './request.js';

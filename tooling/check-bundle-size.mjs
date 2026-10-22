@@ -9,7 +9,8 @@ const BYTES_PER_KB = 1024;
 const USAGE = `Usage: node tooling/check-bundle-size.mjs [dist-folder]
 
 Adds up the gzipped size of the scripts index.html loads on a first visit (the entry script and
-its modulepreload links) and fails above ${BUDGET_KB} KB. The folder defaults to ./dist.`;
+its modulepreload links) and fails above ${BUDGET_KB} KB, or when staff code is among them.
+The folder defaults to ./dist.`;
 
 const args = process.argv.slice(2);
 if (args.includes('--help')) {
@@ -24,8 +25,16 @@ const scripts = [
 ].map((match) => match[1].replace(/^\//, ''));
 
 let total = 0;
+let staffInFirstLoad = false;
 for (const script of new Set(scripts)) {
-  total += gzipSync(readFileSync(join(dist, script)), { level: 9 }).length;
+  const source = readFileSync(join(dist, script));
+  total += gzipSync(source, { level: 9 }).length;
+  // The staff section must stay a separate, lazily loaded chunk (Plan 4a).
+  if (source.includes('/v1/staff/')) staffInFirstLoad = true;
+}
+if (staffInFirstLoad) {
+  console.error('The staff section (/v1/staff/) is in the first load: import it lazily.');
+  process.exit(1);
 }
 const kb = total / BYTES_PER_KB;
 console.log(`First-load JavaScript: ${kb.toFixed(1)} KB gzipped (budget ${BUDGET_KB} KB)`);

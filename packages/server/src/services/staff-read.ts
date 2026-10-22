@@ -1,4 +1,4 @@
-import type { StaffCohorts, StudentDetail } from '@shiksha/api-contract';
+import type { StaffCohorts, StudentDetail } from '@shiksha/api-contract/staff';
 import { istDay, parseEvents, type LearnerEvent } from '@shiksha/learner-core';
 import type {
   AttendanceRepo,

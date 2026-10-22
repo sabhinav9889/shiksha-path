@@ -1,16 +1,8 @@
 import {
-  attendanceRequest,
-  attendanceResponse,
   branding,
-  codeIssueRequest,
-  codeIssueResponse,
-  codeResetRequest,
-  codeResetResponse,
   codeSignIn,
   deletedCheck,
   deletedCheckResponse,
-  levelRequest,
-  levelResponse,
   linkRequest,
   linkResponse,
   meResponse,
@@ -22,9 +14,19 @@ import {
   recordingCompleteResponse,
   recordingStart,
   recordingStartResponse,
+  session,
+} from '@shiksha/api-contract';
+import {
+  attendanceRequest,
+  attendanceResponse,
+  codeIssueRequest,
+  codeIssueResponse,
+  codeResetRequest,
+  codeResetResponse,
+  levelRequest,
+  levelResponse,
   auditPage,
   auditQuery,
-  session,
   recordingsQuery,
   recordingUrlQuery,
   recordingUrlResponse,
@@ -36,7 +38,7 @@ import {
   studentDetail as studentDetailResponse,
   studentQuery,
   unreviewedRecordings,
-} from '@shiksha/api-contract';
+} from '@shiksha/api-contract/staff';
 import type { Logger } from '../logger.js';
 import type {
   AttendanceRepo,

@@ -105,6 +105,7 @@
     oncancel={profiles.length > 0 ? () => (creating = false) : undefined}
   />
   <RestoreButton {lang} onrestore={() => (restoring = true)} />
+  <a class="staff-link" href="#/staff">{t('profiles.staff', lang)}</a>
 {:else}
   <section class="picker">
     <header>
@@ -120,6 +121,7 @@
       onadd={() => (creating = true)}
     />
     <RestoreButton {lang} onrestore={() => (restoring = true)} />
+    <a class="staff-link" href="#/staff">{t('profiles.staff', lang)}</a>
 
     {#if selected}
       <div class="card">
@@ -137,6 +139,15 @@
 {/if}
 
 <style>
+  .staff-link {
+    display: block;
+    margin: 16px auto;
+    padding: 12px;
+    color: var(--color-muted);
+    font-size: 14px;
+    text-align: center;
+  }
+
   .notice {
     max-width: 640px;
     margin: 12px auto 0;

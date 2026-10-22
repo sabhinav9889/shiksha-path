@@ -97,6 +97,8 @@ function defaultAccount(db: ShikshaDb): AccountDeps | null {
   return {
     loadAuth: async () => (await import('../api/auth.js')).createGoogleAuth({ db, ...config }),
     makeApi: (token) => createApiClient({ baseUrl: config.baseUrl, token }),
+    loadStaffAuth: async () =>
+      (await import('../staff/staff-auth.js')).createStaffAuth({ db, ...config }),
   };
 }
 

@@ -7,6 +7,7 @@ export const profilesStrings = {
     en: '{count} people learn on this phone',
   },
   'profiles.add': { hi: 'नया जोड़ें', en: 'Add new' },
+  'profiles.staff': { hi: 'मेंटर / एडमिन', en: 'Mentor / admin' },
   'profiles.generalError': {
     hi: 'कुछ गड़बड़ हुई। फिर से कोशिश करें।',
     en: 'Something went wrong. Please try again.',

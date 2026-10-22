@@ -65,6 +65,14 @@ describe('tooling/check-bundle-size.mjs', () => {
     expect(run.out).toContain('120');
   });
 
+  test('fails when staff code (the /v1/staff/ API) is in the first load', () => {
+    const dir = dist(1000);
+    writeFileSync(join(dir, 'assets', 'index.js'), 'fetch("/v1/staff/me")');
+    const run = node('tooling/check-bundle-size.mjs', [dir]);
+    expect(run.status).toBe(1);
+    expect(run.out).toContain('staff');
+  });
+
   test('--help explains itself', () => {
     expect(node('tooling/check-bundle-size.mjs', ['--help']).out).toContain('Usage');
   });

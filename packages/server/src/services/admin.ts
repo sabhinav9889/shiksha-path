@@ -1,9 +1,5 @@
-import {
-  FEATURE_KEYS,
-  type AdminSetup,
-  type FeatureKey,
-  type StudentsPage,
-} from '@shiksha/api-contract';
+import { FEATURE_KEYS, type FeatureKey } from '@shiksha/api-contract';
+import { type AdminSetup, type StudentsPage } from '@shiksha/api-contract/staff';
 import type {
   AuditRepo,
   BrandingRepo,
