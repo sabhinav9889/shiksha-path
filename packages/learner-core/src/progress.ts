@@ -125,7 +125,13 @@ export function deriveProgress(
     activeDays: new Set(),
     reviewQueue: [],
   };
-  for (const event of normalise(events)) apply(state, event, opts.today);
+  const mentorLevels: Record<string, string> = {};
+  for (const event of normalise(events)) {
+    // The latest level a mentor set wins over any placement, whenever that placement was taken.
+    if (event.type === 'level_set') mentorLevels[event.data.track] = event.data.startLesson;
+    else apply(state, event, opts.today);
+  }
+  Object.assign(state.startLessonByTrack, mentorLevels);
   return state;
 }
 

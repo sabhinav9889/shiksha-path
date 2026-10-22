@@ -20,7 +20,12 @@ function sortEvents(
   const rejected: string[] = [];
   raw.forEach((candidate, index) => {
     const parsed = learnerEventSchema.safeParse(candidate);
-    if (!parsed.success || parsed.data.learnerId !== learnerId) {
+    // Only the server writes level_set (a mentor's decision), never a phone.
+    if (
+      !parsed.success ||
+      parsed.data.learnerId !== learnerId ||
+      parsed.data.type === 'level_set'
+    ) {
       rejected.push(labelOf(candidate, index));
       return;
     }

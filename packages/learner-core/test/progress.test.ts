@@ -180,3 +180,38 @@ describe('todayLesson and trackProgress', () => {
     expect(todayLesson(manifest, progressOf(l.events))).toBeNull();
   });
 });
+
+describe('a mentor setting the level (level_set)', () => {
+  test('moves that track past a placement, and the other track keeps the placement', () => {
+    const l = log();
+    l.add('placement_completed', placed('ef1-02'), '2026-10-18T10:00:00Z');
+    l.add('level_set', { track: 'english', startLesson: 'ef1-03' }, '2026-10-19T10:00:00Z');
+    expect(progressOf(l.events).startLessonByTrack).toEqual({
+      english: 'ef1-03',
+      aptitude: 'apt-01',
+    });
+  });
+
+  test('wins over a placement taken after it, and the latest of two wins', () => {
+    const l = log();
+    l.add('level_set', { track: 'english', startLesson: 'ef1-01' }, '2026-10-18T09:00:00Z');
+    l.add('level_set', { track: 'english', startLesson: 'ef1-03' }, '2026-10-20T09:00:00Z');
+    l.add('placement_completed', placed('ef1-02'), '2026-10-19T10:00:00Z');
+    expect(progressOf([...l.events].reverse()).startLessonByTrack.english).toBe('ef1-03');
+  });
+
+  test('naming a lesson that is not installed leaves today on the first unfinished lesson', () => {
+    const l = log();
+    l.add('level_set', { track: 'english', startLesson: 'ef9-99' }, '2026-10-19T10:00:00Z');
+    const state = progressOf(l.events);
+    expect(todayLesson(manifest, state)?.lessonId).toBe('ef1-01');
+  });
+
+  test('an app that predates it drops the event without failing', () => {
+    const l = log();
+    l.add('level_set', { track: 'english', startLesson: 'ef1-03' });
+    const unknown = { ...(l.events[0] as object), type: 'from_the_future' };
+    expect(parseEvents([unknown])).toEqual({ events: [], ignored: 1 });
+    expect(parseEvents(l.events).events).toHaveLength(1);
+  });
+});

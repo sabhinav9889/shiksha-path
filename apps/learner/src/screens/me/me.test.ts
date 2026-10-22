@@ -54,7 +54,9 @@ describe('language', () => {
     await vi.waitFor(() => expect(text()).toContain('Language'));
     // the names come from the catalogue, in the interface's language
     expect(button(/Hindi \+ English/)).toBeTruthy();
-    expect(button(/English only/).getAttribute('aria-pressed')).toBe('true');
+    await vi.waitFor(() =>
+      expect(button(/English only/).getAttribute('aria-pressed')).toBe('true'),
+    ); // the screen reloads its data just after the interface switches
     expect(appState.lang).toBe('en');
     const events = (await env.runtime.events.all(id)).filter((e) => e.type === 'language_changed');
     expect(events.at(-1)?.data).toEqual({ preference: 'en_only' });

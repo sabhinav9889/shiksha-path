@@ -269,6 +269,18 @@ export function describeServiceContract(
       });
     });
 
+    describe('events only the server writes', () => {
+      test('a phone cannot push a level_set: only a mentor sets a level', async () => {
+        const levelSet = createEvent({ clock: systemClock, ids: cryptoIds }, a, 'level_set', {
+          track: 'english',
+          startLesson: 'ef1-03',
+        });
+        const out = await pushEvents(f, authA, { learnerId: a, events: [levelSet, event(a)] });
+        expect(out.rejected).toEqual([levelSet.id]);
+        expect(out.accepted).toHaveLength(1);
+      });
+    });
+
     describe('rate limits', () => {
       test('the 61st push in a minute is refused, and another learner is unaffected', async () => {
         await awayFromWindowEdge(60);
