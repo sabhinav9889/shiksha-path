@@ -14,7 +14,8 @@ import {
   type StorageEstimator,
 } from '@shiksha/learner-core';
 import { linkedApi, type AccountDeps } from '../account/account.js';
-import { createApiClient } from '../api/api-client.js';
+import { wipeDeleted } from '../account/forget.js';
+import { createApiClient, type ApiClient, type ApiResult } from '../api/api-client.js';
 import { apiConfig } from '../api/config.js';
 import { createRecorder, type Recorder } from '../audio/recorder.js';
 import { ShikshaDb } from '../storage/db.js';
@@ -42,6 +43,8 @@ export interface SyncResult {
   flush: FlushResult;
   added: number;
   recordings: { uploaded: number; left: number };
+  /** The NGO deleted this student on request: the phone's copy is gone now. */
+  wiped: boolean;
 }
 
 export interface Runtime {
@@ -69,6 +72,8 @@ export interface Runtime {
   /** Store events that came from the server as already uploaded; returns how many were new. */
   appendSent(events: LearnerEvent[]): Promise<number>;
   removeLearnerEvents(learnerId: string): Promise<void>;
+  /** Remove every setting kept for a profile on this phone. */
+  removeLearnerMeta(learnerId: string): Promise<void>;
 }
 
 interface RuntimeOptions {
@@ -92,14 +97,30 @@ function defaultAccount(db: ShikshaDb): AccountDeps | null {
   };
 }
 
+/** A refused sign-in is a deletion only if the server says this learner was deleted on request. */
+async function deletedOnServer(
+  api: ApiClient,
+  me: ApiResult<unknown> | null,
+  learnerId: string,
+): Promise<boolean> {
+  if (!me || me.ok || (me.error !== 'UNAUTHENTICATED' && me.error !== 'NOT_LINKED')) return false;
+  const answer = await api.deletedCheck({ learnerIds: [learnerId] });
+  return answer.ok && answer.value.deleted.includes(learnerId);
+}
+
 async function syncLearner(runtime: Runtime, learnerId: string): Promise<SyncResult> {
   const flush = await runtime.flush(learnerId);
   const { added } = await pullNew(runtime, learnerId);
-  await refreshSwitches(runtime, await linkedApi(runtime, learnerId), learnerId);
+  const api = await linkedApi(runtime, learnerId);
+  const me = await refreshSwitches(runtime, api, learnerId);
+  if (api && (await deletedOnServer(api, me, learnerId))) {
+    await wipeDeleted(runtime, learnerId);
+    return { flush, added, recordings: { uploaded: 0, left: 0 }, wiped: true };
+  }
   const recordings = onUnmeteredNetwork()
     ? await uploadRecordings(runtime, learnerId)
     : { uploaded: 0, left: (await runtime.recordings.pendingUpload(learnerId)).length };
-  return { flush, added, recordings };
+  return { flush, added, recordings, wiped: false };
 }
 
 /** Wires the browser adapters to the core's ports. One per app (tests make their own). */
@@ -147,6 +168,7 @@ export function createRuntime(opts: RuntimeOptions = {}): Runtime {
     account,
     appendSent: (list) => events.appendSent(list),
     removeLearnerEvents: (learnerId) => events.removeLearner(learnerId),
+    removeLearnerMeta: (learnerId) => events.removeMetaFor(learnerId),
   };
   return runtime;
 }

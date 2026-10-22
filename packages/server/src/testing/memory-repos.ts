@@ -4,9 +4,11 @@ import {
   LinkConflict,
   type EventRepo,
   type LearnerRepo,
+  type LearnerDataRepo,
   type LearnerRow,
   type SwitchRepo,
 } from '../ports.js';
+import { memoryLearnerData } from './memory-learner-data.js';
 import { memoryRateLimiter } from './memory-rate-limiter.js';
 import { memoryRecordingRepo } from './memory-recording-repo.js';
 import { memoryRecordingStorage } from './memory-recording-storage.js';
@@ -22,7 +24,11 @@ const SEED_KEYS = [
 ];
 
 /** The memory repos, plus the identity map the memory code repo shares (auth user → learner). */
-export type MemoryRepos = ServiceFixture & { identities: Map<string, string> };
+export type MemoryRepos = ServiceFixture & {
+  identities: Map<string, string>;
+  learnerRows: Map<string, LearnerRow>;
+  data: LearnerDataRepo;
+};
 
 /** In-memory repositories with the same behaviour as the Postgres ones. */
 export function makeMemoryRepos(): MemoryRepos {
@@ -79,6 +85,8 @@ export function makeMemoryRepos(): MemoryRepos {
 
   return {
     identities,
+    learnerRows: learners,
+    data: memoryLearnerData({ learners, identities, eventRepo, overrides }),
     learners: learnerRepo,
     events: eventRepo,
     switches: switchRepo,

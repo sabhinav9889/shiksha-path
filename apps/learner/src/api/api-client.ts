@@ -7,6 +7,7 @@ import {
   recordingCompleteResponse,
   recordingStartResponse,
   session,
+  deletedCheckResponse,
   type ApiError,
   type LinkRequest,
   type LinkResponse,
@@ -29,6 +30,8 @@ export interface ApiClient {
   me(): Promise<ApiResult<MeResponse>>;
   startRecording(body: RecordingStart): Promise<ApiResult<RecordingStartResponse>>;
   completeRecording(body: { id: string }): Promise<ApiResult<RecordingCompleteResponse>>;
+  /** Which of these profiles were deleted on request. Needs no sign-in. */
+  deletedCheck(body: { learnerIds: string[] }): Promise<ApiResult<{ deleted: string[] }>>;
   /** Exchange a backup code for a session. Needs no sign-in (it is how one starts). */
   codeSignIn(body: { code: string }): Promise<ApiResult<Session>>;
   /** Put the bytes at a signed upload URL (no sign-in token: the URL carries its own). */
@@ -130,6 +133,7 @@ export function createApiClient(deps: ClientDeps): ApiClient {
     startRecording: (body) => call('/v1/recordings/start', recordingStartResponse, body),
     completeRecording: (body) => call('/v1/recordings/complete', recordingCompleteResponse, body),
     codeSignIn: (body) => call('/v1/auth/code', session, body, false),
+    deletedCheck: (body) => call('/v1/learners/deleted', deletedCheckResponse, body, false),
     uploadTo: (url, bytes, mime) => putBytes({ fetchFn, timeoutMs, url, bytes, mime }),
   };
 }

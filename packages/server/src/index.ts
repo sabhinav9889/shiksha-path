@@ -2,6 +2,7 @@
 export * from './ports.js';
 export { ApiFailure } from './services/failure.js';
 export { issueCode, resetCode, signInWithCode, type CodeDeps } from './services/codes.js';
+export { checkDeleted, deleteLearner, exportLearner } from './services/learner-data.js';
 export { linkLearner } from './services/link.js';
 export { enforce, LIMITS, type LimitKind } from './services/limits.js';
 export { clientKey } from './http/client-key.js';

@@ -1,4 +1,5 @@
 import {
+  checkDeleted,
   completeRecording,
   getMe,
   linkLearner,
@@ -27,6 +28,10 @@ export interface FakeBackend {
   sessions: Map<string, string>;
   useGoogleAccount(id: string): void;
   setOnline(value: boolean): void;
+  /** The NGO deletes a student on request (the server side only). */
+  deleteLearner(learnerId: string): Promise<void>;
+  /** How many times phones asked which profiles were deleted. */
+  deletedChecks(): number;
   /** A mentor issues a backup code: for a new student by name. */
   issueCode(name: string): Promise<{ learnerId: string; code: string }>;
   /** Make every upload to a signed URL fail (the network drops mid-upload). */
@@ -67,6 +72,7 @@ export function makeFakeBackend(): FakeBackend {
   let remembered: string | null = null;
   let online = true;
   let uploadsFail = false;
+  let checks = 0;
 
   const run = async <T>(work: () => Promise<T>): Promise<ApiResult<T>> => {
     if (!online) return { ok: false, error: 'OFFLINE' };
@@ -92,6 +98,10 @@ export function makeFakeBackend(): FakeBackend {
       startRecording: (body) => as((auth) => startRecording(repos, auth, body)),
       completeRecording: (body) => as((auth) => completeRecording(repos, auth, body)),
       codeSignIn: (body) => run(() => signInWithCode(codeDeps, body.code, 'phone-network')),
+      deletedCheck: (body) => {
+        checks += 1;
+        return run(() => checkDeleted(repos, body.learnerIds, 'phone-network'));
+      },
       uploadTo: (url, bytes) => {
         if (!online || uploadsFail) return Promise.resolve(false);
         const path = new URL(url).pathname.slice(1); // memory://upload/<learner>/<id>
@@ -144,6 +154,10 @@ export function makeFakeBackend(): FakeBackend {
       online = value;
     },
     issueCode: (name: string) => issueCode(codeDeps, { name }),
+    deleteLearner: async (learnerId: string) => {
+      await repos.data.deleteWithTombstone(learnerId);
+    },
+    deletedChecks: () => checks,
     failUploads(value: boolean) {
       uploadsFail = value;
     },

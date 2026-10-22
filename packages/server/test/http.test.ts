@@ -255,3 +255,36 @@ describe('logging', () => {
     expect(logger.entries.at(-1)).toMatchObject({ route: 'GET /v1/nope', status: 404 });
   });
 });
+
+describe('POST /v1/learners/deleted', () => {
+  const ask = (learnerIds: unknown, ip = '203.0.113.20') =>
+    handle(
+      new Request(`${BASE}/v1/learners/deleted`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
+        body: JSON.stringify({ learnerIds }),
+      }),
+      deps,
+    );
+
+  test('needs no sign-in and answers only for the ids asked about', async () => {
+    const gone = randomUUID();
+    await deps.data.deleteWithTombstone(gone);
+    const res = await ask([gone, a]);
+    expect([res.status, await json(res)]).toEqual([200, { deleted: [gone] }]);
+  });
+
+  test('refuses more than 20 ids, or ids that are not ids', async () => {
+    const many = Array.from({ length: 21 }, () => randomUUID());
+    expect((await ask(many)).status).toBe(400);
+    expect((await ask(['nope'])).status).toBe(400);
+    expect((await ask([])).status).toBe(400);
+  });
+
+  test('the 31st question in an hour from one network is refused', async () => {
+    for (let n = 0; n < 30; n += 1)
+      expect((await ask([randomUUID()], '198.51.100.1')).status).toBe(200);
+    expect((await ask([randomUUID()], '198.51.100.1')).status).toBe(429);
+    expect((await ask([randomUUID()], '198.51.100.2')).status).toBe(200);
+  });
+});

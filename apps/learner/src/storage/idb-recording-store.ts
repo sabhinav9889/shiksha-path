@@ -38,6 +38,10 @@ export class IdbRecordingStore implements RecordingStore {
     await this.db.recordings.update(id, { bytes: new Uint8Array(0), uploadedAt: at });
   }
 
+  async removeLearner(learnerId: string): Promise<void> {
+    await this.db.recordings.where('learnerId').equals(learnerId).delete();
+  }
+
   async delete(id: string): Promise<void> {
     await this.db.recordings.delete(id);
   }

@@ -59,5 +59,9 @@ export const accountStrings = {
     hi: 'यह कोड दूसरी प्रोफ़ाइल का है',
     en: 'This code belongs to another profile',
   },
+  'account.wiped': {
+    hi: 'यह प्रोफ़ाइल NGO के कहने पर हटा दी गई',
+    en: 'This profile was removed at the NGO’s request',
+  },
   'account.continue': { hi: 'आगे', en: 'Continue' },
 } satisfies Record<string, Localized>;

@@ -1,6 +1,7 @@
 /** What the Edge Function needs, bundled for Deno by `npm run functions:build`. */
 export { PgEventRepo } from './adapters/pg-event-repo.js';
 export { PgCodeRepo } from './adapters/pg-code-repo.js';
+export { PgLearnerDataRepo } from './adapters/pg-learner-data-repo.js';
 export { PgLearnerRepo } from './adapters/pg-learner-repo.js';
 export { PgRateLimiter } from './adapters/pg-rate-limiter.js';
 export { PgRecordingRepo } from './adapters/pg-recording-repo.js';

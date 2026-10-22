@@ -1,5 +1,7 @@
 import {
   codeSignIn,
+  deletedCheck,
+  deletedCheckResponse,
   linkRequest,
   linkResponse,
   meResponse,
@@ -19,6 +21,7 @@ import type {
   CodeAuth,
   CodeRepo,
   EventRepo,
+  LearnerDataRepo,
   LearnerRepo,
   RateLimiter,
   RecordingRepo,
@@ -27,6 +30,7 @@ import type {
 } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
 import { signInWithCode } from '../services/codes.js';
+import { checkDeleted } from '../services/learner-data.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
 import { completeRecording, startRecording } from '../services/recordings.js';
@@ -42,6 +46,7 @@ export interface HandlerDeps {
   /** CODE_PEPPER: keys the code hashes and the network hash for rate limits. */
   pepper: string;
   learners: LearnerRepo;
+  data: LearnerDataRepo;
   events: EventRepo;
   switches: SwitchRepo;
   limiter: RateLimiter;
@@ -88,6 +93,12 @@ const ROUTES: Record<string, Route> = {
     const body = parseWith(codeSignIn, await jsonBody(request));
     const key = await clientKey(request, deps.pepper);
     return session.parse(await signInWithCode(deps, body.code, key));
+  },
+  /** Public: a phone asks whether its profiles were deleted on request, to wipe them too. */
+  'POST /v1/learners/deleted': async (request, _url, deps) => {
+    const body = parseWith(deletedCheck, await jsonBody(request));
+    const key = await clientKey(request, deps.pepper);
+    return deletedCheckResponse.parse(await checkDeleted(deps, body.learnerIds, key));
   },
   'GET /v1/me': async (request, _url, deps) =>
     meResponse.parse(await getMe(deps, (await caller(request, deps.auth)).authUserId)),

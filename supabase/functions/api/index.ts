@@ -7,6 +7,7 @@ import {
   jsonLogger,
   PgEventRepo,
   PgCodeRepo,
+  PgLearnerDataRepo,
   PgLearnerRepo,
   PgRateLimiter,
   PgRecordingRepo,
@@ -28,6 +29,7 @@ const sql = createSql(env('SUPABASE_DB_URL'));
 const deps = {
   auth: createSupabaseAuth(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY')),
   learners: new PgLearnerRepo(sql),
+  data: new PgLearnerDataRepo(sql),
   events: new PgEventRepo(sql),
   switches: new PgSwitchRepo(sql),
   limiter: new PgRateLimiter(sql),

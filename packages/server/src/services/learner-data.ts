@@ -2,11 +2,13 @@ import type { LearnerEvent } from '@shiksha/learner-core';
 import type {
   CodeAuth,
   LearnerDataRepo,
+  RateLimiter,
   RecordingRepo,
   RecordingRow,
   RecordingStorage,
 } from '../ports.js';
 import { ApiFailure } from './failure.js';
+import { enforce } from './limits.js';
 import { recordingPath } from './recordings.js';
 
 export interface LearnerDataDeps {
@@ -65,4 +67,17 @@ export async function deleteLearner(
   for (const id of rows.authUserIds) await deps.auth.deleteUser(id);
   const { events } = await deps.data.deleteWithTombstone(learnerId);
   return { events, recordings: recordings.length, authUsers: rows.authUserIds.length };
+}
+
+/**
+ * Which of a phone's profiles were deleted on request (public: a deleted student has no sign-in
+ * left). Only ever answers about the ids asked; limited per network.
+ */
+export async function checkDeleted(
+  deps: { data: LearnerDataRepo; limiter: RateLimiter },
+  learnerIds: string[],
+  clientKey: string,
+): Promise<{ deleted: string[] }> {
+  await enforce(deps.limiter, 'deletedCheck', `deleted-check:ip:${clientKey}`);
+  return { deleted: await deps.data.deleted(learnerIds) };
 }

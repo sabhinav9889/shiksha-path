@@ -5,6 +5,7 @@
   import { errorMessage, t } from '../../i18n/index.js';
   import { navigate } from '../../router.svelte.js';
   import { visibleProfiles } from '../../account/account.js';
+  import { takeWipedNotice } from '../../account/forget.js';
   import { profilesChanged } from '../../account/profiles-changed.svelte.js';
   import RestoreButton from '../account/RestoreButton.svelte';
   import RestoreProfile from '../account/RestoreProfile.svelte';
@@ -19,6 +20,8 @@
   let selectedId = $state<string | null>(null);
   let creating = $state(false);
   let restoring = $state(false);
+  /** A profile was wiped because the NGO deleted it: said once, here. */
+  let wipedNotice = $state(false);
   let error = $state('');
   let lockSeconds = $state(0);
   let busy = $state(false);
@@ -41,6 +44,7 @@
       profiles = list;
       selectedId = list[0]?.id ?? null;
     });
+    if (runtime) void takeWipedNotice(runtime).then((shown) => (wipedNotice = shown));
   });
 
   /** A lock saved with the profile (set before a restart) shows its remaining time at once. */
@@ -87,6 +91,9 @@
   }
 </script>
 
+{#if wipedNotice}
+  <p class="notice" role="status">{t('account.wiped', lang)}</p>
+{/if}
 {#if profiles === null}
   <div data-testid="profiles-loading"></div>
 {:else if restoring}
@@ -130,6 +137,15 @@
 {/if}
 
 <style>
+  .notice {
+    max-width: 640px;
+    margin: 12px auto 0;
+    padding: 12px 16px;
+    border-radius: var(--radius-m);
+    background: var(--color-card);
+    font-weight: 600;
+  }
+
   .picker {
     display: flex;
     flex-direction: column;

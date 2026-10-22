@@ -22,5 +22,7 @@ export interface RecordingStore {
   summary(learnerId: string): Promise<{ count: number; bytes: number }>;
   pendingUpload(learnerId: string): Promise<Recording[]>;
   markUploaded(id: string, at: string): Promise<void>;
+  /** Remove every recording of a learner from this phone. */
+  removeLearner(learnerId: string): Promise<void>;
   delete(id: string): Promise<void>;
 }
