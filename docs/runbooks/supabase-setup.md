@@ -99,11 +99,53 @@ npx supabase functions deploy api --no-verify-jwt
 - [ ] In the Supabase table editor, set `placement_test` to off in `feature_switches`, then sync on
       the phone. The starting test card disappears. Set it back on afterwards.
 
+## 8. Backups (every night, owned by the NGO)
+
+The job `.github/workflows/backup.yml` runs at 02:00 IST. It dumps the database, copies the
+recordings, encrypts both with the NGO's key, and uploads them to the NGO's own Cloudflare R2
+bucket. Then it deletes recordings past their retention time. Only the NGO's private key can read
+a backup. Neither Supabase, Cloudflare nor GitHub can.
+
+**Once, on an NGO computer:**
+
+1. Install `age` (https://age-encryption.org), then run `age-keygen -o shiksha-backup-key.txt`.
+   It prints the **public key** (`age1...`).
+2. Print the key file and keep **two copies offline**, in two places, for example two safes. Then
+   delete the file from the computer. Without this key, no backup can ever be restored.
+3. In Cloudflare, go to **R2** and create a bucket, for example `shiksha-backups`. Add a
+   **lifecycle rule** that deletes objects after **30 days**. A student deleted on request then
+   leaves the backups within 30 days; the consent form should say so.
+4. Under **R2 → Manage API tokens**, create a token with Object Read & Write on that bucket only.
+5. In Supabase, go to **Project Settings → Storage → S3 Connection** and create an access key.
+
+**In GitHub** (**Settings → Secrets and variables → Actions → New repository secret**), add:
+
+| Secret                                             | Value                                                   |
+| -------------------------------------------------- | ------------------------------------------------------- |
+| `BACKUP_DB_URL`                                    | Supabase **Connect → Session pooler** connection string |
+| `SUPABASE_URL`                                     | `https://<PROJECT_REF>.supabase.co`                     |
+| `SUPABASE_S3_REGION`                               | `ap-south-1`                                            |
+| `SUPABASE_S3_ACCESS_KEY`, `SUPABASE_S3_SECRET_KEY` | from step 5                                             |
+| `BACKUP_AGE_RECIPIENT`                             | the public key from step 1 (`age1...`)                  |
+| `BACKUP_R2_BUCKET`                                 | the bucket name from step 3                             |
+| `R2_ENDPOINT`                                      | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`         |
+| `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`         | from step 4                                             |
+| `SUPABASE_SERVICE_ROLE_KEY`                        | Supabase **Project Settings → API** service role key    |
+| `CODE_PEPPER`                                      | the same value you set for the function                 |
+
+Then open **Actions → Backup → Run workflow** once, and check that two files appear in the bucket.
+
+**Restore drill (once a term):** on the NGO computer, download the newest `db-*.dump.age`. Run
+`age -d -i shiksha-backup-key.txt db-<date>.dump.age > db.dump`, then
+`pg_restore --no-owner --no-privileges -d <a test database URL> db.dump`. Recordings come back the
+same way: `age -d ... recordings-<date>.tar.age | tar -xf -`. CI runs the same check on a local
+copy (`tooling/backup/restore-check.sh`) on every pull request.
+
 ## Know before the pilot
 
 - **Free projects pause** after about a week without activity. Open the dashboard to resume one
   before a class.
-- **Free projects have no backups.** Backups and the move to Pro come with Plan 3b. Until then,
-  keep the pilot small.
+- **Free projects have no Supabase backups.** The nightly job in section 8 is the NGO's own
+  backup. Set it up before any student data goes in.
 - If something fails, the function's logs are in the Supabase dashboard under **Edge Functions →
   api → Logs**. They carry learner ids only, never names or emails.

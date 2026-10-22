@@ -37,3 +37,30 @@ describe('Dependabot', () => {
       expect(u.cooldown?.['default-days'] ?? 0).toBeGreaterThanOrEqual(7);
   });
 });
+
+describe('the nightly backup', () => {
+  const workflow = parse(readFileSync(join(workflowsDir, 'backup.yml'), 'utf8')) as {
+    on: { schedule: { cron: string }[]; workflow_dispatch: unknown };
+    permissions: Record<string, string>;
+    jobs: Record<string, { container?: string; needs?: string; steps: { run?: string }[] }>;
+  };
+
+  test('runs at 02:00 IST every night, and by hand', () => {
+    expect(workflow.on.schedule).toEqual([{ cron: '30 20 * * *' }]);
+    expect('workflow_dispatch' in workflow.on).toBe(true);
+    expect(workflow.permissions).toEqual({ contents: 'read' });
+  });
+
+  test('backs up in the image the restore check uses, pinned by digest', () => {
+    const check = readFileSync(join(githubDir, '../tooling/backup/restore-check.sh'), 'utf8');
+    const image = workflow.jobs.backup?.container ?? '';
+    expect(image).toMatch(/^debian:trixie@sha256:[0-9a-f]{64}$/);
+    expect(check).toContain(image);
+  });
+
+  test('deletes old recordings only after a backup succeeded', () => {
+    expect(workflow.jobs.retention?.needs).toBe('backup');
+    const runs = workflow.jobs.retention?.steps.map((s) => s.run ?? '').join('\n') ?? '';
+    expect(runs).toContain('npm run admin -- retention');
+  });
+});

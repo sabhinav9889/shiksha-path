@@ -78,3 +78,5 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: End-to-end tests against the local backend
         run: npm run test:e2e:backend
+      - name: Backup and restore check
+        run: tooling/backup/restore-check.sh
