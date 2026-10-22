@@ -5,12 +5,14 @@
   import { st } from '../i18n.js';
   import { staffState } from '../staff-state.svelte.js';
   import { whenWords } from '../words.js';
+  import Attendance from './Attendance.svelte';
   import AttentionBadge from './AttentionBadge.svelte';
 
   /** The mentor's cohorts; the server puts students needing attention first. */
   let { lang }: { lang: Lang } = $props();
   let data = $state<StaffCohorts | null>(null);
   let failed = $state(false);
+  let marking = $state<string | null>(null);
 
   onMount(async () => {
     const result = await staffState.auth?.api.cohorts();
@@ -29,6 +31,12 @@
       <h2>{cohort.name}</h2>
       {#if cohort.students.length === 0}
         <p>{st('noStudents', lang)}</p>
+      {:else if marking === cohort.id}
+        <Attendance cohortId={cohort.id} students={cohort.students} {lang} />
+      {:else}
+        <button type="button" onclick={() => (marking = cohort.id)}>
+          {st('markAttendance', lang)}
+        </button>
       {/if}
       <ul>
         {#each cohort.students as s (s.id)}
@@ -64,6 +72,16 @@
 
   a {
     color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  button {
+    min-height: 44px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 12px;
+    background: var(--color-primary);
+    color: #fff;
     font-weight: 600;
   }
 

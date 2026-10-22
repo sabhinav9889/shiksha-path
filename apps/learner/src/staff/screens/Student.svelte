@@ -7,6 +7,8 @@
   import { staffState } from '../staff-state.svelte.js';
   import { activityLine, whenWords } from '../words.js';
   import AttentionBadge from './AttentionBadge.svelte';
+  import IssueCode from './IssueCode.svelte';
+  import SetLevel from './SetLevel.svelte';
 
   /** One student: progress, what they did in plain words, weak lessons, recordings. */
   let { id, lang }: { id: string; lang: Lang } = $props();
@@ -41,6 +43,9 @@
     {st('streak', lang, { n: detail.summary?.streak ?? 0 })}
   </p>
 
+  <IssueCode learnerId={detail.student.id} hasCode={detail.hasCode} {lang} />
+  <SetLevel learnerId={detail.student.id} {lang} />
+
   <h3>{st('recentActivity', lang)}</h3>
   <ul>
     {#each activity as a (a.id)}
@@ -58,7 +63,7 @@
   {/if}
 
   <h3>{st('recordings', lang)}</h3>
-  <ul>
+  <ul data-testid="student-recordings">
     {#each detail.recordings as r (r.id)}
       <li>
         {r.lessonId} · {whenWords(r.recordedAt, lang)} ·

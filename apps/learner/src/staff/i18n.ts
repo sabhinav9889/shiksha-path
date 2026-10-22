@@ -60,6 +60,27 @@ const STRINGS = {
   reviewed: { hi: 'सुनी गई', en: 'reviewed' },
   waiting: { hi: 'सुननी है', en: 'to review' },
   open: { hi: 'खोलें', en: 'Open' },
+  issueCode: { hi: 'बैकअप कोड बनाएँ', en: 'Make a backup code' },
+  resetCode: { hi: 'नया बैकअप कोड बनाएँ', en: 'Make a new backup code' },
+  writeItDown: {
+    hi: 'इसे लिख लें — दोबारा नहीं दिखेगा',
+    en: 'Write it down — it will not be shown again',
+  },
+  done: { hi: 'हो गया', en: 'Done' },
+  level: { hi: 'स्तर', en: 'Level' },
+  track: { hi: 'विषय', en: 'Subject' },
+  startFrom: { hi: 'यहाँ से शुरू', en: 'Start from' },
+  setLevel: { hi: 'स्तर बदलें', en: 'Change level' },
+  confirmLevel: {
+    hi: 'पक्का? {track} अब {lesson} से शुरू होगा।',
+    en: 'Sure? {track} will start from {lesson}.',
+  },
+  yesChange: { hi: 'हाँ, बदलें', en: 'Yes, change' },
+  cancel: { hi: 'रद्द करें', en: 'Cancel' },
+  saved: { hi: 'सेव हो गया', en: 'Saved' },
+  noLessons: { hi: 'इस फ़ोन पर अभी कोई पाठ नहीं', en: 'No lessons on this phone yet' },
+  markAttendance: { hi: 'हाज़िरी लगाएँ', en: 'Mark attendance' },
+  saveAttendance: { hi: 'हाज़िरी सेव करें', en: 'Save attendance' },
 } satisfies Record<string, Record<Lang, string>>;
 
 export type StaffKey = keyof typeof STRINGS;

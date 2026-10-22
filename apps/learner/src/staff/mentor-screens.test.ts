@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto';
 import { createEvent, cryptoIds, systemClock } from '@shiksha/learner-core';
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { makeFakeBackend, type FakeBackend } from '../../test/helpers/fake-backend.js';
 import { makeEnv } from '../../test/helpers/installed-runtime.js';
@@ -109,7 +109,7 @@ describe('the mentor screens', () => {
     await vi.waitFor(() => screen.getByText('पाठ ef1-01 पूरा किया (4/5)'));
     expect(screen.getByText('पाठ ef1-01 शुरू किया')).toBeTruthy();
     expect(screen.getByText(/1 पाठ पूरे/)).toBeTruthy();
-    expect(screen.getByText(/ef1-02/)).toBeTruthy();
+    expect(within(screen.getByTestId('student-recordings')).getByText(/ef1-02/)).toBeTruthy();
   });
 
   test('the recordings page plays on tap and saves a review, which removes it from the list', async () => {

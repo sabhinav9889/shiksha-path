@@ -19,7 +19,7 @@ import {
 } from '@shiksha/server';
 import { createStaffApi } from '../../src/staff/staff-api.js';
 import type { StaffAuth } from '../../src/staff/staff-auth.js';
-import { makeMemoryRepos, memoryCodeRepo } from '@shiksha/server/testing';
+import { makeMemoryRepos } from '@shiksha/server/testing';
 import type { ApiClient, ApiResult } from '../../src/api/api-client.js';
 import type { GoogleAuth } from '../../src/api/auth.js';
 import type { AccountDeps } from '../../src/account/account.js';
@@ -51,7 +51,7 @@ export interface FakeBackend {
 
 export function makeFakeBackend(): FakeBackend {
   const repos = makeMemoryRepos();
-  const codes = memoryCodeRepo(repos);
+  const codes = repos.codes; // one code store, shared with the staff API handler
   // Code users sign in with a token equal to their auth user id, like the fake Google tokens.
   const codeUsers = new Map<string, { email: string; password: string }>();
   const codeAuth: CodeAuth = {
@@ -163,7 +163,7 @@ export function makeFakeBackend(): FakeBackend {
         : { authUserId: token, provider: 'google', email: null },
     );
   const handlerDeps = Object.assign(Object.create(repos) as typeof repos, {
-    auth: { ...repos.auth, verify },
+    auth: { ...repos.auth, ...codeAuth, verify },
     allowedOrigins: [],
     logger: memoryLogger(),
   }) as unknown as HandlerDeps;
