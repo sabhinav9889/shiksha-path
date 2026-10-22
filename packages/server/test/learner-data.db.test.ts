@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { deleteUser, localStack, makeUser } from '../../../supabase/tests/stack.js';
+import { PgAttendanceRepo } from '../src/adapters/pg-attendance-repo.js';
 import { PgAuditRepo } from '../src/adapters/pg-audit-repo.js';
 import { PgCodeRepo } from '../src/adapters/pg-code-repo.js';
 import { PgLearnerDataRepo } from '../src/adapters/pg-learner-data-repo.js';
@@ -28,6 +29,7 @@ const bucket = createClient(apiUrl, serviceKey, { auth: { persistSession: false 
 );
 
 const deps = (): LearnerDataDeps => ({
+  attendance: new PgAttendanceRepo(sql),
   audit: new PgAuditRepo(sql),
   data: new PgLearnerDataRepo(sql),
   recordings: new PgRecordingRepo(sql),
@@ -54,6 +56,7 @@ async function makeLearner(name: string): Promise<Learner> {
                     ${sql.json({ preference: 'hi_en' })})`;
   await sql`insert into feature_overrides (learner_id, key, enabled)
             values (${id}, 'placement_test', false)`;
+  await sql`insert into lab_attendance (learner_id, day, present) values (${id}, '2026-10-20', true)`;
   for (const bucket of [`recording:${id}`, `sync:${id}`]) {
     await sql`insert into rate_limits (bucket, window_start) values (${bucket}, now())`;
   }
@@ -118,6 +121,8 @@ describe('export', () => {
     expect(out.data.identities[0]?.email).toMatch(/@test\.local$/);
     expect(out.data.events).toHaveLength(1);
     expect(out.data.overrides).toEqual({ placement_test: false });
+    expect(out.data.attendance).toEqual([{ date: '2026-10-20', present: true }]);
+    expect(out.data.learner.deactivated).toBe(false);
     expect(out.recordings.map((r) => [r.id, [...r.bytes]])).toEqual([[a.recordingId, [7, 8, 9]]]);
     expect(JSON.stringify(out.data)).not.toContain(b.id);
   });

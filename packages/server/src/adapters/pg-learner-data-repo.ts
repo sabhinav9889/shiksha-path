@@ -7,8 +7,15 @@ export class PgLearnerDataRepo implements LearnerDataRepo {
 
   async rows(learnerId: string): Promise<LearnerRows | null> {
     const [learner] = await this.sql<
-      { id: string; name: string; cohort_id: string | null; created_at: Date }[]
-    >`select id, name, cohort_id, created_at from learners where id = ${learnerId}`;
+      {
+        id: string;
+        name: string;
+        cohort_id: string | null;
+        created_at: Date;
+        deactivated: boolean;
+      }[]
+    >`select id, name, cohort_id, created_at, deactivated_at is not null as deactivated
+      from learners where id = ${learnerId}`;
     if (!learner) return null;
     const identities = await this.sql<{ auth_user_id: string }[]>`
       select auth_user_id from learner_identities where learner_id = ${learnerId}
@@ -24,6 +31,7 @@ export class PgLearnerDataRepo implements LearnerDataRepo {
         name: learner.name,
         cohortId: learner.cohort_id,
         createdAt: learner.created_at.toISOString(),
+        deactivated: learner.deactivated,
       },
       authUserIds: identities.map((r) => r.auth_user_id),
       events: events.map((e) => ({ ...e, at: new Date(e.at).toISOString() })),

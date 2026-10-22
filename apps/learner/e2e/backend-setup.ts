@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { expect, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import postgres from 'postgres';
+import { PgAttendanceRepo } from '../../../packages/server/src/adapters/pg-attendance-repo.js';
 import { PgAuditRepo } from '../../../packages/server/src/adapters/pg-audit-repo.js';
 import { PgCodeRepo } from '../../../packages/server/src/adapters/pg-code-repo.js';
 import { PgLearnerRepo } from '../../../packages/server/src/adapters/pg-learner-repo.js';
@@ -209,6 +210,7 @@ export async function deleteStudent(
 ): Promise<void> {
   await deleteLearner(
     {
+      attendance: new PgAttendanceRepo(sql),
       audit: new PgAuditRepo(sql),
       data: new PgLearnerDataRepo(sql),
       recordings: new PgRecordingRepo(sql),

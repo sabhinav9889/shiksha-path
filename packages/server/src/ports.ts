@@ -98,7 +98,13 @@ export interface RecordingStorage {
 
 /** What the server holds about one learner, for export and deletion (privacy rule). */
 export interface LearnerRows {
-  learner: { id: string; name: string; cohortId: string | null; createdAt: string };
+  learner: {
+    id: string;
+    name: string;
+    cohortId: string | null;
+    createdAt: string;
+    deactivated: boolean;
+  };
   authUserIds: string[];
   events: LearnerEvent[];
   overrides: Record<string, boolean>;

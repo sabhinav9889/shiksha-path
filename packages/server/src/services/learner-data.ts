@@ -1,5 +1,6 @@
 import type { LearnerEvent } from '@shiksha/learner-core';
 import type {
+  AttendanceRepo,
   AuditRepo,
   CodeAuth,
   LearnerDataRepo,
@@ -12,7 +13,11 @@ import { ApiFailure } from './failure.js';
 import { enforce } from './limits.js';
 import { recordingPath } from './recordings.js';
 
+/** The first day attendance could exist: the export takes all of it. */
+const EVERY_DAY = '2000-01-01';
+
 export interface LearnerDataDeps {
+  attendance: AttendanceRepo;
   audit: AuditRepo;
   data: LearnerDataRepo;
   recordings: RecordingRepo;
@@ -22,10 +27,17 @@ export interface LearnerDataDeps {
 
 /** Everything the server holds about a student, in plain JSON (privacy rule: export). */
 export interface LearnerExport {
-  learner: { id: string; name: string; cohortId: string | null; createdAt: string };
+  learner: {
+    id: string;
+    name: string;
+    cohortId: string | null;
+    createdAt: string;
+    deactivated: boolean;
+  };
   identities: { email: string | null }[];
   events: LearnerEvent[];
   overrides: Record<string, boolean>;
+  attendance: { date: string; present: boolean }[];
   recordings: Omit<RecordingRow, 'learnerId'>[];
 }
 
@@ -50,7 +62,11 @@ export async function exportLearner(
     delete copy.learnerId; // the export is about this learner already
     return copy as Omit<RecordingRow, 'learnerId'>;
   });
-  return { data: { learner, identities, events, overrides, recordings: listed }, recordings };
+  const attendance = await deps.attendance.forLearner(learnerId, EVERY_DAY);
+  return {
+    data: { learner, identities, events, overrides, attendance, recordings: listed },
+    recordings,
+  };
 }
 
 /**
