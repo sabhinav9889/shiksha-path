@@ -66,6 +66,9 @@ const envelope = <T extends EventType>(type: T): z.ZodType =>
 
 const EVENT_TYPES = Object.keys(DATA) as EventType[];
 
+/** The event types this version understands; `parseEvents` drops any other. */
+export const KNOWN_EVENT_TYPES: readonly EventType[] = [...EVENT_TYPES].sort();
+
 /** One schema per event type, so each type's `data` is checked against its own shape. */
 export const learnerEventSchema = z.union(
   EVENT_TYPES.map(envelope) as unknown as [z.ZodType, z.ZodType],

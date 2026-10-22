@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { makeFakeBackend, type FakeBackend } from '../../test/helpers/fake-backend.js';
 import { makeEnv, type TestEnv } from '../../test/helpers/installed-runtime.js';
 import { setLinked } from '../account/account.js';
+import { pullCursorKey } from '../account/restore-flow.js';
 import { appState, initApp, refreshSession, signIn, signOut } from '../app-state.svelte.js';
 import { setLevel } from '@shiksha/server';
 import { pullNew } from './pull.js';
@@ -121,7 +122,7 @@ describe('pulling', () => {
       .push({ learnerId: learner, events: [lesson('ef1-03')] });
     backend.setOnline(false);
     expect(await pullNew(env.runtime, learner)).toEqual({ added: 0 });
-    expect(await env.runtime.events.getMeta(`pullCursor:${learner}`)).toBeNull();
+    expect(await env.runtime.events.getMeta(pullCursorKey(learner))).toBeNull();
     backend.setOnline(true);
     expect(await pullNew(env.runtime, learner)).toEqual({ added: 1 });
   });
@@ -163,6 +164,20 @@ test("a mentor's level change reaches the phone on its next pull", async () => {
     track: 'english',
     startLesson: 'ef1-03',
   });
+  expect((await pullNew(env.runtime, learner)).added).toBe(1);
+  const session = await env.runtime.openSession(learner);
+  expect(session.progress.startLessonByTrack.english).toBe('ef1-03');
+});
+
+test('a level change an older app version pulled past and dropped is pulled again', async () => {
+  const admin = { staffId: crypto.randomUUID(), role: 'admin' as const, cohortIds: [] };
+  await setLevel(backend.repos, admin, {
+    learnerId: learner,
+    track: 'english',
+    startLesson: 'ef1-03',
+  });
+  // An app before Plan 4a pulled this page, dropped the unknown event, and kept the cursor.
+  await env.runtime.events.setMeta(`pullCursor:${learner}`, '1000');
   expect((await pullNew(env.runtime, learner)).added).toBe(1);
   const session = await env.runtime.openSession(learner);
   expect(session.progress.startLessonByTrack.english).toBe('ef1-03');

@@ -1,9 +1,28 @@
-import { createProfile, parseEvents, type Profile } from '@shiksha/learner-core';
+import { createProfile, KNOWN_EVENT_TYPES, parseEvents, type Profile } from '@shiksha/learner-core';
 import type { ApiClient } from '../api/api-client.js';
 import type { Runtime } from '../runtime/runtime.js';
 import { apiFor, setLinked } from './account.js';
 
-const cursorKey = (learnerId: string): string => `pullCursor:${learnerId}`;
+const FNV_OFFSET = 0x811c9dc5;
+const FNV_PRIME = 0x01000193;
+const HEX = 16;
+
+/** A short fingerprint of the event types this app version understands. */
+function typesFingerprint(types: readonly string[]): string {
+  let hash = FNV_OFFSET;
+  for (const char of types.join(','))
+    hash = Math.imul(hash ^ (char.codePointAt(0) ?? 0), FNV_PRIME);
+  return (hash >>> 0).toString(HEX);
+}
+
+/**
+ * Where the pull got to. An older version drops event types it does not know yet but still
+ * moves its cursor past them, so the key names the known types: when an update learns a new
+ * type (a mentor's `level_set`), the pull starts again from 0. Re-pulled events are ignored by id.
+ */
+export const pullCursorKey = (learnerId: string): string =>
+  `pullCursor:${typesFingerprint(KNOWN_EVENT_TYPES)}:${learnerId}`;
+const cursorKey = pullCursorKey;
 const restoringKey = (profileId: string): string => `restoring:${profileId}`;
 /** Never shown: provisional profiles are hidden on the picker until the restore finishes. */
 const PROVISIONAL_NAME = 'restoring';
