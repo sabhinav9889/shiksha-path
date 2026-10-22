@@ -4,9 +4,9 @@ import type {
   AuditRepo,
   BrandingRepo,
   OrgRepo,
+  StudentRow,
   StaffRepo,
   StaffRole,
-  StudentRow,
   SummaryRepo,
   SwitchRepo,
 } from '../ports.js';
@@ -15,7 +15,7 @@ import { setBranding } from './branding.js';
 import { ApiFailure } from './failure.js';
 import { deleteLearner, type LearnerDataDeps } from './learner-data.js';
 import { inScope, type StaffCaller } from './staff.js';
-import { needsAttention, type Attention } from './summary.js';
+import { needsAttention, type Attention, type Summary } from './summary.js';
 import { istDay } from '@shiksha/learner-core';
 
 export interface AdminDeps extends LearnerDataDeps {
@@ -101,6 +101,24 @@ async function searchCohorts(
   return [filter.cohortId].filter((c) => !mentorCohorts || mentorCohorts.includes(c));
 }
 
+type Listed = StudentsPage['students'][number];
+
+/** One page of rows from the repository, after the learner with id `after`. */
+function readPage(
+  deps: AdminDeps,
+  filter: StudentFilter,
+  cohortIds: string[] | undefined,
+  after: string | undefined,
+): ReturnType<OrgRepo['search']> {
+  return deps.org.search({
+    ...(filter.q ? { q: filter.q } : {}),
+    ...(cohortIds ? { cohortIds } : {}),
+    ...(filter.active === undefined ? {} : { active: filter.active }),
+    ...(after ? { after } : {}),
+    limit: PAGE,
+  });
+}
+
 /** Admin search: name text, cohort, mentor, active and "needs attention", 50 per page. */
 export async function searchStudents(
   deps: AdminDeps,
@@ -109,24 +127,33 @@ export async function searchStudents(
 ): Promise<StudentsPage> {
   requireAdmin(staff);
   const cohortIds = await searchCohorts(deps, filter);
-  const rows = await deps.org.search({
-    ...(filter.q ? { q: filter.q } : {}),
-    ...(cohortIds ? { cohortIds } : {}),
-    ...(filter.active === undefined ? {} : { active: filter.active }),
-    ...(filter.after ? { after: filter.after } : {}),
-    limit: PAGE,
-  });
-  const summaries = await deps.summaries.forLearners(rows.map((r) => r.id));
   const today = istDay(new Date());
-  const students = rows
-    .map((row: StudentRow) => {
-      const summary = summaries.get(row.id);
-      const attention: Attention[] = summary ? needsAttention(summary, row.linkedOn, today) : [];
-      return { ...row, summary: summary ?? null, attention };
-    })
-    .filter((s) => !filter.attention || s.attention.length > 0);
-  const last = rows.at(-1);
-  return { students, next: rows.length === PAGE && last ? `${last.name}\u0000${last.id}` : null };
+  const students: Listed[] = [];
+  let after = filter.after;
+  // "Needs attention" is known only after reading the summaries, so keep reading pages until
+  // 50 are kept or the list ends: a flagged student past the first 50 names is still found.
+  for (;;) {
+    const rows = await readPage(deps, filter, cohortIds, after);
+    const summaries = await deps.summaries.forLearners(rows.map((r) => r.id));
+    const kept = rows
+      .map((row) => withAttention(row, summaries.get(row.id) ?? null, today))
+      .filter((s) => !filter.attention || s.attention.length > 0);
+    const room = PAGE - students.length;
+    students.push(...kept.slice(0, room));
+    const last = students.at(-1);
+    if (kept.length >= room && last) {
+      const more =
+        rows.findIndex((r) => r.id === last.id) < rows.length - 1 || rows.length === PAGE;
+      return { students, next: more ? last.id : null };
+    }
+    after = rows.at(-1)?.id;
+    if (rows.length < PAGE || !after) return { students, next: null };
+  }
+}
+
+function withAttention(row: StudentRow, summary: Summary | null, today: string): Listed {
+  const attention: Attention[] = summary ? needsAttention(summary, row.linkedOn, today) : [];
+  return { ...row, summary, attention };
 }
 
 /** Rename and/or move a student to another cohort (which moves them to its mentors). */

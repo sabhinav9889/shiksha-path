@@ -127,7 +127,8 @@ export class PgOrgRepo implements OrgRepo {
         and (${filter.cohortIds === undefined} or l.cohort_id in
               (select value::uuid from jsonb_array_elements_text(${cohorts})))
         and (${filter.active === undefined} or (l.deactivated_at is null) = ${filter.active ?? true})
-        and (${filter.after === undefined} or l.name || chr(0) || l.id::text > ${filter.after ?? ''})
+        and (${filter.after === undefined} or (l.name, l.id) >
+              (select a.name, a.id from learners a where a.id = ${filter.after ?? null}::uuid))
       order by l.name, l.id
       limit ${filter.limit}`;
     return rows.map(toStudent);

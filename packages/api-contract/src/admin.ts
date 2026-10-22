@@ -5,7 +5,6 @@ import { summary } from './staff-read.js';
 const MAX_NAME = 80;
 const name = z.string().trim().min(1).max(MAX_NAME);
 const MAX_EMAIL = 254;
-const MAX_CURSOR = 200;
 
 export const idResponse = z.object({ id: z.uuid() });
 export const okResponse = z.object({ ok: z.literal(true) });
@@ -52,7 +51,7 @@ export const studentsQuery = z.strictObject({
   mentorId: z.uuid().optional(),
   active: flag.optional(),
   attention: flag.optional(),
-  after: z.string().max(MAX_CURSOR).optional(),
+  after: z.uuid().optional(),
 });
 
 export const studentsPage = z.object({

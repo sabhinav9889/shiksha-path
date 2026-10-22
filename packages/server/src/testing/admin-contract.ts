@@ -51,6 +51,36 @@ export function describeAdminContract(name: string, make: () => Promise<ServiceF
         expect(byCohort.students.map((s) => s.id)).toEqual([learnerB]);
       });
 
+      test('more than 50 students page by an id cursor; "needs attention" looks past page 1', async () => {
+        const boss = await staffMember('admin', []);
+        const lab = await f.org.saveLab({ name: 'Lab' });
+        const cohort = await f.org.saveCohort({ name: 'Big', labId: lab });
+        const ids: string[] = [];
+        for (let n = 0; n < 51; n += 1) ids.push(await w.learnerIn(cohort));
+        const late = ids[50] ?? '';
+        await f.org.renameLearner(late, 'zz-late');
+        await f.summaries.refresh(late, () => ({
+          lessonsDone: 0,
+          lessonsThisWeek: 0,
+          streak: 0,
+          lastActiveDay: '2020-01-01',
+          currentLesson: null,
+          lowScores: false,
+          stuckLesson: null,
+        }));
+        const first = await admin.searchStudents(f, boss, { cohortId: cohort });
+        expect(first.students).toHaveLength(50);
+        expect(first.next).toMatch(/^[0-9a-f-]{36}$/); // an id, never a name
+        const second = await admin.searchStudents(f, boss, {
+          cohortId: cohort,
+          after: first.next ?? '',
+        });
+        expect(second.students.map((s) => s.id)).toEqual([late]);
+        expect(second.next).toBeNull();
+        const flagged = await admin.searchStudents(f, boss, { cohortId: cohort, attention: true });
+        expect(flagged.students.map((s) => s.id)).toEqual([late]);
+      });
+
       test('moving a student moves them out of the old mentor’s reach', async () => {
         const boss = await staffMember('admin', []);
         const mentorA = await staffMember('mentor', [cohortA]);

@@ -212,7 +212,8 @@ export interface OrgRepo {
   labs(): Promise<{ id: string; name: string }[]>;
   setDeactivated(learnerId: string, deactivated: boolean): Promise<void>;
   renameLearner(learnerId: string, name: string): Promise<void>;
-  /** Admin search: name contains `q` (literal text), optional cohort filter, by name, paged. */
+  /** Admin search: name contains `q` (literal text), optional cohort filter, by name, paged.
+   * `after` is the id of the last learner of the previous page. */
   search(filter: {
     q?: string;
     cohortIds?: string[];

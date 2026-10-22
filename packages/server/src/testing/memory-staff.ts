@@ -85,7 +85,12 @@ export function memoryOrg(
           .filter((s) => !cohortIds || (s.cohortId !== null && cohortIds.includes(s.cohortId)))
           .filter((s) => active === undefined || s.deactivated !== active)
           .sort((x, y) => x.name.localeCompare(y.name) || x.id.localeCompare(y.id))
-          .filter((s) => !after || `${s.name}\u0000${s.id}` > after)
+          .filter((s) => {
+            const from = after ? learners.get(after) : undefined;
+            if (!after) return true;
+            if (!from) return false;
+            return s.name.localeCompare(from.name) > 0 || (s.name === from.name && s.id > from.id);
+          })
           .slice(0, limit),
       );
     },
