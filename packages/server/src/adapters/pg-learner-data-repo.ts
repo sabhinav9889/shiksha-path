@@ -36,6 +36,8 @@ export class PgLearnerDataRepo implements LearnerDataRepo {
       const [counted] = await tx<{ n: number }[]>`
         select count(*)::int as n from learner_events where learner_id = ${learnerId}`;
       await tx`delete from learners where id = ${learnerId}`;
+      // Per-learner rate-limit windows are named `<action>:<learnerId>` (Plan 3b review M1).
+      await tx`delete from rate_limits where bucket like '%:' || ${learnerId}`;
       await tx`insert into deleted_learners (id) values (${learnerId}) on conflict (id) do nothing`;
       return { events: counted?.n ?? 0 };
     });

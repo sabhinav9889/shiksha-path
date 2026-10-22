@@ -114,7 +114,7 @@ the keys in the shell for that session only:
 export SUPABASE_DB_URL='<Session pooler connection string>'
 export SUPABASE_URL='https://<PROJECT_REF>.supabase.co'
 export SUPABASE_SERVICE_ROLE_KEY='<service role key>'
-export CODE_PEPPER='<the same pepper as the function>'
+export CODE_PEPPER='<the same pepper as the function>' # only for issue-code and reset-code
 npm run admin -- --help
 ```
 
@@ -147,7 +147,10 @@ a backup. Neither Supabase, Cloudflare nor GitHub can.
 3. In Cloudflare, go to **R2** and create a bucket, for example `shiksha-backups`. Add a
    **lifecycle rule** that deletes objects after **30 days**. A student deleted on request then
    leaves the backups within 30 days; the consent form should say so.
-4. Under **R2 → Manage API tokens**, create a token with Object Read & Write on that bucket only.
+4. Under **R2 → Manage API tokens**, create a token with **Object Write** only, on that bucket
+   only. The nightly job only uploads, so a leaked GitHub secret cannot read old backups. For
+   restores, create a second token with **Object Read** on the bucket, and keep it offline with
+   the age key. Never add the read token to GitHub.
 5. In Supabase, go to **Project Settings → Storage → S3 Connection** and create an access key.
 
 **In GitHub** (**Settings → Secrets and variables → Actions → New repository secret**), add:
@@ -163,7 +166,6 @@ a backup. Neither Supabase, Cloudflare nor GitHub can.
 | `R2_ENDPOINT`                                      | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`         |
 | `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`         | from step 4                                             |
 | `SUPABASE_SERVICE_ROLE_KEY`                        | Supabase **Project Settings → API** service role key    |
-| `CODE_PEPPER`                                      | the same value you set for the function                 |
 
 Then open **Actions → Backup → Run workflow** once, and check that two files appear in the bucket.
 
@@ -174,6 +176,12 @@ Then open **Actions → Backup → Run workflow** once, and check that two files
 restored progress). Recordings come back the
 same way: `age -d ... recordings-<date>.tar.age | tar -xf -`. CI runs the same check on a local
 copy (`tooling/backup/restore-check.sh`) on every pull request.
+
+**Restoring into the live project:** a backup from before a deletion brings that student back.
+Before restoring, save the current list of deleted students:
+`psql <live URL> -At -c 'select id from deleted_learners' > deleted.txt`. After restoring (and
+`after-restore.sql`), run `npm run admin -- delete --learner <id> --yes` for every id in
+`deleted.txt`, then delete the file.
 
 ## Know before the pilot
 

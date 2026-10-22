@@ -158,6 +158,24 @@ describe('the admin tool', () => {
     });
   });
 
+  test('retention and set-branding need no CODE_PEPPER; issue-code still does (M6)', async () => {
+    const plain = makeAdminDeps({ ...env, CODE_PEPPER: undefined });
+    const runPlain = (...argv: string[]): Promise<number> => runAdmin(argv, plain, io);
+    const dir = mkdtempSync(join(tmpdir(), 'shiksha-brand-'));
+    try {
+      expect(await runPlain('retention', '--dry-run')).toBe(0);
+      const path = join(dir, 'brand.json');
+      const name = { hi: 'शिक्षा पथ', en: 'Shiksha Path' };
+      writeFileSync(path, JSON.stringify({ name, primary: '#2f3ab2', accent: '#b45309' }));
+      expect(await runPlain('set-branding', '--file', path, '--dry-run')).toBe(0);
+      expect(await runPlain('issue-code', '--name', 'X')).toBe(1);
+      expect(lines.join('\n')).toMatch(/CODE_PEPPER/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      await plain.close();
+    }
+  });
+
   test('the environment is checked, and secrets are never printed', async () => {
     expect(() => makeAdminDeps({ ...env, CODE_PEPPER: 'short' })).toThrow(/CODE_PEPPER/);
     await run('--help');

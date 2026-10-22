@@ -70,4 +70,27 @@ describe('POST /v1/auth/code', () => {
     expect(logged).not.toContain(code.replace('-', ''));
     expect(logged).not.toContain('203.0.113.9');
   });
+
+  test('the limit follows the address the proxy added, not one the client put first (M8)', async () => {
+    const fixture = makeMemoryCodeFixture();
+    const deps = {
+      ...fixture.deps,
+      allowedOrigins: [],
+      logger: memoryLogger(),
+    } as unknown as HandlerDeps;
+    const attempt = (forwardedFor: string): Promise<Response> =>
+      handle(
+        new Request('https://x/v1/auth/code', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-forwarded-for': forwardedFor },
+          body: JSON.stringify({ code: 'ABCD-EFGH' }),
+        }),
+        deps,
+      );
+    for (let n = 0; n < 10; n += 1) {
+      expect((await attempt(`10.0.0.${n}, 198.51.100.7`)).status).toBe(401);
+    }
+    expect((await attempt('10.0.0.99, 198.51.100.7')).status).toBe(429);
+    expect((await attempt('198.51.100.7, 198.51.100.8')).status).toBe(401);
+  });
 });

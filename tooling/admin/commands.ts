@@ -49,12 +49,17 @@ export interface AdminDeps {
 }
 
 const MIN_PEPPER = 32;
+const PEPPER_NEEDED = 'CODE_PEPPER must be at least 32 characters';
 const adminEnv = z.object({
   SUPABASE_DB_URL: z.string().min(1, 'SUPABASE_DB_URL is missing'),
   SUPABASE_URL: z.string().min(1, 'SUPABASE_URL is missing'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY is missing'),
-  CODE_PEPPER: z.string().min(MIN_PEPPER, 'CODE_PEPPER must be at least 32 characters'),
+  // Only the code commands use it, so retention and branding run without it (Plan 3b M6).
+  CODE_PEPPER: z.string().min(MIN_PEPPER, PEPPER_NEEDED).optional(),
 });
+
+/** A setting this command needs is missing: the command stops with that message. */
+export class SettingMissing extends Error {}
 
 /** The services over the real database and Supabase, from the environment (never printed). */
 export function makeAdminDeps(env: Record<string, string | undefined>): AdminDeps {
@@ -65,14 +70,18 @@ export function makeAdminDeps(env: Record<string, string | undefined>): AdminDep
   const auth = createSupabaseAuth(e.SUPABASE_URL, e.SUPABASE_SERVICE_ROLE_KEY);
   const recordings = new PgRecordingRepo(sql);
   const storage = createSupabaseRecordingStorage(e.SUPABASE_URL, e.SUPABASE_SERVICE_ROLE_KEY);
+  const pepper = e.CODE_PEPPER;
   return {
-    codes: {
-      learners: new PgLearnerRepo(sql),
-      switches: new PgSwitchRepo(sql),
-      codes: new PgCodeRepo(sql),
-      auth,
-      limiter: new PgRateLimiter(sql),
-      pepper: e.CODE_PEPPER,
+    get codes(): CodeDeps {
+      if (!pepper) throw new SettingMissing(PEPPER_NEEDED);
+      return {
+        learners: new PgLearnerRepo(sql),
+        switches: new PgSwitchRepo(sql),
+        codes: new PgCodeRepo(sql),
+        auth,
+        limiter: new PgRateLimiter(sql),
+        pepper,
+      };
     },
     data: {
       audit: new PgAuditRepo(sql),
@@ -105,8 +114,8 @@ export const USAGE = `Usage: npm run admin -- <command> [options]
   add-staff --email <e> --role admin|mentor --name <n>   Invite staff (the first admin starts here)
 
 Every command takes --dry-run (say what would happen) and --help.
-Reads SUPABASE_DB_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and CODE_PEPPER from the
-environment. It never prints them, or a student's name or email.`;
+Reads SUPABASE_DB_URL, SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from the environment, and
+CODE_PEPPER for issue-code and reset-code. It never prints them, or a student's name or email.`;
 
 interface Args {
   command: string | undefined;
@@ -297,6 +306,7 @@ export async function runAdmin(argv: string[], deps: AdminDeps, io: AdminIo): Pr
     return await command(args, deps, io);
   } catch (error) {
     if (error instanceof ApiFailure) return usage(io, `refused (${error.code})`);
+    if (error instanceof SettingMissing) return usage(io, error.message);
     throw error;
   }
 }
