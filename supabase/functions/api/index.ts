@@ -10,6 +10,8 @@ import {
   PgCodeRepo,
   PgLearnerDataRepo,
   PgLearnerRepo,
+  PgOrgRepo,
+  PgStaffRepo,
   PgRateLimiter,
   PgRecordingRepo,
   createSupabaseRecordingStorage,
@@ -30,6 +32,8 @@ const sql = createSql(env('SUPABASE_DB_URL'));
 const deps = {
   auth: createSupabaseAuth(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY')),
   learners: new PgLearnerRepo(sql),
+  staff: new PgStaffRepo(sql),
+  org: new PgOrgRepo(sql),
   data: new PgLearnerDataRepo(sql),
   branding: new PgBrandingRepo(sql),
   events: new PgEventRepo(sql),

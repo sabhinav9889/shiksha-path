@@ -8,8 +8,10 @@ import type {
   EventRepo,
   LearnerDataRepo,
   LearnerRepo,
+  OrgRepo,
   RateLimiter,
   RecordingRepo,
+  StaffRepo,
   SwitchRepo,
 } from '../ports.js';
 import { getBranding, setBranding } from '../services/branding.js';
@@ -20,7 +22,7 @@ import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
 import { pullEvents, pushEvents } from '../services/sync.js';
 
-const google = (authUserId: string): Caller => ({ authUserId, provider: 'google' });
+const google = (authUserId: string): Caller => ({ authUserId, provider: 'google', email: null });
 
 /** Repositories plus the set-up a test needs that the read-only ports do not offer. */
 export interface ServiceFixture {
@@ -31,6 +33,8 @@ export interface ServiceFixture {
   recordings: RecordingRepo;
   branding: BrandingRepo;
   data: LearnerDataRepo;
+  staff: StaffRepo;
+  org: OrgRepo;
   /** Stands in for the bucket: a test "uploads" with `storage.put`. */
   storage: MemoryRecordingStorage;
   newAuthUser(): Promise<string>;
@@ -99,7 +103,7 @@ export function describeServiceContract(
         const profileId = randomUUID();
         const out = linkLearner(
           f,
-          { authUserId: auth, provider: 'email' },
+          { authUserId: auth, provider: 'email', email: null },
           { profileId, name: 'X' },
         );
         expect(await codeOf(out)).toBe('FORBIDDEN');

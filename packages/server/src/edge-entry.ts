@@ -4,6 +4,8 @@ export { PgBrandingRepo } from './adapters/pg-branding-repo.js';
 export { PgCodeRepo } from './adapters/pg-code-repo.js';
 export { PgLearnerDataRepo } from './adapters/pg-learner-data-repo.js';
 export { PgLearnerRepo } from './adapters/pg-learner-repo.js';
+export { PgOrgRepo } from './adapters/pg-org-repo.js';
+export { PgStaffRepo } from './adapters/pg-staff-repo.js';
 export { PgRateLimiter } from './adapters/pg-rate-limiter.js';
 export { PgRecordingRepo } from './adapters/pg-recording-repo.js';
 export { createSupabaseRecordingStorage } from './adapters/supabase-recording-storage.js';

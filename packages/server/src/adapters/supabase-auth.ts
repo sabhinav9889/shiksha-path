@@ -17,7 +17,7 @@ export function createSupabaseAuth(url: string, serviceRoleKey: string): Auth & 
         if (error || !data.user) return null;
         // `app_metadata` is set by Supabase and the admin API only; users cannot change it.
         const provider = String(data.user.app_metadata.provider ?? 'unknown');
-        return { authUserId: data.user.id, provider };
+        return { authUserId: data.user.id, provider, email: data.user.email ?? null };
       } catch {
         return null;
       }

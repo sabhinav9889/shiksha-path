@@ -12,6 +12,8 @@ export const API_ERRORS = [
   'RATE_LIMITED',
   'FEATURE_OFF',
   'BAD_CODE',
+  'NOT_STAFF',
+  'DEACTIVATED',
 ] as const;
 export type ApiError = (typeof API_ERRORS)[number];
 

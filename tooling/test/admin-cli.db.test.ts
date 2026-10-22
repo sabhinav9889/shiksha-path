@@ -29,7 +29,15 @@ describe('the admin tool', () => {
   test('--help lists every command and exits 0', async () => {
     expect(await run('--help')).toBe(0);
     const help = lines.join('\n');
-    const all = ['issue-code', 'reset-code', 'export', 'delete', 'retention', 'set-branding'];
+    const all = [
+      'issue-code',
+      'reset-code',
+      'export',
+      'delete',
+      'retention',
+      'set-branding',
+      'add-staff',
+    ];
     for (const command of all) {
       expect(help).toContain(command);
     }
@@ -117,6 +125,25 @@ describe('the admin tool', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  test('add-staff invites the first admin and prints only the staff id', async () => {
+    const email = `owner.${Date.now()}@ngo.example`;
+    expect(await run('add-staff', '--email', email, '--role', 'admin', '--name', 'Owner')).toBe(0);
+    const out = lines.join('\n');
+    expect(out).toMatch(/^staff [0-9a-f-]{36}$/m);
+    expect(out).not.toContain(email);
+    expect(await run('add-staff', '--email', email, '--role', 'admin', '--name', 'Owner')).toBe(1);
+    expect(await run('add-staff', '--email', 'x@y', '--role', 'boss', '--name', 'X')).toBe(1);
+    const staffId = /staff ([0-9a-f-]{36})/.exec(out)?.[1] ?? '';
+    await admin.staff.save({
+      id: staffId,
+      email,
+      role: 'admin',
+      name: 'Owner',
+      active: false,
+      cohortIds: [],
+    });
   });
 
   test('the environment is checked, and secrets are never printed', async () => {

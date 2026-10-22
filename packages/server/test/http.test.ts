@@ -24,7 +24,11 @@ beforeEach(async () => {
   const auth = {
     ...memoryAuth(),
     verify: (t: string) =>
-      Promise.resolve(tokens[t] ? { authUserId: tokens[t], provider: 'google' } : null),
+      Promise.resolve(
+        tokens[t]
+          ? { authUserId: tokens[t], provider: 'google', email: `${tokens[t]}@ngo.example` }
+          : null,
+      ),
   };
   logger = memoryLogger();
   deps = {
@@ -38,14 +42,14 @@ beforeEach(async () => {
   a = (
     await linkLearner(
       repos,
-      { authUserId: 'auth-a', provider: 'google' },
+      { authUserId: 'auth-a', provider: 'google', email: null },
       { profileId: randomUUID(), name: 'A' },
     )
   ).learnerId;
   b = (
     await linkLearner(
       repos,
-      { authUserId: 'auth-b', provider: 'google' },
+      { authUserId: 'auth-b', provider: 'google', email: null },
       { profileId: randomUUID(), name: 'B' },
     )
   ).learnerId;
@@ -298,6 +302,30 @@ describe('GET /v1/branding', () => {
       primary: '#2f3ab2',
       accent: '#b45309',
       version: 0,
+    });
+  });
+});
+
+describe('staff sign-in', () => {
+  test('a learner is NOT_STAFF on staff routes; an invited Google account claims, then reads me', async () => {
+    expect((await call('GET', '/v1/staff/me', { token: 'token-a' })).status).toBe(403);
+    const lab = await deps.org.saveLab({ name: 'Lab' });
+    const cohort = await deps.org.saveCohort({ name: 'C1', labId: lab });
+    await deps.staff.save({
+      email: 'AUTH-C@ngo.example',
+      role: 'mentor',
+      name: 'Meena',
+      active: true,
+      cohortIds: [cohort],
+    });
+    expect((await call('GET', '/v1/staff/me', { token: 'token-c' })).status).toBe(403);
+    const claimed = await call('POST', '/v1/staff/claim', { token: 'token-c', body: {} });
+    expect(claimed.status).toBe(200);
+    const me = await call('GET', '/v1/staff/me', { token: 'token-c' });
+    expect(await json(me)).toEqual({
+      role: 'mentor',
+      name: 'Meena',
+      cohorts: [{ id: cohort, name: 'C1' }],
     });
   });
 });

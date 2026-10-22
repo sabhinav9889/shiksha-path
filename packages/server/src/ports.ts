@@ -120,6 +120,40 @@ export interface RateLimiter {
 export interface Caller {
   authUserId: string;
   provider: string;
+  /** Only to claim a staff invite; never logged or stored for learners. */
+  email: string | null;
+}
+
+export type StaffRole = 'mentor' | 'admin';
+
+export interface StaffRow {
+  id: string;
+  email: string;
+  role: StaffRole;
+  name: string;
+  active: boolean;
+  authUserId: string | null;
+  cohortIds: string[];
+}
+
+/** Mentors and admins (spec §8). Invited by email; the first Google sign-in claims the row. */
+export interface StaffRepo {
+  byId(staffId: string): Promise<StaffRow | null>;
+  byAuthUser(authUserId: string): Promise<StaffRow | null>;
+  byEmail(email: string): Promise<StaffRow | null>;
+  /** Bind an unclaimed invite to an auth user; false when someone claimed it first. */
+  claim(staffId: string, authUserId: string): Promise<boolean>;
+  save(row: Omit<StaffRow, 'id' | 'authUserId'> & { id?: string }): Promise<string>;
+  list(): Promise<StaffRow[]>;
+}
+
+/** Labs, cohorts and which cohort a learner is in. */
+export interface OrgRepo {
+  saveLab(lab: { id?: string; name: string }): Promise<string>;
+  saveCohort(cohort: { id?: string; name: string; labId: string | null }): Promise<string>;
+  setLearnerCohort(learnerId: string, cohortId: string | null): Promise<void>;
+  cohortOfLearner(learnerId: string): Promise<string | null | undefined>;
+  cohorts(ids: string[] | 'all'): Promise<{ id: string; name: string; labId: string | null }[]>;
 }
 
 /** Verifies an access token; the identity comes from here, never from a request body. */

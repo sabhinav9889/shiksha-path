@@ -6,6 +6,7 @@ import { brandingInput } from '@shiksha/api-contract';
 import { z } from 'zod';
 import { PgBrandingRepo } from '../../packages/server/src/adapters/pg-branding-repo.js';
 import { PgCodeRepo } from '../../packages/server/src/adapters/pg-code-repo.js';
+import { PgStaffRepo } from '../../packages/server/src/adapters/pg-staff-repo.js';
 import { PgLearnerDataRepo } from '../../packages/server/src/adapters/pg-learner-data-repo.js';
 import { PgLearnerRepo } from '../../packages/server/src/adapters/pg-learner-repo.js';
 import { PgRateLimiter } from '../../packages/server/src/adapters/pg-rate-limiter.js';
@@ -16,7 +17,7 @@ import { createSupabaseAuth } from '../../packages/server/src/adapters/supabase-
 import { createSupabaseRecordingStorage } from '../../packages/server/src/adapters/supabase-recording-storage.js';
 import { setBranding } from '../../packages/server/src/services/branding.js';
 import { issueCode, resetCode, type CodeDeps } from '../../packages/server/src/services/codes.js';
-import type { BrandingRepo } from '../../packages/server/src/ports.js';
+import type { BrandingRepo, StaffRepo, StaffRole } from '../../packages/server/src/ports.js';
 import { ApiFailure } from '../../packages/server/src/services/failure.js';
 import {
   deleteLearner,
@@ -35,6 +36,7 @@ export interface AdminDeps {
   data: LearnerDataDeps;
   retention: RetentionDeps;
   branding: BrandingRepo;
+  staff: StaffRepo;
   close(): Promise<void>;
 }
 
@@ -77,6 +79,7 @@ export function makeAdminDeps(env: Record<string, string | undefined>): AdminDep
       limiter: new PgRateLimiter(sql),
     },
     branding: new PgBrandingRepo(sql),
+    staff: new PgStaffRepo(sql),
     close: () => sql.end(),
   };
 }
@@ -89,6 +92,7 @@ export const USAGE = `Usage: npm run admin -- <command> [options]
   delete --learner <id> --yes                 Delete everything about the student, everywhere
   retention                                   Delete recordings past their time (runs nightly)
   set-branding --file <json>                  Name {hi, en}, primary and accent colours (#rrggbb)
+  add-staff --email <e> --role admin|mentor --name <n>   Invite staff (the first admin starts here)
 
 Every command takes --dry-run (say what would happen) and --help.
 Reads SUPABASE_DB_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and CODE_PEPPER from the
@@ -227,6 +231,31 @@ const brand: Command = async (args, deps, io) => {
   return 0;
 };
 
+const ROLES = new Set(['admin', 'mentor']);
+
+const addStaff: Command = async (args, deps, io) => {
+  const email = text(args, 'email');
+  const role = text(args, 'role');
+  const name = text(args, 'name');
+  if (!email || !name || !role || !ROLES.has(role)) {
+    return usage(io, 'add-staff needs --email, --name and --role admin|mentor');
+  }
+  if (await deps.staff.byEmail(email)) return usage(io, 'refused: that email is already invited');
+  if (args.options.has('dry-run')) {
+    io.out(`would invite a ${role}`);
+    return 0;
+  }
+  const id = await deps.staff.save({
+    email,
+    name,
+    role: role as StaffRole,
+    active: true,
+    cohortIds: [],
+  });
+  io.out(`staff ${id}`);
+  return 0;
+};
+
 function usage(io: AdminIo, problem: string): number {
   io.err(problem);
   io.err('run with --help for the commands');
@@ -240,6 +269,7 @@ const COMMANDS: Record<string, Command> = {
   delete: remove,
   retention,
   'set-branding': brand,
+  'add-staff': addStaff,
 };
 
 /** Run one command; returns the exit code. Refusals from the services exit 1 with a reason. */

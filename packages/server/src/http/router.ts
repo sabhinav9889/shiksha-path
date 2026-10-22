@@ -15,6 +15,8 @@ import {
   recordingStart,
   recordingStartResponse,
   session,
+  staffClaim,
+  staffMe,
 } from '@shiksha/api-contract';
 import type { Logger } from '../logger.js';
 import type {
@@ -25,9 +27,11 @@ import type {
   EventRepo,
   LearnerDataRepo,
   LearnerRepo,
+  OrgRepo,
   RateLimiter,
   RecordingRepo,
   RecordingStorage,
+  StaffRepo,
   SwitchRepo,
 } from '../ports.js';
 import { ApiFailure } from '../services/failure.js';
@@ -37,6 +41,7 @@ import { checkDeleted } from '../services/learner-data.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
 import { completeRecording, startRecording } from '../services/recordings.js';
+import { claimStaff, getStaffMe, staffCaller } from '../services/staff.js';
 import { pullEvents, pushEvents } from '../services/sync.js';
 import { clientKey } from './client-key.js';
 import { corsHeaders } from './cors.js';
@@ -49,6 +54,8 @@ export interface HandlerDeps {
   /** CODE_PEPPER: keys the code hashes and the network hash for rate limits. */
   pepper: string;
   learners: LearnerRepo;
+  staff: StaffRepo;
+  org: OrgRepo;
   data: LearnerDataRepo;
   branding: BrandingRepo;
   events: EventRepo;
@@ -106,6 +113,16 @@ const ROUTES: Record<string, Route> = {
   },
   /** Public: the name and colours are needed before anyone signs in, and are not personal. */
   'GET /v1/branding': async (_request, _url, deps) => branding.parse(await getBranding(deps)),
+  /** A Google sign-in whose email matches an invite becomes that staff member. */
+  'POST /v1/staff/claim': async (request, _url, deps) => {
+    const who = await caller(request, deps.auth);
+    parseWith(staffClaim, await jsonBody(request));
+    return staffMe.parse(await getStaffMe(deps, await claimStaff(deps, who)));
+  },
+  'GET /v1/staff/me': async (request, _url, deps) => {
+    const staff = await staffCaller(deps, await caller(request, deps.auth));
+    return staffMe.parse(await getStaffMe(deps, staff));
+  },
   'GET /v1/me': async (request, _url, deps) =>
     meResponse.parse(await getMe(deps, (await caller(request, deps.auth)).authUserId)),
 };

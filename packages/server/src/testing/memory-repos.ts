@@ -9,6 +9,7 @@ import {
   type SwitchRepo,
 } from '../ports.js';
 import { memoryBranding } from './memory-branding.js';
+import { memoryOrg, memoryStaff } from './memory-staff.js';
 import { memoryLearnerData } from './memory-learner-data.js';
 import { memoryRateLimiter } from './memory-rate-limiter.js';
 import { memoryRecordingRepo } from './memory-recording-repo.js';
@@ -94,6 +95,8 @@ export function makeMemoryRepos(): MemoryRepos {
     limiter: memoryRateLimiter(),
     recordings: memoryRecordingRepo(),
     branding: memoryBranding(),
+    staff: memoryStaff(),
+    org: memoryOrg(learners),
     storage: memoryRecordingStorage(),
     newAuthUser: () => Promise.resolve(randomUUID()),
     setAllStudents: (key, enabled) => {

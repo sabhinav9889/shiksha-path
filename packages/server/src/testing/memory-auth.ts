@@ -13,7 +13,11 @@ export function memoryAuth(): Auth & CodeAuth {
   return {
     verify: (token) => {
       const id = sessions.get(token);
-      return Promise.resolve(id && users.has(id) ? { authUserId: id, provider: 'email' } : null);
+      return Promise.resolve(
+        id && users.has(id)
+          ? { authUserId: id, provider: 'email', email: users.get(id)?.email ?? null }
+          : null,
+      );
     },
     createCodeUser(password) {
       const authUserId = randomUUID();

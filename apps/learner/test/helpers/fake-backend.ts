@@ -92,7 +92,9 @@ export function makeFakeBackend(): FakeBackend {
     };
     return {
       link: (body) =>
-        as((auth) => linkLearner(repos, { authUserId: auth, provider: 'google' }, body)),
+        as((auth) =>
+          linkLearner(repos, { authUserId: auth, provider: 'google', email: null }, body),
+        ),
       push: (body) => as((auth) => pushEvents(repos, auth, body)),
       pull: ({ after }) => as((auth) => pullEvents(repos, auth, { after, limit: 500 })),
       me: () => as((auth) => getMe(repos, auth)),

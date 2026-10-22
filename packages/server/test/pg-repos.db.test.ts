@@ -6,6 +6,8 @@ import { cryptoIds, createEvent, systemClock } from '@shiksha/learner-core';
 import { afterAll, describe, expect, test } from 'vitest';
 import { PgBrandingRepo } from '../src/adapters/pg-branding-repo.js';
 import { PgEventRepo } from '../src/adapters/pg-event-repo.js';
+import { PgOrgRepo } from '../src/adapters/pg-org-repo.js';
+import { PgStaffRepo } from '../src/adapters/pg-staff-repo.js';
 import { PgLearnerDataRepo } from '../src/adapters/pg-learner-data-repo.js';
 import { PgLearnerRepo } from '../src/adapters/pg-learner-repo.js';
 import { PgRateLimiter } from '../src/adapters/pg-rate-limiter.js';
@@ -14,6 +16,7 @@ import { memoryRecordingStorage } from '../src/testing/memory-recording-storage.
 import { PgSwitchRepo } from '../src/adapters/pg-switch-repo.js';
 import { createSql } from '../src/adapters/pg.js';
 import { describeServiceContract, type ServiceFixture } from '../src/testing/service-contract.js';
+import { describeStaffContract } from '../src/testing/staff-contract.js';
 
 const DB_URL =
   process.env.SUPABASE_DB_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
@@ -34,6 +37,8 @@ async function makePgFixture(): Promise<ServiceFixture> {
     recordings: new PgRecordingRepo(sql),
     branding: new PgBrandingRepo(sql),
     data: new PgLearnerDataRepo(sql),
+    staff: new PgStaffRepo(sql),
+    org: new PgOrgRepo(sql),
     storage: memoryRecordingStorage(), // the real bucket is tested through the API
     async newAuthUser() {
       const id = randomUUID();
@@ -59,7 +64,12 @@ async function makePgFixture(): Promise<ServiceFixture> {
         select learner_id from learner_identities
         where auth_user_id in (select value::uuid from jsonb_array_elements_text(${sql.json(authUsers)}))`;
       for (const { learner_id } of linked) await sql`delete from learners where id = ${learner_id}`;
+      for (const id of authUsers) await sql`delete from staff where auth_user_id = ${id}`;
       for (const id of authUsers) await sql`delete from auth.users where id = ${id}`;
+      await sql`delete from staff where auth_user_id is null and email like '%@ngo.example'`;
+      await sql`delete from cohorts where name in ('A', 'B') and lab_id in
+                  (select id from labs where name = 'Lab')`;
+      await sql`delete from labs where name = 'Lab'`;
       await sql`insert into feature_switches (key) values
         ('ai_doubts'), ('speaking_practice'), ('placement_test'),
         ('english_only_option'), ('mentor_booking'), ('community_feed')
@@ -69,6 +79,7 @@ async function makePgFixture(): Promise<ServiceFixture> {
 }
 
 describeServiceContract('Postgres repositories', makePgFixture);
+describeStaffContract('Postgres repositories', makePgFixture);
 
 describe('Postgres specifics', () => {
   test('100 events go in with one call', async () => {

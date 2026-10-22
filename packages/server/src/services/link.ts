@@ -5,6 +5,7 @@ import {
   type LearnerDataRepo,
   type LearnerRepo,
   type RateLimiter,
+  type StaffRepo,
 } from '../ports.js';
 import { enforce } from './limits.js';
 import { ApiFailure } from './failure.js';
@@ -17,13 +18,15 @@ import { ApiFailure } from './failure.js';
 const MAY_CREATE = 'google';
 
 async function linkOnce(
-  deps: { learners: LearnerRepo; data: LearnerDataRepo },
+  deps: { learners: LearnerRepo; data: LearnerDataRepo; staff: StaffRepo },
   { authUserId, provider }: Caller,
   request: LinkRequest,
 ): Promise<LinkResponse> {
   const existing = await deps.learners.findByAuthUser(authUserId);
   if (existing) return { learnerId: existing.id, name: existing.name, created: false };
   if (provider !== MAY_CREATE) throw new ApiFailure('FORBIDDEN');
+  // Staff and learners never share a sign-in (a mentor's account cannot become a student).
+  if (await deps.staff.byAuthUser(authUserId)) throw new ApiFailure('FORBIDDEN');
   // A student deleted on request stays deleted: their old id is never made a learner again.
   if ((await deps.data.deleted([request.profileId])).length > 0) throw new ApiFailure('FORBIDDEN');
   if (await deps.learners.findById(request.profileId)) throw new ApiFailure('PROFILE_TAKEN');
@@ -33,7 +36,7 @@ async function linkOnce(
 
 /** Link the caller to a learner. A request racing another for the same rows re-reads once. */
 export async function linkLearner(
-  deps: { learners: LearnerRepo; limiter: RateLimiter; data: LearnerDataRepo },
+  deps: { learners: LearnerRepo; limiter: RateLimiter; data: LearnerDataRepo; staff: StaffRepo },
   who: Caller,
   request: LinkRequest,
 ): Promise<LinkResponse> {
