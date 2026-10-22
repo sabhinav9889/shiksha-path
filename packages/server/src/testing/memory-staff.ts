@@ -32,7 +32,10 @@ export function memoryStaff(): StaffRepo {
   };
 }
 
-export function memoryOrg(learners: Map<string, LearnerRow>): OrgRepo {
+export function memoryOrg(
+  learners: Map<string, LearnerRow>,
+  lastReceived: ReadonlyMap<string, string> = new Map(),
+): OrgRepo {
   const labs = new Map<string, string>();
   const cohorts = new Map<string, { id: string; name: string; labId: string | null }>();
   const cohortOf = new Map<string, string | null>();
@@ -44,7 +47,7 @@ export function memoryOrg(learners: Map<string, LearnerRow>): OrgRepo {
     cohortId: cohortOf.get(l.id) ?? null,
     deactivated: deactivated.has(l.id),
     linkedOn: today,
-    lastSyncedAt: null,
+    lastSyncedAt: lastReceived.get(l.id) ?? null,
   });
   return {
     saveLab({ id = randomUUID(), name }) {

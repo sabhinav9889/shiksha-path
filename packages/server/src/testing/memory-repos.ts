@@ -62,6 +62,7 @@ export function makeMemoryRepos(): MemoryRepos {
     },
   };
 
+  const lastReceived = new Map<string, string>(); // learner -> when the server last got an event
   const eventRepo: EventRepo = {
     insertMany: (learnerId, batch) => {
       const inserted: string[] = [];
@@ -73,6 +74,7 @@ export function makeMemoryRepos(): MemoryRepos {
         seq += 1;
         events.push({ ...structuredClone(event), seq });
         inserted.push(event.id);
+        lastReceived.set(learnerId, new Date().toISOString());
       }
       return Promise.resolve({ inserted, ownedByOthers });
     },
@@ -114,7 +116,7 @@ export function makeMemoryRepos(): MemoryRepos {
     staff: memoryStaff(),
     audit: memoryAudit(),
     summaries: memorySummaries(eventRepo),
-    org: memoryOrg(learners),
+    org: memoryOrg(learners, lastReceived),
     storage: memoryRecordingStorage(),
     newAuthUser: () => Promise.resolve(randomUUID()),
     setAllStudents: (key, enabled) => {
