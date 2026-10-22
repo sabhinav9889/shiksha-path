@@ -5,6 +5,8 @@ import type { Summary } from './services/summary.js';
 export interface LearnerRow {
   id: string;
   name: string;
+  /** Deactivated by an admin: their sync is refused, their data kept (spec §8.1). */
+  deactivated?: boolean;
 }
 
 /** Another request created the same learner or identity at the same moment. */
@@ -41,6 +43,9 @@ export interface EventRepo {
 export interface SwitchRepo {
   allStudents(): Promise<Record<string, boolean>>;
   overrides(learnerId: string): Promise<Record<string, boolean>>;
+  setForAll(key: string, enabled: boolean): Promise<void>;
+  /** `null` removes the override, so the all-students value applies again. */
+  setOverride(learnerId: string, key: string, enabled: boolean | null): Promise<void>;
 }
 
 export interface RecordingRow {
@@ -204,6 +209,17 @@ export interface OrgRepo {
   setLearnerCohort(learnerId: string, cohortId: string | null): Promise<void>;
   cohortOfLearner(learnerId: string): Promise<string | null | undefined>;
   cohorts(ids: string[] | 'all'): Promise<{ id: string; name: string; labId: string | null }[]>;
+  labs(): Promise<{ id: string; name: string }[]>;
+  setDeactivated(learnerId: string, deactivated: boolean): Promise<void>;
+  renameLearner(learnerId: string, name: string): Promise<void>;
+  /** Admin search: name contains `q` (literal text), optional cohort filter, by name, paged. */
+  search(filter: {
+    q?: string;
+    cohortIds?: string[];
+    active?: boolean;
+    after?: string;
+    limit: number;
+  }): Promise<StudentRow[]>;
   /** Learners in these cohorts (everyone for 'all'), for staff screens. */
   students(cohortIds: string[] | 'all'): Promise<StudentRow[]>;
   student(learnerId: string): Promise<StudentRow | null>;

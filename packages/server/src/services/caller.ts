@@ -8,5 +8,6 @@ export async function callerLearner(
 ): Promise<LearnerRow> {
   const learner = await learners.findByAuthUser(authUserId);
   if (!learner) throw new ApiFailure('NOT_LINKED');
+  if (learner.deactivated) throw new ApiFailure('DEACTIVATED');
   return learner;
 }

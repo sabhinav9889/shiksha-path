@@ -20,4 +20,19 @@ export class PgSwitchRepo implements SwitchRepo {
         select key, enabled from feature_overrides where learner_id = ${learnerId}`,
     );
   }
+
+  async setForAll(key: string, enabled: boolean): Promise<void> {
+    await this.sql`update feature_switches set enabled_for_all = ${enabled} where key = ${key}`;
+  }
+
+  async setOverride(learnerId: string, key: string, enabled: boolean | null): Promise<void> {
+    if (enabled === null) {
+      await this
+        .sql`delete from feature_overrides where learner_id = ${learnerId} and key = ${key}`;
+      return;
+    }
+    await this.sql`
+      insert into feature_overrides (learner_id, key, enabled) values (${learnerId}, ${key}, ${enabled})
+      on conflict (learner_id, key) do update set enabled = excluded.enabled`;
+  }
 }

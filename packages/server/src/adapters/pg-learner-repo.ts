@@ -8,7 +8,7 @@ export class PgLearnerRepo implements LearnerRepo {
 
   async findByAuthUser(authUserId: string): Promise<LearnerRow | null> {
     const rows = await this.sql<LearnerRow[]>`
-      select l.id, l.name from learners l
+      select l.id, l.name, l.deactivated_at is not null as deactivated from learners l
       join learner_identities i on i.learner_id = l.id
       where i.auth_user_id = ${authUserId}`;
     return rows[0] ?? null;

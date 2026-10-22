@@ -109,6 +109,9 @@
       </div>
     </section>
 
+    {#if data.deactivated}
+      <p class="card closed" role="status">{t('me.deactivated', lang)}</p>
+    {/if}
     <SyncCard {lang} sync={data.sync} {busy} {message} onsync={syncNow} />
     <StorageCard {lang} {data} />
     {#if data.linked}<RecordingsCard {lang} />{/if}
@@ -118,6 +121,12 @@
 </section>
 
 <style>
+  .closed {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-wrong);
+  }
+
   .me {
     display: flex;
     flex-direction: column;

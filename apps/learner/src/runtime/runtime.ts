@@ -46,6 +46,8 @@ export interface SyncResult {
   recordings: { uploaded: number; left: number };
   /** The NGO deleted this student on request: the phone's copy is gone now. */
   wiped: boolean;
+  /** The NGO deactivated this profile: work waits on the phone until it is reactivated. */
+  deactivated: boolean;
 }
 
 export interface Runtime {
@@ -109,6 +111,24 @@ async function deletedOnServer(
   return answer.ok && answer.value.deleted.includes(learnerId);
 }
 
+/**
+ * Remember whether the NGO deactivated this profile (spec §8.1), so the me screen can say why
+ * nothing uploads. Learning goes on offline; a later sync after reactivation clears it.
+ */
+async function noteDeactivated(
+  runtime: Runtime,
+  learnerId: string,
+  me: ApiResult<unknown> | null,
+): Promise<boolean> {
+  if (!me) return false;
+  const deactivated = !me.ok && me.error === 'DEACTIVATED';
+  if (deactivated || me.ok)
+    await runtime.events.setMeta(deactivatedKey(learnerId), deactivated ? '1' : '');
+  return deactivated;
+}
+
+export const deactivatedKey = (learnerId: string): string => `deactivated:${learnerId}`;
+
 async function syncLearner(runtime: Runtime, learnerId: string): Promise<SyncResult> {
   const flush = await runtime.flush(learnerId);
   const { added } = await pullNew(runtime, learnerId);
@@ -117,12 +137,14 @@ async function syncLearner(runtime: Runtime, learnerId: string): Promise<SyncRes
   const me = await refreshSwitches(runtime, api, learnerId);
   if (api && (await deletedOnServer(api, me, learnerId))) {
     await wipeDeleted(runtime, learnerId);
-    return { flush, added, recordings: { uploaded: 0, left: 0 }, wiped: true };
+    return { flush, added, recordings: { uploaded: 0, left: 0 }, wiped: true, deactivated: false };
   }
-  const recordings = onUnmeteredNetwork()
-    ? await uploadRecordings(runtime, learnerId)
-    : { uploaded: 0, left: (await runtime.recordings.pendingUpload(learnerId)).length };
-  return { flush, added, recordings, wiped: false };
+  const deactivated = await noteDeactivated(runtime, learnerId, me);
+  const recordings =
+    onUnmeteredNetwork() && !deactivated
+      ? await uploadRecordings(runtime, learnerId)
+      : { uploaded: 0, left: (await runtime.recordings.pendingUpload(learnerId)).length };
+  return { flush, added, recordings, wiped: false, deactivated };
 }
 
 /** Wires the browser adapters to the core's ports. One per app (tests make their own). */

@@ -7,7 +7,7 @@ import {
   type StorageEstimator,
 } from '@shiksha/learner-core';
 import { isLinked } from '../../account/account.js';
-import type { Runtime } from '../../runtime/runtime.js';
+import { deactivatedKey, type Runtime } from '../../runtime/runtime.js';
 import { stateOf, type ModuleState } from '../lessons/lessons-data.js';
 
 export interface MeData {
@@ -18,6 +18,8 @@ export interface MeData {
   recordings: { count: number; bytes: number };
   /** Connected to Google; `null` on a phone-only build. */
   linked: boolean | null;
+  /** The NGO deactivated this profile (seen on the last sync). */
+  deactivated: boolean;
 }
 
 async function languageOf(
@@ -60,5 +62,6 @@ export async function loadMe(
     modules,
     recordings: await runtime.recordings.summary(learnerId),
     linked: runtime.account ? await isLinked(runtime, learnerId) : null,
+    deactivated: (await runtime.events.getMeta(deactivatedKey(learnerId))) === '1',
   };
 }

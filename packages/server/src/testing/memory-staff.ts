@@ -32,9 +32,7 @@ export function memoryStaff(): StaffRepo {
   };
 }
 
-export function memoryOrg(learners: Map<string, LearnerRow>): OrgRepo & {
-  setDeactivated(learnerId: string, value: boolean): void;
-} {
+export function memoryOrg(learners: Map<string, LearnerRow>): OrgRepo {
   const labs = new Map<string, string>();
   const cohorts = new Map<string, { id: string; name: string; labId: string | null }>();
   const cohortOf = new Map<string, string | null>();
@@ -63,9 +61,30 @@ export function memoryOrg(learners: Map<string, LearnerRow>): OrgRepo & {
     },
     cohortOfLearner: (learnerId) =>
       Promise.resolve(learners.has(learnerId) ? (cohortOf.get(learnerId) ?? null) : undefined),
+    labs: () => Promise.resolve([...labs].map(([id, name]) => ({ id, name }))),
     setDeactivated(learnerId, value) {
       if (value) deactivated.add(learnerId);
       else deactivated.delete(learnerId);
+      const learner = learners.get(learnerId);
+      if (learner) learners.set(learnerId, { ...learner, deactivated: value });
+      return Promise.resolve();
+    },
+    renameLearner(learnerId, name) {
+      const learner = learners.get(learnerId);
+      if (learner) learners.set(learnerId, { ...learner, name });
+      return Promise.resolve();
+    },
+    search({ q, cohortIds, active, after, limit }) {
+      const all = [...learners.values()].map(row);
+      return Promise.resolve(
+        all
+          .filter((s) => !q || s.name.toLowerCase().includes(q.toLowerCase()))
+          .filter((s) => !cohortIds || (s.cohortId !== null && cohortIds.includes(s.cohortId)))
+          .filter((s) => active === undefined || s.deactivated !== active)
+          .sort((x, y) => x.name.localeCompare(y.name) || x.id.localeCompare(y.id))
+          .filter((s) => !after || `${s.name}\u0000${s.id}` > after)
+          .slice(0, limit),
+      );
     },
     students: (ids) =>
       Promise.resolve(

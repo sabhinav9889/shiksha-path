@@ -11,7 +11,10 @@ import {
   systemClock,
   type LearnerEvent,
 } from '@shiksha/learner-core';
+import * as admin from '../services/admin.js';
 import { listAudit, withAudit } from '../services/audit.js';
+import { getMe } from '../services/me.js';
+import { pullEvents } from '../services/sync.js';
 import {
   issueStudentCode,
   markAttendance,
@@ -44,6 +47,10 @@ export function describeStaffContract(name: string, make: () => Promise<ServiceF
     let learnerA: string;
     let learnerB: string;
 
+    const authOf = new Map<string, string>();
+    const learnerAuth = (learnerId: string): Promise<string> =>
+      Promise.resolve(authOf.get(learnerId) ?? '');
+
     async function learnerIn(cohortId: string): Promise<string> {
       const auth = await f.newAuthUser();
       const { learnerId } = await linkLearner(f, google(auth, null), {
@@ -51,6 +58,7 @@ export function describeStaffContract(name: string, make: () => Promise<ServiceF
         name: 'S',
       });
       await f.org.setLearnerCohort(learnerId, cohortId);
+      authOf.set(learnerId, auth);
       return learnerId;
     }
 
@@ -429,6 +437,108 @@ export function describeStaffContract(name: string, make: () => Promise<ServiceF
         expect((await studentDetail(f, mentor, learnerA)).attendance).toEqual([]);
         const notMine = markAttendance(f, mentor, { cohortId: cohortB, day: today(), present: [] });
         expect(await codeOf(notMine)).toBe('FORBIDDEN');
+      });
+    });
+
+    describe('the admin API', () => {
+      test('every admin action refuses a mentor', async () => {
+        const mentor = await staffMember('mentor', [cohortA]);
+        const calls = [
+          admin.saveLab(f, mentor, { name: 'L' }),
+          admin.saveCohort(f, mentor, { name: 'C', labId: null }),
+          admin.searchStudents(f, mentor, {}),
+          admin.editStudent(f, mentor, { learnerId: learnerA, name: 'X' }),
+          admin.setActive(f, mentor, { learnerId: learnerA, active: false }),
+          admin.setSwitch(f, mentor, { key: 'placement_test', enabledForAll: false }),
+          admin.setOverride(f, mentor, {
+            learnerId: learnerA,
+            key: 'placement_test',
+            enabled: false,
+          }),
+        ];
+        for (const call of calls) expect(await codeOf(call)).toBe('FORBIDDEN');
+      });
+
+      test('search finds by literal name text, filters by cohort and pages by 50', async () => {
+        const boss = await staffMember('admin', []);
+        await admin.editStudent(f, boss, { learnerId: learnerA, name: 'Ri%ya_1' });
+        await admin.editStudent(f, boss, { learnerId: learnerB, name: 'Riya2' });
+        const literal = await admin.searchStudents(f, boss, { q: '%ya_' });
+        expect(literal.students.map((s) => s.id)).toEqual([learnerA]);
+        const byCohort = await admin.searchStudents(f, boss, { q: 'Riya', cohortId: cohortB });
+        expect(byCohort.students.map((s) => s.id)).toEqual([learnerB]);
+      });
+
+      test('moving a student moves them out of the old mentor’s reach', async () => {
+        const boss = await staffMember('admin', []);
+        const mentorA = await staffMember('mentor', [cohortA]);
+        await admin.editStudent(f, boss, { learnerId: learnerA, cohortId: cohortB });
+        expect(await codeOf(inScope(f, mentorA, learnerA))).toBe('FORBIDDEN');
+        const actions = (await f.audit.page(null, 100))
+          .filter((e) => e.staffId === boss.staffId)
+          .map((e) => e.action);
+        expect(actions).toContain('student_moved');
+      });
+
+      test('a deactivated learner cannot sync until reactivated', async () => {
+        const boss = await staffMember('admin', []);
+        const auth = await learnerAuth(learnerA);
+        await admin.setActive(f, boss, { learnerId: learnerA, active: false });
+        expect(await codeOf(pullEvents(f, auth, { after: 0, limit: 10 }))).toBe('DEACTIVATED');
+        expect(await codeOf(getMe(f, auth))).toBe('DEACTIVATED');
+        await admin.setActive(f, boss, { learnerId: learnerA, active: true });
+        expect((await pullEvents(f, auth, { after: 0, limit: 10 })).events).toEqual([]);
+      });
+
+      test('an override of null falls back to the all-students value', async () => {
+        const boss = await staffMember('admin', []);
+        const auth = await learnerAuth(learnerA);
+        await admin.setSwitch(f, boss, { key: 'placement_test', enabledForAll: false });
+        await admin.setOverride(f, boss, {
+          learnerId: learnerA,
+          key: 'placement_test',
+          enabled: true,
+        });
+        expect((await getMe(f, auth)).switches.placement_test).toBe(true);
+        await admin.setOverride(f, boss, {
+          learnerId: learnerA,
+          key: 'placement_test',
+          enabled: null,
+        });
+        expect((await getMe(f, auth)).switches.placement_test).toBe(false);
+        await admin.setSwitch(f, boss, { key: 'placement_test', enabledForAll: true });
+      });
+
+      test('deleting through the admin API leaves only an anonymous audit entry', async () => {
+        const boss = await staffMember('admin', []);
+        await admin.setActive(f, boss, { learnerId: learnerA, active: false });
+        await admin.deleteStudent(f, boss, { learnerId: learnerA });
+        const mine = (await f.audit.page(null, 100)).filter((e) => e.staffId === boss.staffId);
+        expect(mine.map((e) => e.action)).toEqual(['student_deleted', 'student_deactivated']);
+        expect(JSON.stringify(mine)).not.toContain(learnerA);
+        expect(mine[0]?.details).toEqual({ learner: 'DELETED' });
+        expect(await f.org.cohortOfLearner(learnerA)).toBeUndefined();
+      });
+
+      test('inviting an email already used is refused; staff can be given cohorts', async () => {
+        const boss = await staffMember('admin', []);
+        const email = `${randomUUID()}@ngo.example`;
+        const id = await admin.saveStaff(f, boss, {
+          email,
+          role: 'mentor',
+          name: 'New',
+          active: true,
+          cohortIds: [cohortA],
+        });
+        expect((await f.staff.byId(id))?.cohortIds).toEqual([cohortA]);
+        const again = admin.saveStaff(f, boss, {
+          email: email.toUpperCase(),
+          role: 'mentor',
+          name: 'Dup',
+          active: true,
+          cohortIds: [],
+        });
+        expect(await codeOf(again)).toBe('INVALID_REQUEST');
       });
     });
   });

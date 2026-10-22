@@ -59,6 +59,13 @@ async function makePgFixture(): Promise<ServiceFixture> {
         codeUsers.push(user.authUserId);
         return user;
       },
+      // The fixture makes learners' sign-ins with plain SQL, which the Auth admin API cannot
+      // delete; remove those rows directly (real Auth users are tested in learner-data.db).
+      async deleteUser(authUserId: string) {
+        await realAuth.deleteUser(authUserId).catch(async () => {
+          await sql`delete from auth.users where id = ${authUserId}`;
+        });
+      },
     },
     storage: memoryRecordingStorage(), // the real bucket is tested through the API
     async newAuthUser() {

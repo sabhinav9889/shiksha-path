@@ -89,4 +89,47 @@ export class PgOrgRepo implements OrgRepo {
     const [row] = await this.select('one', learnerId);
     return row ? toStudent(row) : null;
   }
+
+  async labs(): Promise<{ id: string; name: string }[]> {
+    return [
+      ...(await this.sql<{ id: string; name: string }[]>`select id, name from labs order by name`),
+    ];
+  }
+
+  async setDeactivated(learnerId: string, deactivated: boolean): Promise<void> {
+    await this.sql`
+      update learners set deactivated_at = case when ${deactivated} then now() else null end
+      where id = ${learnerId}`;
+  }
+
+  async renameLearner(learnerId: string, name: string): Promise<void> {
+    await this.sql`update learners set name = ${name} where id = ${learnerId}`;
+  }
+
+  /** `q` is matched as literal text: % and _ in it are escaped, never wildcards. */
+  async search(filter: {
+    q?: string;
+    cohortIds?: string[];
+    active?: boolean;
+    after?: string;
+    limit: number;
+  }): Promise<StudentRow[]> {
+    const escaped = (filter.q ?? '').replace(/[\\%_]/g, (c) => '\\' + c);
+    const pattern = '%'.concat(escaped, '%'); // a bound parameter, never part of the SQL text
+    const cohorts = this.sql.json(filter.cohortIds ?? []);
+    const rows = await this.sql<Row[]>`
+      select l.id, l.name, l.cohort_id, l.deactivated_at is not null as deactivated,
+             to_char(l.created_at at time zone 'Asia/Kolkata', 'YYYY-MM-DD') as linked_on,
+             (select max(e.received_at) from learner_events e where e.learner_id = l.id)
+               as last_synced
+      from learners l
+      where l.name ilike ${pattern}
+        and (${filter.cohortIds === undefined} or l.cohort_id in
+              (select value::uuid from jsonb_array_elements_text(${cohorts})))
+        and (${filter.active === undefined} or (l.deactivated_at is null) = ${filter.active ?? true})
+        and (${filter.after === undefined} or l.name || chr(0) || l.id::text > ${filter.after ?? ''})
+      order by l.name, l.id
+      limit ${filter.limit}`;
+    return rows.map(toStudent);
+  }
 }

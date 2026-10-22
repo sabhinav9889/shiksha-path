@@ -88,6 +88,17 @@ export function makeMemoryRepos(): MemoryRepos {
   const switchRepo: SwitchRepo = {
     allStudents: () => Promise.resolve(Object.fromEntries(allStudents)),
     overrides: (learnerId) => Promise.resolve(Object.fromEntries(overrides.get(learnerId) ?? [])),
+    setForAll(key, enabled) {
+      allStudents.set(key, enabled);
+      return Promise.resolve();
+    },
+    setOverride(learnerId, key, enabled) {
+      const mine = overrides.get(learnerId) ?? new Map<string, boolean>();
+      if (enabled === null) mine.delete(key);
+      else mine.set(key, enabled);
+      overrides.set(learnerId, mine);
+      return Promise.resolve();
+    },
   };
 
   const repos: MemoryRepos = {
