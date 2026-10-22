@@ -217,7 +217,8 @@ export function describeStaffContract(name: string, make: () => Promise<ServiceF
         expect(mine.cohorts[0]?.students.map((s) => s.id)).toEqual([learnerA]);
         const admin = await staffMember('admin', []);
         const all = await listCohorts(f, admin);
-        expect(all.cohorts.map((c) => c.id).sort()).toEqual([cohortA, cohortB].sort());
+        // A real database may hold other tests' cohorts: an admin sees at least both of these.
+        expect(all.cohorts.map((c) => c.id)).toEqual(expect.arrayContaining([cohortA, cohortB]));
       });
 
       test('students who need attention come first', async () => {

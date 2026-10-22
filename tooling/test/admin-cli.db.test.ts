@@ -1,6 +1,7 @@
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import postgres from 'postgres';
 import { afterAll, beforeEach, describe, expect, test } from 'vitest';
 import { localStack } from '../../supabase/tests/stack.js';
 import { makeAdminDeps, runAdmin, type AdminIo } from '../admin/commands.js';
@@ -13,6 +14,7 @@ const env = {
   CODE_PEPPER: 'admin-test-pepper-0123456789abcdef0',
 };
 const admin = makeAdminDeps(env);
+const cleanupSql = postgres(env.SUPABASE_DB_URL, { max: 1 });
 let lines: string[];
 const io: AdminIo = { out: (line) => lines.push(line), err: (line) => lines.push(`! ${line}`) };
 const run = (...argv: string[]): Promise<number> => runAdmin(argv, admin, io);
@@ -23,6 +25,7 @@ beforeEach(() => {
 
 afterAll(async () => {
   await admin.close();
+  await cleanupSql.end();
 });
 
 describe('the admin tool', () => {
@@ -64,6 +67,7 @@ describe('the admin tool', () => {
     const learnerId = /learner ([0-9a-f-]{36})/.exec(lines.join('\n'))?.[1] ?? '';
     expect(await admin.org.cohortOfLearner(learnerId)).toBe(cohortId);
     await run('delete', '--learner', learnerId, '--yes');
+    await cleanupSql`delete from cohorts where id = ${cohortId}`;
   });
 
   test('export writes learner.json and the recordings into the folder', async () => {
