@@ -29,7 +29,7 @@ describe('the admin tool', () => {
   test('--help lists every command and exits 0', async () => {
     expect(await run('--help')).toBe(0);
     const help = lines.join('\n');
-    for (const command of ['issue-code', 'reset-code', 'export', 'delete']) {
+    for (const command of ['issue-code', 'reset-code', 'export', 'delete', 'retention']) {
       expect(help).toContain(command);
     }
   });
@@ -77,6 +77,13 @@ describe('the admin tool', () => {
     expect(await run('reset-code', '--learner', learnerId, '--dry-run')).toBe(0);
     expect(await run('delete', '--learner', learnerId, '--yes')).toBe(0);
     expect(lines.join('\n')).toMatch(/deleted: 0 events, 0 recordings, 1 sign-in/);
+  });
+
+  test('retention says what it would delete, then deletes it', async () => {
+    expect(await run('retention', '--dry-run')).toBe(0);
+    expect(lines.join('\n')).toMatch(/would delete \d+ recordings?/);
+    expect(await run('retention')).toBe(0);
+    expect(lines.join('\n')).toMatch(/deleted \d+ recordings?, \d+ rate-limit windows?/);
   });
 
   test('the environment is checked, and secrets are never printed', async () => {

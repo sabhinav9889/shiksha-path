@@ -11,3 +11,4 @@ export { completeRecording, recordingPath, startRecording } from './services/rec
 export { pullEvents, pushEvents } from './services/sync.js';
 export { handle, type HandlerDeps } from './http/router.js';
 export { jsonLogger, memoryLogger, type Logger, type LogEntry } from './logger.js';
+export { runRetention, type RetentionDeps } from './services/retention.js';

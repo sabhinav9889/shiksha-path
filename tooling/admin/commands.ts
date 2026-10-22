@@ -19,6 +19,7 @@ import {
   exportLearner,
   type LearnerDataDeps,
 } from '../../packages/server/src/services/learner-data.js';
+import { runRetention, type RetentionDeps } from '../../packages/server/src/services/retention.js';
 
 export interface AdminIo {
   out(line: string): void;
@@ -28,6 +29,7 @@ export interface AdminIo {
 export interface AdminDeps {
   codes: CodeDeps;
   data: LearnerDataDeps;
+  retention: RetentionDeps;
   close(): Promise<void>;
 }
 
@@ -46,6 +48,8 @@ export function makeAdminDeps(env: Record<string, string | undefined>): AdminDep
   const e = parsed.data;
   const sql = createSql(e.SUPABASE_DB_URL);
   const auth = createSupabaseAuth(e.SUPABASE_URL, e.SUPABASE_SERVICE_ROLE_KEY);
+  const recordings = new PgRecordingRepo(sql);
+  const storage = createSupabaseRecordingStorage(e.SUPABASE_URL, e.SUPABASE_SERVICE_ROLE_KEY);
   return {
     codes: {
       learners: new PgLearnerRepo(sql),
@@ -57,10 +61,11 @@ export function makeAdminDeps(env: Record<string, string | undefined>): AdminDep
     },
     data: {
       data: new PgLearnerDataRepo(sql),
-      recordings: new PgRecordingRepo(sql),
-      storage: createSupabaseRecordingStorage(e.SUPABASE_URL, e.SUPABASE_SERVICE_ROLE_KEY),
+      recordings,
+      storage,
       auth,
     },
+    retention: { recordings, storage, limiter: new PgRateLimiter(sql) },
     close: () => sql.end(),
   };
 }
@@ -71,6 +76,7 @@ export const USAGE = `Usage: npm run admin -- <command> [options]
   reset-code --learner <id>                   A new code; the old one stops working at once
   export --learner <id> --out <folder>        learner.json and the recordings, into the folder
   delete --learner <id> --yes                 Delete everything about the student, everywhere
+  retention                                   Delete recordings past their time (runs nightly)
 
 Every command takes --dry-run (say what would happen) and --help.
 Reads SUPABASE_DB_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and CODE_PEPPER from the
@@ -178,6 +184,21 @@ const remove: Command = async (args, deps, io) => {
   return 0;
 };
 
+const retention: Command = async (args, deps, io) => {
+  const now = new Date();
+  if (args.options.has('dry-run')) {
+    const due = await deps.retention.recordings.due(now);
+    io.out(`would delete ${plural(due.length, 'recording')}`);
+    return 0;
+  }
+  const done = await runRetention(deps.retention, now);
+  io.out(
+    `deleted ${plural(done.recordings, 'recording')}, ` +
+      `${plural(done.rateWindows, 'rate-limit window')}`,
+  );
+  return 0;
+};
+
 function usage(io: AdminIo, problem: string): number {
   io.err(problem);
   io.err('run with --help for the commands');
@@ -189,6 +210,7 @@ const COMMANDS: Record<string, Command> = {
   'reset-code': reset,
   export: exportCommand,
   delete: remove,
+  retention,
 };
 
 /** Run one command; returns the exit code. Refusals from the services exit 1 with a reason. */
