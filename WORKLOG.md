@@ -5,9 +5,9 @@ Active tasks. Read this at the start of every session. Details live in `.claude/
 
 **Statuses:** `in-progress` · `blocked` · `shipped` · `on-hold`
 
-| Task                               | Status      | Assignee | Branch                   | Next step                                                                                        | Detail                                                      |
-| ---------------------------------- | ----------- | -------- | ------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
-| Plan 3b – backend and sync, part 2 | in-progress | Claude   | `feature/backend-sync-2` | Final whole-branch review, then PR; owner then follows the new runbook sections (codes, backups) | [plan](docs/superpowers/plans/2026-10-22-backend-sync-2.md) |
+| Task                                  | Status      | Assignee | Branch                 | Next step                                                                         | Detail                                                    |
+| ------------------------------------- | ----------- | -------- | ---------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Plan 4a – mentor view and admin panel | in-progress | Claude   | `feature/mentor-admin` | Final whole-branch review, then PR; owner then adds the first admin (runbook §10) | [plan](docs/superpowers/plans/2026-10-22-mentor-admin.md) |
 
 ## Archive
 
@@ -22,3 +22,5 @@ Shipped tasks move here with their merge date.
 - Plan 3a plan, AGENTS.md and GEMINI.md · merged 2026-10-20 (PR #12)
 - Plan 3a – backend and sync · merged 2026-10-21 (PR #13)
 - Plan 3b plan · merged 2026-10-22 (PR #14)
+- Plan 3b – backend and sync, part 2 · merged 2026-10-22 (PR #15)
+- Plan 4a plan · merged 2026-10-22 (PR #16)

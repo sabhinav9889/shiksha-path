@@ -13,6 +13,10 @@ const ROUTES: Route[] = [
   { name: 'placement-result' },
   { name: 'me' },
   { name: 'auth-callback' },
+  { name: 'staff', view: 'cohorts' },
+  { name: 'staff', view: 'recordings' },
+  { name: 'staff', view: 'student', id: '0f8fad5b-d9cb-469f-a165-70867728950e' },
+  { name: 'staff', view: 'admin', section: 'students' },
 ];
 
 describe('parseRoute', () => {
@@ -44,5 +48,20 @@ describe('navigate', () => {
     navigate({ name: 'lessons' });
     expect(router.current).toEqual({ name: 'lessons' });
     expect(window.location.hash).toBe('#/lessons');
+  });
+});
+
+describe('the staff section', () => {
+  test('reads its views; a bad student id or admin section goes to the cohorts', () => {
+    expect(parseRoute('#/staff')).toEqual({ name: 'staff', view: 'cohorts' });
+    expect(parseRoute('#/staff/admin/audit')).toEqual({
+      name: 'staff',
+      view: 'admin',
+      section: 'audit',
+    });
+    expect(parseRoute('#/staff?code=x')).toEqual({ name: 'staff', view: 'cohorts' });
+    for (const hash of ['#/staff/student/nope', '#/staff/admin/hack', '#/staff/what']) {
+      expect(parseRoute(hash)).toEqual({ name: 'staff', view: 'cohorts' });
+    }
   });
 });

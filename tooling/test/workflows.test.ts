@@ -42,7 +42,14 @@ describe('the nightly backup', () => {
   const workflow = parse(readFileSync(join(workflowsDir, 'backup.yml'), 'utf8')) as {
     on: { schedule: { cron: string }[]; workflow_dispatch: unknown };
     permissions: Record<string, string>;
-    jobs: Record<string, { container?: string; needs?: string; steps: { run?: string }[] }>;
+    jobs: Record<
+      string,
+      {
+        container?: string;
+        needs?: string;
+        steps: { run?: string; env?: Record<string, string> }[];
+      }
+    >;
   };
 
   test('runs at 02:00 IST every night, and by hand', () => {
@@ -62,5 +69,10 @@ describe('the nightly backup', () => {
     expect(workflow.jobs.retention?.needs).toBe('backup');
     const runs = workflow.jobs.retention?.steps.map((s) => s.run ?? '').join('\n') ?? '';
     expect(runs).toContain('npm run admin -- retention');
+  });
+
+  test('the retention job is not given the code pepper it does not need (M6)', () => {
+    const steps = workflow.jobs.retention?.steps ?? [];
+    expect(steps.some((s) => s.env && 'CODE_PEPPER' in s.env)).toBe(false);
   });
 });

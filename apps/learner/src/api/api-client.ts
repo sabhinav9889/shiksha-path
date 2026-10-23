@@ -42,14 +42,14 @@ export interface ApiClient {
   uploadTo(url: string, bytes: Uint8Array, mime: string): Promise<boolean>;
 }
 
-interface ClientDeps {
+export interface ClientDeps {
   baseUrl: string;
   token: () => Promise<string | null>;
   fetchFn?: typeof fetch;
   timeoutMs?: number;
 }
 
-type Schema<T> = { safeParse(v: unknown): { success: boolean; data?: T } };
+export type Schema<T> = { safeParse(v: unknown): { success: boolean; data?: T } };
 
 const DEFAULT_TIMEOUT_MS = 20_000;
 
@@ -102,17 +102,18 @@ async function putBytes(o: {
   }
 }
 
-/** The one module the app uses to talk to /v1. Every answer is checked against the contract. */
-export function createApiClient(deps: ClientDeps): ApiClient {
+/** One /v1 request: token (when signed in), timeout, contract check; failures as values. */
+export type Call = <T>(
+  path: string,
+  schema: Schema<T>,
+  body?: unknown,
+  signedIn?: boolean,
+) => Promise<ApiResult<T>>;
+
+export function makeCaller(deps: ClientDeps): Call {
   const fetchFn = deps.fetchFn ?? ((input, init) => fetch(input, init));
   const timeoutMs = deps.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-
-  async function call<T>(
-    path: string,
-    schema: Schema<T>,
-    body?: unknown,
-    signedIn = true,
-  ): Promise<ApiResult<T>> {
+  return async (path, schema, body, signedIn = true) => {
     const token = signedIn ? await deps.token() : null;
     if (signedIn && !token) return { ok: false, error: 'UNAUTHENTICATED' };
     const controller = new AbortController();
@@ -127,7 +128,14 @@ export function createApiClient(deps: ClientDeps): ApiClient {
       clearTimeout(timer);
     }
     return answerOf(response, schema);
-  }
+  };
+}
+
+/** The one module the app uses to talk to /v1. Every answer is checked against the contract. */
+export function createApiClient(deps: ClientDeps): ApiClient {
+  const fetchFn = deps.fetchFn ?? ((input, init) => fetch(input, init));
+  const timeoutMs = deps.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const call = makeCaller(deps);
 
   return {
     link: (body) => call('/v1/learners/link', linkResponse, body),

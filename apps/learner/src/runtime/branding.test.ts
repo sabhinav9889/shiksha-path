@@ -47,6 +47,8 @@ describe('branding on the phone', () => {
     const style = document.documentElement.style;
     expect(style.getPropertyValue('--color-primary')).toBe('#1f6f43');
     expect(style.getPropertyValue('--color-accent')).toBe('#9a3412');
+    expect(style.getPropertyValue('--color-primary-dark')).toBe('#164e2f');
+    expect(style.getPropertyValue('--color-primary-soft')).toBe('#e9f1ec');
     render(NavBar, { lang: 'hi', current: 'home' });
     expect(screen.getByText('नई राह')).toBeTruthy();
     expect(document.title).toBe('नई राह');

@@ -2,13 +2,19 @@ import { randomUUID } from 'node:crypto';
 import type { LearnerEvent } from '@shiksha/learner-core';
 import {
   LinkConflict,
+  type CodeRepo,
   type EventRepo,
   type LearnerRepo,
   type LearnerDataRepo,
   type LearnerRow,
   type SwitchRepo,
 } from '../ports.js';
+import { memoryAttendance } from './memory-attendance.js';
+import { memoryAuth, memoryCodeRepo } from './memory-auth.js';
+import { memoryAudit } from './memory-audit.js';
+import { memorySummaries } from './memory-summaries.js';
 import { memoryBranding } from './memory-branding.js';
+import { memoryOrg, memoryStaff } from './memory-staff.js';
 import { memoryLearnerData } from './memory-learner-data.js';
 import { memoryRateLimiter } from './memory-rate-limiter.js';
 import { memoryRecordingRepo } from './memory-recording-repo.js';
@@ -56,6 +62,7 @@ export function makeMemoryRepos(): MemoryRepos {
     },
   };
 
+  const lastReceived = new Map<string, string>(); // learner -> when the server last got an event
   const eventRepo: EventRepo = {
     insertMany: (learnerId, batch) => {
       const inserted: string[] = [];
@@ -67,6 +74,7 @@ export function makeMemoryRepos(): MemoryRepos {
         seq += 1;
         events.push({ ...structuredClone(event), seq });
         inserted.push(event.id);
+        lastReceived.set(learnerId, new Date().toISOString());
       }
       return Promise.resolve({ inserted, ownedByOthers });
     },
@@ -82,9 +90,20 @@ export function makeMemoryRepos(): MemoryRepos {
   const switchRepo: SwitchRepo = {
     allStudents: () => Promise.resolve(Object.fromEntries(allStudents)),
     overrides: (learnerId) => Promise.resolve(Object.fromEntries(overrides.get(learnerId) ?? [])),
+    setForAll(key, enabled) {
+      allStudents.set(key, enabled);
+      return Promise.resolve();
+    },
+    setOverride(learnerId, key, enabled) {
+      const mine = overrides.get(learnerId) ?? new Map<string, boolean>();
+      if (enabled === null) mine.delete(key);
+      else mine.set(key, enabled);
+      overrides.set(learnerId, mine);
+      return Promise.resolve();
+    },
   };
 
-  return {
+  const repos: MemoryRepos = {
     identities,
     learnerRows: learners,
     data: memoryLearnerData({ learners, identities, eventRepo, overrides }),
@@ -94,6 +113,10 @@ export function makeMemoryRepos(): MemoryRepos {
     limiter: memoryRateLimiter(),
     recordings: memoryRecordingRepo(),
     branding: memoryBranding(),
+    staff: memoryStaff(),
+    audit: memoryAudit(),
+    summaries: memorySummaries(eventRepo),
+    org: memoryOrg(learners, lastReceived),
     storage: memoryRecordingStorage(),
     newAuthUser: () => Promise.resolve(randomUUID()),
     setAllStudents: (key, enabled) => {
@@ -111,7 +134,13 @@ export function makeMemoryRepos(): MemoryRepos {
       return Promise.resolve();
     },
     cleanup: () => Promise.resolve(),
+    codes: undefined as unknown as CodeRepo,
+    attendance: memoryAttendance(),
+    auth: memoryAuth(),
+    pepper: 'memory-test-pepper-0123456789abcdef',
   };
+  repos.codes = memoryCodeRepo(repos);
+  return repos;
 }
 
 export const makeMemoryFixture = (): Promise<ServiceFixture> => Promise.resolve(makeMemoryRepos());

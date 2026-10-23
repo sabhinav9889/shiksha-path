@@ -275,3 +275,29 @@ describe('the placement switch', () => {
     expect(screen.queryByText('शुरुआती टेस्ट दें')).toBeNull();
   });
 });
+
+describe("a mentor's level change", () => {
+  test("pulled from the server, it moves today's lesson; an unknown lesson changes nothing", async () => {
+    const profile = await env.addProfile('प्रिया');
+    await env.runtime.events.append(createEvent(env.runtime, profile.id, 'placement_skipped', {}));
+    await env.runtime.appendSent([
+      createEvent(env.runtime, profile.id, 'level_set', {
+        track: 'english',
+        startLesson: 'ef9-99',
+      }),
+    ]);
+    await signIn(profile.id, '1234');
+    const first = render(HomeScreen);
+    await vi.waitFor(() => screen.getByText('पाठ 1'));
+    first.unmount();
+    await env.runtime.appendSent([
+      createEvent(env.runtime, profile.id, 'level_set', {
+        track: 'english',
+        startLesson: 'ef1-02',
+      }),
+    ]);
+    await signIn(profile.id, '1234');
+    render(HomeScreen);
+    await vi.waitFor(() => screen.getByText('पाठ 2'));
+  });
+});

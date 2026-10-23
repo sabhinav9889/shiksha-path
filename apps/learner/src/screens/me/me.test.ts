@@ -46,6 +46,9 @@ async function record(learnerId: string, bytes: number): Promise<void> {
   });
 }
 
+/** A real lesson sync can take over a second when the whole suite runs with coverage. */
+const SYNC_WAIT_MS = 5000;
+
 describe('language', () => {
   test('switching to English only changes the interface and is recorded', async () => {
     const id = await open();
@@ -54,7 +57,9 @@ describe('language', () => {
     await vi.waitFor(() => expect(text()).toContain('Language'));
     // the names come from the catalogue, in the interface's language
     expect(button(/Hindi \+ English/)).toBeTruthy();
-    expect(button(/English only/).getAttribute('aria-pressed')).toBe('true');
+    await vi.waitFor(() =>
+      expect(button(/English only/).getAttribute('aria-pressed')).toBe('true'),
+    ); // the screen reloads its data just after the interface switches
     expect(appState.lang).toBe('en');
     const events = (await env.runtime.events.all(id)).filter((e) => e.type === 'language_changed');
     expect(events.at(-1)?.data).toEqual({ preference: 'en_only' });
@@ -66,8 +71,9 @@ describe('sync', () => {
     await open();
     expect(text()).toContain('अभी तक sync नहीं हुआ');
     await fireEvent.click(button('अभी sync करें'));
-    await vi.waitFor(() =>
-      expect(screen.getByRole('status').textContent).toContain('पाठ अपडेट हो गए'),
+    await vi.waitFor(
+      () => expect(screen.getByRole('status').textContent).toContain('पाठ अपडेट हो गए'),
+      { timeout: SYNC_WAIT_MS },
     );
   });
 
@@ -77,8 +83,9 @@ describe('sync', () => {
     env.server.failing.add('manifest.json');
     await open();
     await fireEvent.click(button('अभी sync करें'));
-    await vi.waitFor(() =>
-      expect(screen.getByRole('status').textContent).toContain('सूची अभी नहीं मिली'),
+    await vi.waitFor(
+      () => expect(screen.getByRole('status').textContent).toContain('सूची अभी नहीं मिली'),
+      { timeout: SYNC_WAIT_MS },
     );
   });
 

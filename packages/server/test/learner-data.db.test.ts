@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { deleteUser, localStack, makeUser } from '../../../supabase/tests/stack.js';
+import { PgAttendanceRepo } from '../src/adapters/pg-attendance-repo.js';
+import { PgAuditRepo } from '../src/adapters/pg-audit-repo.js';
 import { PgCodeRepo } from '../src/adapters/pg-code-repo.js';
 import { PgLearnerDataRepo } from '../src/adapters/pg-learner-data-repo.js';
 import { PgLearnerRepo } from '../src/adapters/pg-learner-repo.js';
@@ -27,6 +29,8 @@ const bucket = createClient(apiUrl, serviceKey, { auth: { persistSession: false 
 );
 
 const deps = (): LearnerDataDeps => ({
+  attendance: new PgAttendanceRepo(sql),
+  audit: new PgAuditRepo(sql),
   data: new PgLearnerDataRepo(sql),
   recordings: new PgRecordingRepo(sql),
   storage: createSupabaseRecordingStorage(apiUrl, serviceKey),
@@ -52,6 +56,10 @@ async function makeLearner(name: string): Promise<Learner> {
                     ${sql.json({ preference: 'hi_en' })})`;
   await sql`insert into feature_overrides (learner_id, key, enabled)
             values (${id}, 'placement_test', false)`;
+  await sql`insert into lab_attendance (learner_id, day, present) values (${id}, '2026-10-20', true)`;
+  for (const bucket of [`recording:${id}`, `sync:${id}`]) {
+    await sql`insert into rate_limits (bucket, window_start) values (${bucket}, now())`;
+  }
   const recordingId = randomUUID();
   await sql`insert into recordings (id, learner_id, lesson_id, item_id, mime, bytes, duration_ms,
                                     recorded_at, status, uploaded_at)
@@ -64,17 +72,19 @@ async function makeLearner(name: string): Promise<Learner> {
   return { id, authId: user.id, recordingId };
 }
 
-/** Every row anywhere in `public` that still names the learner, except the tombstone. */
+/** Every row anywhere in `public` that still names the learner (in any text, id or JSON
+ * column, also inside a longer value such as a rate-limit bucket), except the tombstone. */
 async function rowsNaming(learnerId: string): Promise<Record<string, number>> {
-  const tables = await sql<{ table_name: string; column_name: string }[]>`
+  const columns = await sql<{ table_name: string; column_name: string }[]>`
     select table_name, column_name from information_schema.columns
-    where table_schema = 'public' and column_name in ('learner_id', 'id')
-      and table_name <> 'deleted_learners'`;
+    where table_schema = 'public' and table_name <> 'deleted_learners'
+      and data_type in ('uuid', 'text', 'character varying', 'jsonb')`;
   const found: Record<string, number> = {};
-  for (const { table_name, column_name } of tables) {
+  for (const { table_name, column_name } of columns) {
     // Names come from the catalogue above, never from input.
     const [row] = await sql.unsafe<{ n: number }[]>(
-      `select count(*)::int as n from public.${table_name} where ${column_name}::text = $1`,
+      `select count(*)::int as n from public.${table_name}
+       where position($1 in ${column_name}::text) > 0`,
       [learnerId],
     );
     if ((row?.n ?? 0) > 0) found[`${table_name}.${column_name}`] = row?.n ?? 0;
@@ -94,6 +104,7 @@ afterEach(async () => {
     await bucket.remove([`${l.id}/${l.recordingId}`]);
     await sql`delete from learners where id = ${l.id}`;
     await sql`delete from deleted_learners where id = ${l.id}`;
+    await sql`delete from rate_limits where bucket like ${`%:${l.id}`}`;
     await deleteUser(l.authId).catch(() => undefined);
   }
 });
@@ -110,6 +121,8 @@ describe('export', () => {
     expect(out.data.identities[0]?.email).toMatch(/@test\.local$/);
     expect(out.data.events).toHaveLength(1);
     expect(out.data.overrides).toEqual({ placement_test: false });
+    expect(out.data.attendance).toEqual([{ date: '2026-10-20', present: true }]);
+    expect(out.data.learner.deactivated).toBe(false);
     expect(out.recordings.map((r) => [r.id, [...r.bytes]])).toEqual([[a.recordingId, [7, 8, 9]]]);
     expect(JSON.stringify(out.data)).not.toContain(b.id);
   });
@@ -125,6 +138,22 @@ describe('delete', () => {
     expect(await sql`select id from deleted_learners where id = ${a.id}`).toHaveLength(1);
     expect(Object.keys(await rowsNaming(b.id)).length).toBeGreaterThanOrEqual(4);
     expect((await bucket.list(b.id)).data).toHaveLength(1);
+    expect(await rowsNaming(b.id)).toHaveProperty(['rate_limits.bucket'], 2);
+  });
+
+  test('their audit entries stay, but no longer name them', async () => {
+    await new PgAuditRepo(sql).add({
+      staffId: null,
+      action: 'level_set',
+      learnerId: a.id,
+      details: { track: 'english' },
+    });
+    await deleteLearner(deps(), a.id);
+    expect(await sql`select 1 from audit_log where learner_id = ${a.id}`).toHaveLength(0);
+    const [row] = await sql<{ details: Record<string, string> }[]>`
+      select details from audit_log where details->>'track' = 'english'
+      order by id desc limit 1`;
+    expect(row?.details).toEqual({ track: 'english', learner: 'DELETED' });
   });
 
   test('a file with no row under the learner (a late upload) goes too', async () => {

@@ -30,12 +30,17 @@ export class PgEventRepo implements EventRepo {
     events: LearnerEvent[],
   ): Promise<{ inserted: string[]; ownedByOthers: string[] }> {
     const rows = events.map((e) => ({ id: e.id, type: e.type, at: e.at, data: e.data }));
-    const inserted = await this.sql<{ id: string }[]>`
-      insert into learner_events (id, learner_id, type, at, data)
-      select x.id, ${learnerId}, x.type, x.at, x.data
-      from jsonb_to_recordset(${this.sql.json(rows)}) as x(id uuid, type text, at timestamptz, data jsonb)
-      on conflict (id) do nothing
-      returning id`;
+    // One writer per learner at a time: a pull can then never pass an event whose sequence number
+    // was taken before a later one committed, and summary refreshes see every committed row.
+    const inserted = await this.sql.begin(async (tx) => {
+      await tx`select pg_advisory_xact_lock(hashtext(${learnerId}))`;
+      return tx<{ id: string }[]>`
+        insert into learner_events (id, learner_id, type, at, data)
+        select x.id, ${learnerId}, x.type, x.at, x.data
+        from jsonb_to_recordset(${tx.json(rows)}) as x(id uuid, type text, at timestamptz, data jsonb)
+        on conflict (id) do nothing
+        returning id`;
+    });
     const insertedIds = inserted.map((r) => r.id);
     const rest = events.map((e) => e.id).filter((id) => !insertedIds.includes(id));
     if (rest.length === 0) return { inserted: insertedIds, ownedByOthers: [] };

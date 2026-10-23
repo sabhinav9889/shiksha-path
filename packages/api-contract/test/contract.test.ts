@@ -30,6 +30,8 @@ describe('error bodies', () => {
       'RATE_LIMITED',
       'FEATURE_OFF',
       'BAD_CODE',
+      'NOT_STAFF',
+      'DEACTIVATED',
     ]);
     expect(ok(errorBody, { error: 'FORBIDDEN' })).toBe(true);
     expect(ok(errorBody, { error: 'NOPE' })).toBe(false);

@@ -13,6 +13,7 @@ interface Row {
   status: 'pending' | 'uploaded';
   uploaded_at: Date | null;
   reviewed_at: Date | null;
+  review_comment: string | null;
   created_at: Date;
 }
 
@@ -28,6 +29,7 @@ const toRow = (r: Row): RecordingRow => ({
   status: r.status,
   uploadedAt: r.uploaded_at?.toISOString() ?? null,
   reviewedAt: r.reviewed_at?.toISOString() ?? null,
+  comment: r.review_comment,
   createdAt: r.created_at.toISOString(),
 });
 
@@ -35,7 +37,7 @@ export class PgRecordingRepo implements RecordingRepo {
   constructor(private readonly sql: Sql) {}
 
   async create(
-    row: Omit<RecordingRow, 'status' | 'uploadedAt' | 'reviewedAt' | 'createdAt'>,
+    row: Omit<RecordingRow, 'status' | 'uploadedAt' | 'reviewedAt' | 'createdAt' | 'comment'>,
   ): Promise<'created' | 'exists' | 'ownedByOther'> {
     const inserted = await this.sql`
       insert into recordings (id, learner_id, lesson_id, item_id, mime, bytes, duration_ms,
@@ -82,5 +84,27 @@ export class PgRecordingRepo implements RecordingRepo {
     await this.sql`
       delete from recordings
       where id in (select value::uuid from jsonb_array_elements_text(${this.sql.json(ids)}))`;
+  }
+
+  async review(id: string, staffId: string, comment: string | null, at: Date): Promise<string> {
+    const [row] = await this.sql<{ reviewed_at: Date }[]>`
+      update recordings
+      set reviewed_at = coalesce(reviewed_at, ${at}), reviewed_by = ${staffId},
+          review_comment = ${comment}
+      where id = ${id}
+      returning reviewed_at`;
+    if (!row) throw new Error('no such recording');
+    return row.reviewed_at.toISOString();
+  }
+
+  async unreviewed(learnerIds: string[] | 'all'): Promise<RecordingRow[]> {
+    const ids = this.sql.json(learnerIds === 'all' ? [] : learnerIds);
+    const rows = await this.sql<Row[]>`
+      select * from recordings
+      where status = 'uploaded' and reviewed_at is null
+        and (${learnerIds === 'all'} or learner_id in
+              (select value::uuid from jsonb_array_elements_text(${ids})))
+      order by uploaded_at`;
+    return rows.map(toRow);
   }
 }

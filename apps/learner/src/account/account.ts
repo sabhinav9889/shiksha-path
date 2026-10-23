@@ -1,12 +1,15 @@
 import type { Profile } from '@shiksha/learner-core';
 import type { ApiClient } from '../api/api-client.js';
 import type { GoogleAuth } from '../api/auth.js';
+import type { StaffAuth } from '../staff/staff-auth.js';
 import type { Runtime } from '../runtime/runtime.js';
 
 /** How the app reaches Google sign-in and /v1. Null on a phone-only build (no Supabase set). */
 export interface AccountDeps {
   loadAuth(): Promise<GoogleAuth>;
   makeApi(token: () => Promise<string | null>): ApiClient;
+  /** The staff section's own sign-in and API (Plan 4a), loaded only when it is opened. */
+  loadStaffAuth(): Promise<StaffAuth>;
 }
 
 const linkedKey = (profileId: string): string => `linked:${profileId}`;

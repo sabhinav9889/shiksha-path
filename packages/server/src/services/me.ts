@@ -2,6 +2,15 @@ import { FEATURE_KEYS, type FeatureKey, type MeResponse } from '@shiksha/api-con
 import type { LearnerRepo, SwitchRepo } from '../ports.js';
 import { callerLearner } from './caller.js';
 
+/** Only the known feature keys, in a fixed order. */
+export function knownSwitches(
+  values: Record<string, boolean>,
+): Partial<Record<FeatureKey, boolean>> {
+  return Object.fromEntries(
+    FEATURE_KEYS.filter((key) => values[key] !== undefined).map((key) => [key, values[key]]),
+  );
+}
+
 /** Every feature switch for a learner: the individual override wins, a missing switch is on. */
 export async function effectiveSwitches(
   switches: SwitchRepo,

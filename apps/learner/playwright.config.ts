@@ -20,7 +20,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: /(speaking-mic|backend)\.spec\.ts/,
+      testIgnore: /(speaking-mic|backend|staff)\.spec\.ts/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 360, height: 640 } },
     },
     {
@@ -41,7 +41,7 @@ export default defineConfig({
       ? [
           {
             name: 'chromium-backend',
-            testMatch: /backend\.spec\.ts/,
+            testMatch: /(backend|staff)\.spec\.ts/,
             use: {
               ...devices['Desktop Chrome'],
               viewport: { width: 360, height: 640 },

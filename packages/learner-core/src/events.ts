@@ -31,6 +31,8 @@ const DATA = {
   }),
   placement_skipped: z.looseObject({}),
   language_changed: z.looseObject({ preference: z.enum(['hi_en', 'en_only']) }),
+  /** Written by the server when a mentor sets the level; a phone never creates it. */
+  level_set: z.looseObject({ track: nonEmpty, startLesson: nonEmpty }),
 } as const;
 
 export type EventType = keyof typeof DATA;
@@ -46,6 +48,7 @@ export interface EventData {
   };
   placement_skipped: Record<string, never>;
   language_changed: { preference: LanguagePreference };
+  level_set: { track: string; startLesson: string };
 }
 
 export type LearnerEvent = {
@@ -62,6 +65,9 @@ const envelope = <T extends EventType>(type: T): z.ZodType =>
   });
 
 const EVENT_TYPES = Object.keys(DATA) as EventType[];
+
+/** The event types this version understands; `parseEvents` drops any other. */
+export const KNOWN_EVENT_TYPES: readonly EventType[] = [...EVENT_TYPES].sort();
 
 /** One schema per event type, so each type's `data` is checked against its own shape. */
 export const learnerEventSchema = z.union(

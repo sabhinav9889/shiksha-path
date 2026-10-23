@@ -11,9 +11,15 @@ import {
   startRecording,
   ApiFailure,
   type CodeAuth,
+  handle,
+  memoryLogger,
+  type Auth,
   type CodeDeps,
+  type HandlerDeps,
 } from '@shiksha/server';
-import { makeMemoryRepos, memoryCodeRepo } from '@shiksha/server/testing';
+import { createStaffApi } from '../../src/staff/staff-api.js';
+import type { StaffAuth } from '../../src/staff/staff-auth.js';
+import { makeMemoryRepos } from '@shiksha/server/testing';
 import type { ApiClient, ApiResult } from '../../src/api/api-client.js';
 import type { GoogleAuth } from '../../src/api/auth.js';
 import type { AccountDeps } from '../../src/account/account.js';
@@ -33,6 +39,9 @@ export interface FakeBackend {
   deleteLearner(learnerId: string): Promise<void>;
   /** How many times phones asked which profiles were deleted. */
   deletedChecks(): number;
+  /** The Google account (email) the next staff sign-in returns. */
+  useStaffAccount(email: string): void;
+  staffAuth: StaffAuth;
   /** A mentor issues a backup code: for a new student by name. */
   issueCode(name: string): Promise<{ learnerId: string; code: string }>;
   /** Make every upload to a signed URL fail (the network drops mid-upload). */
@@ -42,7 +51,7 @@ export interface FakeBackend {
 
 export function makeFakeBackend(): FakeBackend {
   const repos = makeMemoryRepos();
-  const codes = memoryCodeRepo(repos);
+  const codes = repos.codes; // one code store, shared with the staff API handler
   // Code users sign in with a token equal to their auth user id, like the fake Google tokens.
   const codeUsers = new Map<string, { email: string; password: string }>();
   const codeAuth: CodeAuth = {
@@ -92,7 +101,9 @@ export function makeFakeBackend(): FakeBackend {
     };
     return {
       link: (body) =>
-        as((auth) => linkLearner(repos, { authUserId: auth, provider: 'google' }, body)),
+        as((auth) =>
+          linkLearner(repos, { authUserId: auth, provider: 'google', email: null }, body),
+        ),
       push: (body) => as((auth) => pushEvents(repos, auth, body)),
       pull: ({ after }) => as((auth) => pullEvents(repos, auth, { after, limit: 500 })),
       me: () => as((auth) => getMe(repos, auth)),
@@ -142,7 +153,47 @@ export function makeFakeBackend(): FakeBackend {
     },
   };
 
-  const account: AccountDeps = { loadAuth: () => Promise.resolve(google), makeApi };
+  // Staff: the real /v1 handler over the same repositories, reached through a fake fetch.
+  let pendingStaff: string | null = null;
+  let staffToken: string | null = null;
+  const verify: Auth['verify'] = (token) =>
+    Promise.resolve(
+      token.startsWith('staff:')
+        ? { authUserId: `staff-${token.slice(6)}`, provider: 'google', email: token.slice(6) }
+        : { authUserId: token, provider: 'google', email: null },
+    );
+  const handlerDeps = Object.assign(Object.create(repos) as typeof repos, {
+    auth: { ...repos.auth, ...codeAuth, verify },
+    allowedOrigins: [],
+    logger: memoryLogger(),
+  }) as unknown as HandlerDeps;
+  const fetchFn = ((input: RequestInfo | URL, init?: RequestInit) =>
+    online
+      ? handle(new Request(input, init), handlerDeps)
+      : Promise.reject(new TypeError('offline'))) as typeof fetch;
+  const staffAuth: StaffAuth = {
+    startSignIn: () => {
+      staffToken = pendingStaff ? `staff:${pendingStaff}` : null;
+      return Promise.resolve();
+    },
+    finish: () => Promise.resolve(staffToken !== null),
+    token: () => Promise.resolve(staffToken),
+    signOut: () => {
+      staffToken = null;
+      return Promise.resolve();
+    },
+    api: createStaffApi({
+      baseUrl: 'https://fake',
+      token: () => Promise.resolve(staffToken),
+      fetchFn,
+    }),
+  };
+
+  const account: AccountDeps = {
+    loadAuth: () => Promise.resolve(google),
+    makeApi,
+    loadStaffAuth: () => Promise.resolve(staffAuth),
+  };
   return {
     account,
     repos,
@@ -155,6 +206,10 @@ export function makeFakeBackend(): FakeBackend {
     setOnline(value: boolean) {
       online = value;
     },
+    useStaffAccount(email: string) {
+      pendingStaff = email;
+    },
+    staffAuth,
     issueCode: (name: string) => issueCode(codeDeps, { name }),
     deleteLearner: async (learnerId: string) => {
       await repos.data.deleteWithTombstone(learnerId);

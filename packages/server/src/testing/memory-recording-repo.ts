@@ -30,6 +30,7 @@ export function memoryRecordingRepo(
         status: 'pending',
         uploadedAt: null,
         reviewedAt: null,
+        comment: null,
         createdAt,
       });
       return Promise.resolve('created');
@@ -43,6 +44,20 @@ export function memoryRecordingRepo(
     listByLearner: (learnerId) =>
       Promise.resolve([...rows.values()].filter((r) => r.learnerId === learnerId)),
     due: (now) => Promise.resolve([...rows.values()].filter((r) => isDue(r, now))),
+    review(id, _staffId, comment, at) {
+      const row = rows.get(id);
+      if (!row) return Promise.reject(new Error('no such recording'));
+      const reviewedAt = row.reviewedAt ?? at.toISOString();
+      rows.set(id, { ...row, reviewedAt, comment });
+      return Promise.resolve(reviewedAt);
+    },
+    unreviewed: (learnerIds) =>
+      Promise.resolve(
+        [...rows.values()]
+          .filter((r) => r.status === 'uploaded' && !r.reviewedAt)
+          .filter((r) => learnerIds === 'all' || learnerIds.includes(r.learnerId))
+          .sort((a, b) => (a.uploadedAt ?? '').localeCompare(b.uploadedAt ?? '')),
+      ),
     delete(ids) {
       for (const id of ids) rows.delete(id);
       return Promise.resolve();

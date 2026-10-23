@@ -21,7 +21,13 @@ export function memoryLearnerData(state: State): LearnerDataRepo {
       if (!learner) return null;
       const { events } = await state.eventRepo.page(learnerId, 0, ALL);
       return {
-        learner: { ...learner, cohortId: null, createdAt: new Date(0).toISOString() },
+        learner: {
+          id: learner.id,
+          name: learner.name,
+          cohortId: null,
+          createdAt: new Date(0).toISOString(),
+          deactivated: learner.deactivated ?? false,
+        },
         authUserIds: authOf(learnerId),
         events: events.map((e) => {
           const copy: Partial<typeof e> = { ...e };

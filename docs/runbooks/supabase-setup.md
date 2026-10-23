@@ -105,16 +105,17 @@ npx supabase functions deploy api --no-verify-jwt
 - [ ] In the Supabase table editor, set `placement_test` to off in `feature_switches`, then sync on
       the phone. The starting test card disappears. Set it back on afterwards.
 
-## 8. Backup codes, export and deletion (until the admin panel)
+## 8. The admin tool (codes, export and deletion)
 
-Until the admin panel (Plan 4), the owner does these from the repo, on a trusted computer, with
-the keys in the shell for that session only:
+Mentors issue and reset codes in the app (section 10). Export, deletion and the first admin are
+done by the owner from the repo, on a trusted computer, with the keys in the shell for that
+session only:
 
 ```sh
 export SUPABASE_DB_URL='<Session pooler connection string>'
 export SUPABASE_URL='https://<PROJECT_REF>.supabase.co'
 export SUPABASE_SERVICE_ROLE_KEY='<service role key>'
-export CODE_PEPPER='<the same pepper as the function>'
+export CODE_PEPPER='<the same pepper as the function>' # only for issue-code and reset-code
 npm run admin -- --help
 ```
 
@@ -147,7 +148,10 @@ a backup. Neither Supabase, Cloudflare nor GitHub can.
 3. In Cloudflare, go to **R2** and create a bucket, for example `shiksha-backups`. Add a
    **lifecycle rule** that deletes objects after **30 days**. A student deleted on request then
    leaves the backups within 30 days; the consent form should say so.
-4. Under **R2 → Manage API tokens**, create a token with Object Read & Write on that bucket only.
+4. Under **R2 → Manage API tokens**, create a token with **Object Write** only, on that bucket
+   only. The nightly job only uploads, so a leaked GitHub secret cannot read old backups. For
+   restores, create a second token with **Object Read** on the bucket, and keep it offline with
+   the age key. Never add the read token to GitHub.
 5. In Supabase, go to **Project Settings → Storage → S3 Connection** and create an access key.
 
 **In GitHub** (**Settings → Secrets and variables → Actions → New repository secret**), add:
@@ -163,7 +167,6 @@ a backup. Neither Supabase, Cloudflare nor GitHub can.
 | `R2_ENDPOINT`                                      | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`         |
 | `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`         | from step 4                                             |
 | `SUPABASE_SERVICE_ROLE_KEY`                        | Supabase **Project Settings → API** service role key    |
-| `CODE_PEPPER`                                      | the same value you set for the function                 |
 
 Then open **Actions → Backup → Run workflow** once, and check that two files appear in the bucket.
 
@@ -174,6 +177,39 @@ Then open **Actions → Backup → Run workflow** once, and check that two files
 restored progress). Recordings come back the
 same way: `age -d ... recordings-<date>.tar.age | tar -xf -`. CI runs the same check on a local
 copy (`tooling/backup/restore-check.sh`) on every pull request.
+
+**Restoring into the live project:** a backup from before a deletion brings that student back.
+Before restoring, save the current list of deleted students:
+`psql <live URL> -At -c 'select id from deleted_learners' > deleted.txt`. After restoring (and
+`after-restore.sql`), run `npm run admin -- delete --learner <id> --yes` for every id in
+`deleted.txt`, then delete the file.
+
+## 10. Mentors and admins
+
+**The first admin (once):** with the keys from section 8 in the shell, run
+`npm run admin -- add-staff --email <their Google email> --role admin --name "<name>"`. It prints
+only the staff id. The admin then opens `<APP_URL>/#/staff` and signs in with that Google account.
+
+**Inviting mentors:** an admin opens **सेटअप**, adds labs and cohorts, and invites each mentor by
+their Google email, ticking the cohorts they look after. The invite is claimed by the first
+Google sign-in with that email; until then it shows "अभी साइन इन नहीं किया".
+
+**What mentors can do, for their own cohorts only:** see each student's progress and who needs
+attention; listen to recordings and mark them reviewed with a short comment; add a student
+without Google and give them a backup code, or reset a code; move a student's English or aptitude
+start lesson; mark today's attendance.
+
+**What admins can do, for everyone:** everything a mentor can; set up labs, cohorts and staff (and pause staff or change their cohorts);
+search, move, pause and delete students (delete asks twice and needs the name typed); turn
+features on or off for all students or one; set the name and colours (refused when hard to read);
+read the audit log.
+
+**Limits:** a mentor never sees students outside their cohorts, and cannot change setup, features,
+branding or the audit log. Nobody, admins included, can see a backup code after it is first
+shown, or a student's email. Every change is in the audit log; a deleted student's entries stay
+but no longer name them. When a mentor leaves, an admin opens **सेटअप**, taps **बदलें** beside
+them and unticks **सक्रिय**: their next request is refused. An admin cannot pause or demote
+themselves, so one admin always remains. Renaming a student has no screen yet (Plan 4b).
 
 ## Know before the pilot
 

@@ -1,9 +1,12 @@
 import type { Branding, BrandingInput, Session } from '@shiksha/api-contract';
 import type { LearnerEvent } from '@shiksha/learner-core';
+import type { Summary } from './services/summary.js';
 
 export interface LearnerRow {
   id: string;
   name: string;
+  /** Deactivated by an admin: their sync is refused, their data kept (spec §8.1). */
+  deactivated?: boolean;
 }
 
 /** Another request created the same learner or identity at the same moment. */
@@ -40,6 +43,9 @@ export interface EventRepo {
 export interface SwitchRepo {
   allStudents(): Promise<Record<string, boolean>>;
   overrides(learnerId: string): Promise<Record<string, boolean>>;
+  setForAll(key: string, enabled: boolean): Promise<void>;
+  /** `null` removes the override, so the all-students value applies again. */
+  setOverride(learnerId: string, key: string, enabled: boolean | null): Promise<void>;
 }
 
 export interface RecordingRow {
@@ -54,6 +60,8 @@ export interface RecordingRow {
   status: 'pending' | 'uploaded';
   uploadedAt: string | null;
   reviewedAt: string | null;
+  /** A mentor's note on the recording (at most 280 characters), for mentors only. */
+  comment: string | null;
   /** When the upload was started (an old recording made offline can start uploading late). */
   createdAt: string;
 }
@@ -61,7 +69,7 @@ export interface RecordingRow {
 export interface RecordingRepo {
   /** `exists`: this learner already has it; `ownedByOther`: the id is someone else's. */
   create(
-    row: Omit<RecordingRow, 'status' | 'uploadedAt' | 'reviewedAt' | 'createdAt'>,
+    row: Omit<RecordingRow, 'status' | 'uploadedAt' | 'reviewedAt' | 'createdAt' | 'comment'>,
   ): Promise<'created' | 'exists' | 'ownedByOther'>;
   get(id: string): Promise<RecordingRow | null>;
   markUploaded(id: string, at: Date): Promise<void>;
@@ -69,6 +77,10 @@ export interface RecordingRepo {
   /** Rows retention should remove at `now` (Task 10). */
   due(now: Date): Promise<RecordingRow[]>;
   delete(ids: string[]): Promise<void>;
+  /** Mark reviewed (the first review time stays) and set the comment; returns the review time. */
+  review(id: string, staffId: string, comment: string | null, at: Date): Promise<string>;
+  /** Uploaded, unreviewed recordings of these learners (everyone for 'all'), oldest first. */
+  unreviewed(learnerIds: string[] | 'all'): Promise<RecordingRow[]>;
 }
 
 /** Where recordings live (spec §5.5 rule 5): S3-style, so another store is one adapter. */
@@ -86,7 +98,13 @@ export interface RecordingStorage {
 
 /** What the server holds about one learner, for export and deletion (privacy rule). */
 export interface LearnerRows {
-  learner: { id: string; name: string; cohortId: string | null; createdAt: string };
+  learner: {
+    id: string;
+    name: string;
+    cohortId: string | null;
+    createdAt: string;
+    deactivated: boolean;
+  };
   authUserIds: string[];
   events: LearnerEvent[];
   overrides: Record<string, boolean>;
@@ -120,6 +138,109 @@ export interface RateLimiter {
 export interface Caller {
   authUserId: string;
   provider: string;
+  /** Only to claim a staff invite; never logged or stored for learners. */
+  email: string | null;
+}
+
+export type StaffRole = 'mentor' | 'admin';
+
+export interface StaffRow {
+  id: string;
+  email: string;
+  role: StaffRole;
+  name: string;
+  active: boolean;
+  authUserId: string | null;
+  cohortIds: string[];
+}
+
+/** Mentors and admins (spec §8). Invited by email; the first Google sign-in claims the row. */
+export interface StaffRepo {
+  byId(staffId: string): Promise<StaffRow | null>;
+  byAuthUser(authUserId: string): Promise<StaffRow | null>;
+  byEmail(email: string): Promise<StaffRow | null>;
+  /** Bind an unclaimed invite to an auth user; false when someone claimed it first. */
+  claim(staffId: string, authUserId: string): Promise<boolean>;
+  save(row: Omit<StaffRow, 'id' | 'authUserId'> & { id?: string }): Promise<string>;
+  list(): Promise<StaffRow[]>;
+}
+
+export type AuditDetails = Record<string, string | number | boolean | null>;
+
+export interface AuditEntry {
+  id: number;
+  staffId: string | null;
+  action: string;
+  learnerId: string | null;
+  details: AuditDetails;
+  at: string;
+}
+
+/** Every staff action, kept until the NGO deletes it (spec §8.1 audit log). */
+export interface AuditRepo {
+  add(entry: Omit<AuditEntry, 'id' | 'at'>): Promise<void>;
+  /** Newest first, entries with an id below `before` (all when null). */
+  page(before: number | null, limit: number): Promise<AuditEntry[]>;
+  /** A learner deleted on request: their entries keep no id (privacy rule). */
+  anonymiseLearner(learnerId: string): Promise<void>;
+}
+
+/** Per-learner progress summaries for staff screens, re-derived after every upload. */
+export interface SummaryRepo {
+  /**
+   * Re-derive one learner's summary from their whole log and store it. Refreshes of one learner
+   * never interleave, so the last one always sees every committed event.
+   */
+  refresh(learnerId: string, derive: (events: unknown[]) => Summary): Promise<Summary>;
+  forLearners(ids: string[]): Promise<Map<string, Summary>>;
+}
+
+/** Lab attendance: one mark per learner per IST day (spec §8 mentor actions). */
+export interface AttendanceRepo {
+  /** Replace the marks of these learners for `day`: present if listed, absent otherwise. */
+  markDay(input: {
+    learnerIds: string[];
+    present: ReadonlySet<string>;
+    day: string;
+    staffId: string;
+  }): Promise<number>;
+  /** A learner's marks since `fromDay` (inclusive), newest first. */
+  forLearner(learnerId: string, fromDay: string): Promise<{ date: string; present: boolean }[]>;
+}
+
+/** Labs, cohorts and which cohort a learner is in. */
+export interface OrgRepo {
+  saveLab(lab: { id?: string; name: string }): Promise<string>;
+  saveCohort(cohort: { id?: string; name: string; labId: string | null }): Promise<string>;
+  setLearnerCohort(learnerId: string, cohortId: string | null): Promise<void>;
+  cohortOfLearner(learnerId: string): Promise<string | null | undefined>;
+  cohorts(ids: string[] | 'all'): Promise<{ id: string; name: string; labId: string | null }[]>;
+  labs(): Promise<{ id: string; name: string }[]>;
+  setDeactivated(learnerId: string, deactivated: boolean): Promise<void>;
+  renameLearner(learnerId: string, name: string): Promise<void>;
+  /** Admin search: name contains `q` (literal text), optional cohort filter, by name, paged.
+   * `after` is the id of the last learner of the previous page. */
+  search(filter: {
+    q?: string;
+    cohortIds?: string[];
+    active?: boolean;
+    after?: string;
+    limit: number;
+  }): Promise<StudentRow[]>;
+  /** Learners in these cohorts (everyone for 'all'), for staff screens. */
+  students(cohortIds: string[] | 'all'): Promise<StudentRow[]>;
+  student(learnerId: string): Promise<StudentRow | null>;
+}
+
+export interface StudentRow {
+  id: string;
+  name: string;
+  cohortId: string | null;
+  deactivated: boolean;
+  /** IST day the learner was created (linked): "inactive" counts from here before any activity. */
+  linkedOn: string;
+  /** When the server last received an event from them. */
+  lastSyncedAt: string | null;
 }
 
 /** Verifies an access token; the identity comes from here, never from a request body. */

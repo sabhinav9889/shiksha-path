@@ -16,8 +16,8 @@
   import ProfilesScreen from './screens/profiles/ProfilesScreen.svelte';
   import Shell from './ui/Shell.svelte';
 
-  /** Places a signed-out phone may be: the picker, and the page Google sign-in returns to. */
-  const OPEN_ROUTES: Route['name'][] = ['profiles', 'auth-callback'];
+  /** Places a signed-out phone may be: the picker, Google's return page, and the staff section. */
+  const OPEN_ROUTES: Route['name'][] = ['profiles', 'auth-callback', 'staff'];
 
   /** Without a signed-in profile the only place to be is the profile picker. */
   const route: Route = $derived(
@@ -74,6 +74,11 @@
       <MeScreen />
     {:else if route.name === 'auth-callback'}
       <AuthCallback />
+    {:else if route.name === 'staff'}
+      <!-- The staff section is a separate chunk: a student's first visit never loads it. -->
+      {#await import('./staff/StaffApp.svelte') then staff}
+        <staff.default />
+      {/await}
     {/if}
   </Shell>
 </div>

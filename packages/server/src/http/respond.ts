@@ -11,6 +11,8 @@ const STATUS: Record<ApiError, number> = {
   RATE_LIMITED: 429,
   FEATURE_OFF: 403,
   BAD_CODE: 401,
+  NOT_STAFF: 403,
+  DEACTIVATED: 403,
 };
 
 const HTTP_OK = 200;

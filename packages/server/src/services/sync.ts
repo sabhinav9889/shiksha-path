@@ -1,6 +1,7 @@
 import type { PullQuery, PullResponse, PushRequest, PushResponse } from '@shiksha/api-contract';
-import { learnerEventSchema, type LearnerEvent } from '@shiksha/learner-core';
-import type { EventRepo, LearnerRepo, RateLimiter } from '../ports.js';
+import { istDay, learnerEventSchema, type LearnerEvent } from '@shiksha/learner-core';
+import type { EventRepo, LearnerRepo, RateLimiter, SummaryRepo } from '../ports.js';
+import { summarise } from './summary.js';
 import { enforce } from './limits.js';
 import { callerLearner } from './caller.js';
 import { ApiFailure } from './failure.js';
@@ -20,7 +21,12 @@ function sortEvents(
   const rejected: string[] = [];
   raw.forEach((candidate, index) => {
     const parsed = learnerEventSchema.safeParse(candidate);
-    if (!parsed.success || parsed.data.learnerId !== learnerId) {
+    // Only the server writes level_set (a mentor's decision), never a phone.
+    if (
+      !parsed.success ||
+      parsed.data.learnerId !== learnerId ||
+      parsed.data.type === 'level_set'
+    ) {
       rejected.push(labelOf(candidate, index));
       return;
     }
@@ -34,7 +40,7 @@ function sortEvents(
  * again (a retry); one whose id belongs to someone else is rejected.
  */
 export async function pushEvents(
-  deps: { learners: LearnerRepo; events: EventRepo; limiter: RateLimiter },
+  deps: { learners: LearnerRepo; events: EventRepo; limiter: RateLimiter; summaries: SummaryRepo },
   authUserId: string,
   request: PushRequest,
 ): Promise<PushResponse> {
@@ -43,12 +49,25 @@ export async function pushEvents(
   if (request.learnerId !== learner.id) throw new ApiFailure('FORBIDDEN');
   const { valid, rejected } = sortEvents(learner.id, request.events);
   if (valid.length === 0) return { accepted: [], rejected };
-  const { ownedByOthers } = await deps.events.insertMany(learner.id, valid);
+  const { inserted, ownedByOthers } = await deps.events.insertMany(learner.id, valid);
+  if (inserted.length > 0) await refreshSummary(deps, learner.id);
   const taken = new Set(ownedByOthers);
   return {
     accepted: valid.filter((e) => !taken.has(e.id)).map((e) => e.id),
     rejected: [...rejected, ...ownedByOthers],
   };
+}
+
+/**
+ * Re-derive the learner's summary for staff screens. A failure here never fails the upload: the
+ * events are safe, and the next upload refreshes it again.
+ */
+export async function refreshSummary(
+  deps: { summaries: SummaryRepo },
+  learnerId: string,
+): Promise<void> {
+  const today = istDay(new Date());
+  await deps.summaries.refresh(learnerId, (log) => summarise(log, today)).catch(() => undefined);
 }
 
 /** The server's ordering number is a cursor, not part of the event the phone made. */

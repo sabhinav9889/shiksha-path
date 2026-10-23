@@ -7,15 +7,22 @@ describe('the Supabase Auth adapter', () => {
 
   test("verifies each user's own token", async () => {
     const [a, b] = [await makeUser(), await makeUser()];
-    expect(await auth().verify(a.accessToken)).toEqual({ authUserId: a.id, provider: 'google' });
-    expect(await auth().verify(b.accessToken)).toEqual({ authUserId: b.id, provider: 'google' });
+    expect(await auth().verify(a.accessToken)).toMatchObject({
+      authUserId: a.id,
+      provider: 'google',
+    });
+    expect(await auth().verify(b.accessToken)).toMatchObject({
+      authUserId: b.id,
+      provider: 'google',
+    });
+    expect((await auth().verify(a.accessToken))?.email).toMatch(/@test\.local$/);
     await deleteUser(a.id);
     await deleteUser(b.id);
   });
 
   test('reports a plain email user as an email sign-in', async () => {
     const user = await makeUser('email');
-    expect(await auth().verify(user.accessToken)).toEqual({
+    expect(await auth().verify(user.accessToken)).toMatchObject({
       authUserId: user.id,
       provider: 'email',
     });

@@ -1,26 +1,41 @@
 import { randomUUID } from 'node:crypto';
 import type { RecordingStart } from '@shiksha/api-contract';
-import { cryptoIds, createEvent, systemClock, type LearnerEvent } from '@shiksha/learner-core';
+import {
+  cryptoIds,
+  createEvent,
+  istDay,
+  systemClock,
+  type LearnerEvent,
+} from '@shiksha/learner-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type {
+  AttendanceRepo,
+  AuditRepo,
+  Auth,
+  CodeAuth,
   BrandingRepo,
   Caller,
+  CodeRepo,
   EventRepo,
   LearnerDataRepo,
   LearnerRepo,
+  OrgRepo,
   RateLimiter,
   RecordingRepo,
+  StaffRepo,
+  SummaryRepo,
   SwitchRepo,
 } from '../ports.js';
 import { getBranding, setBranding } from '../services/branding.js';
 import { completeRecording, startRecording } from '../services/recordings.js';
+import { summarise } from '../services/summary.js';
 import type { MemoryRecordingStorage } from './memory-recording-storage.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
 import { pullEvents, pushEvents } from '../services/sync.js';
 
-const google = (authUserId: string): Caller => ({ authUserId, provider: 'google' });
+const google = (authUserId: string): Caller => ({ authUserId, provider: 'google', email: null });
 
 /** Repositories plus the set-up a test needs that the read-only ports do not offer. */
 export interface ServiceFixture {
@@ -31,6 +46,15 @@ export interface ServiceFixture {
   recordings: RecordingRepo;
   branding: BrandingRepo;
   data: LearnerDataRepo;
+  staff: StaffRepo;
+  org: OrgRepo;
+  audit: AuditRepo;
+  summaries: SummaryRepo;
+  codes: CodeRepo;
+  attendance: AttendanceRepo;
+  /** Makes, signs in and deletes the auth users behind backup codes. */
+  auth: Auth & CodeAuth;
+  pepper: string;
   /** Stands in for the bucket: a test "uploads" with `storage.put`. */
   storage: MemoryRecordingStorage;
   newAuthUser(): Promise<string>;
@@ -99,7 +123,7 @@ export function describeServiceContract(
         const profileId = randomUUID();
         const out = linkLearner(
           f,
-          { authUserId: auth, provider: 'email' },
+          { authUserId: auth, provider: 'email', email: null },
           { profileId, name: 'X' },
         );
         expect(await codeOf(out)).toBe('FORBIDDEN');
@@ -269,6 +293,18 @@ export function describeServiceContract(
       });
     });
 
+    describe('events only the server writes', () => {
+      test('a phone cannot push a level_set: only a mentor sets a level', async () => {
+        const levelSet = createEvent({ clock: systemClock, ids: cryptoIds }, a, 'level_set', {
+          track: 'english',
+          startLesson: 'ef1-03',
+        });
+        const out = await pushEvents(f, authA, { learnerId: a, events: [levelSet, event(a)] });
+        expect(out.rejected).toEqual([levelSet.id]);
+        expect(out.accepted).toHaveLength(1);
+      });
+    });
+
     describe('rate limits', () => {
       test('the 61st push in a minute is refused, and another learner is unaffected', async () => {
         await awayFromWindowEdge(60);
@@ -392,6 +428,37 @@ export function describeServiceContract(
         const out = setBranding(f, { ...readable, primary: '#ffd400' });
         expect(await codeOf(out)).toBe('INVALID_REQUEST');
         expect(await getBranding(f)).toEqual(before);
+      });
+    });
+
+    describe('progress summaries', () => {
+      const today = () => istDay(new Date());
+      const done = (learnerId: string, lessonId: string): LearnerEvent =>
+        createEvent({ clock: systemClock, ids: cryptoIds }, learnerId, 'lesson_completed', {
+          lessonId,
+          correct: 4,
+          scored: 5,
+        });
+
+      test('after a push the summary matches the whole log, and a duplicate push changes nothing', async () => {
+        const events = [done(a, 'ef1-01'), done(a, 'ef1-02')];
+        await pushEvents(f, authA, { learnerId: a, events });
+        const expected = summarise(events, today());
+        expect((await f.summaries.forLearners([a])).get(a)).toEqual(expected);
+        await pushEvents(f, authA, { learnerId: a, events });
+        expect((await f.summaries.forLearners([a])).get(a)).toEqual(expected);
+        expect((await f.summaries.forLearners([b])).get(b)).toBeUndefined();
+      });
+
+      test('two pushes for one learner at once still end equal to the whole log', async () => {
+        const first = [done(a, 'ef1-01'), done(a, 'ef1-02')];
+        const second = [done(a, 'ef1-03'), done(a, 'ef1-04')];
+        await awayFromWindowEdge(60);
+        await Promise.all([
+          pushEvents(f, authA, { learnerId: a, events: first }),
+          pushEvents(f, authA, { learnerId: a, events: second }),
+        ]);
+        expect((await f.summaries.forLearners([a])).get(a)?.lessonsDone).toBe(4);
       });
     });
   });

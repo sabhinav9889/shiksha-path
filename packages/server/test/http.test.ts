@@ -24,7 +24,11 @@ beforeEach(async () => {
   const auth = {
     ...memoryAuth(),
     verify: (t: string) =>
-      Promise.resolve(tokens[t] ? { authUserId: tokens[t], provider: 'google' } : null),
+      Promise.resolve(
+        tokens[t]
+          ? { authUserId: tokens[t], provider: 'google', email: `${tokens[t]}@ngo.example` }
+          : null,
+      ),
   };
   logger = memoryLogger();
   deps = {
@@ -38,14 +42,14 @@ beforeEach(async () => {
   a = (
     await linkLearner(
       repos,
-      { authUserId: 'auth-a', provider: 'google' },
+      { authUserId: 'auth-a', provider: 'google', email: null },
       { profileId: randomUUID(), name: 'A' },
     )
   ).learnerId;
   b = (
     await linkLearner(
       repos,
-      { authUserId: 'auth-b', provider: 'google' },
+      { authUserId: 'auth-b', provider: 'google', email: null },
       { profileId: randomUUID(), name: 'B' },
     )
   ).learnerId;
@@ -299,5 +303,201 @@ describe('GET /v1/branding', () => {
       accent: '#b45309',
       version: 0,
     });
+  });
+});
+
+describe('staff sign-in', () => {
+  test('a learner is NOT_STAFF on staff routes; an invited Google account claims, then reads me', async () => {
+    expect((await call('GET', '/v1/staff/me', { token: 'token-a' })).status).toBe(403);
+    const lab = await deps.org.saveLab({ name: 'Lab' });
+    const cohort = await deps.org.saveCohort({ name: 'C1', labId: lab });
+    await deps.staff.save({
+      email: 'AUTH-C@ngo.example',
+      role: 'mentor',
+      name: 'Meena',
+      active: true,
+      cohortIds: [cohort],
+    });
+    expect((await call('GET', '/v1/staff/me', { token: 'token-c' })).status).toBe(403);
+    const claimed = await call('POST', '/v1/staff/claim', { token: 'token-c', body: {} });
+    expect(claimed.status).toBe(200);
+    const me = await call('GET', '/v1/staff/me', { token: 'token-c' });
+    expect(await json(me)).toEqual({
+      role: 'mentor',
+      name: 'Meena',
+      cohorts: [{ id: cohort, name: 'C1' }],
+    });
+  });
+});
+
+describe('GET /v1/staff/audit', () => {
+  test('a mentor is refused; an admin reads the newest entries', async () => {
+    const lab = await deps.org.saveLab({ name: 'Lab' });
+    const cohort = await deps.org.saveCohort({ name: 'C1', labId: lab });
+    await deps.staff.save({
+      email: 'auth-c@ngo.example',
+      role: 'mentor',
+      name: 'M',
+      active: true,
+      cohortIds: [cohort],
+    });
+    await call('POST', '/v1/staff/claim', { token: 'token-c', body: {} });
+    expect((await call('GET', '/v1/staff/audit', { token: 'token-c' })).status).toBe(403);
+    const [mentor] = await deps.staff.list();
+    await deps.staff.save({ ...mentor!, role: 'admin', cohortIds: [] });
+    await deps.audit.add({
+      staffId: mentor!.id,
+      action: 'lab_saved',
+      learnerId: null,
+      details: {},
+    });
+    const res = await call('GET', '/v1/staff/audit?limit=5', { token: 'token-c' });
+    expect(res.status).toBe(200);
+    expect(await json(res)).toMatchObject({ entries: [{ action: 'lab_saved' }], next: null });
+    expect((await call('GET', '/v1/staff/audit?limit=0', { token: 'token-c' })).status).toBe(400);
+  });
+});
+
+describe("the mentor's read routes", () => {
+  test('a learner token is NOT_STAFF; a bad id is INVALID_REQUEST; a real id answers', async () => {
+    expect((await call('GET', '/v1/staff/cohorts', { token: 'token-a' })).status).toBe(403);
+    const lab = await deps.org.saveLab({ name: 'Lab' });
+    const cohort = await deps.org.saveCohort({ name: 'C1', labId: lab });
+    await deps.org.setLearnerCohort(a, cohort);
+    await deps.staff.save({
+      email: 'auth-c@ngo.example',
+      role: 'mentor',
+      name: 'M',
+      active: true,
+      cohortIds: [cohort],
+    });
+    await call('POST', '/v1/staff/claim', { token: 'token-c', body: {} });
+    const list = await call('GET', '/v1/staff/cohorts', { token: 'token-c' });
+    expect(list.status).toBe(200);
+    expect(await json(list)).toMatchObject({ cohorts: [{ id: cohort, students: [{ id: a }] }] });
+    expect((await call('GET', '/v1/staff/student?id=nope', { token: 'token-c' })).status).toBe(400);
+    expect((await call('GET', `/v1/staff/student?id=${b}`, { token: 'token-c' })).status).toBe(403);
+    const one = await call('GET', `/v1/staff/student?id=${a}`, { token: 'token-c' });
+    expect(one.status).toBe(200);
+    expect(await json(one)).toMatchObject({ student: { id: a }, hasCode: false });
+  });
+});
+
+describe("the mentor's action routes", () => {
+  test('codes, level and attendance answer through HTTP, and bad input is refused', async () => {
+    const lab = await deps.org.saveLab({ name: 'Lab' });
+    const cohort = await deps.org.saveCohort({ name: 'C1', labId: lab });
+    await deps.org.setLearnerCohort(a, cohort);
+    await deps.staff.save({
+      email: 'auth-c@ngo.example',
+      role: 'mentor',
+      name: 'M',
+      active: true,
+      cohortIds: [cohort],
+    });
+    await call('POST', '/v1/staff/claim', { token: 'token-c', body: {} });
+    const issued = await call('POST', '/v1/staff/codes/issue', {
+      token: 'token-c',
+      body: { name: 'नई', cohortId: cohort },
+    });
+    expect(issued.status).toBe(200);
+    const level = await call('POST', '/v1/staff/level', {
+      token: 'token-c',
+      body: { learnerId: a, track: 'english', startLesson: 'ef1-03' },
+    });
+    expect(level.status).toBe(200);
+    const day = new Date(Date.now() + 19_800_000).toISOString().slice(0, 10);
+    const marked = await call('POST', '/v1/staff/attendance', {
+      token: 'token-c',
+      body: { cohortId: cohort, day, present: [a] },
+    });
+    expect(await json(marked)).toEqual({ marked: 2 });
+    const badDay = await call('POST', '/v1/staff/attendance', {
+      token: 'token-c',
+      body: { cohortId: cohort, day: '2026-13-40', present: [] },
+    });
+    expect(badDay.status).toBe(400);
+    const reset = await call('POST', '/v1/staff/codes/reset', {
+      token: 'token-c',
+      body: { learnerId: b },
+    });
+    expect(reset.status).toBe(403);
+  });
+});
+
+describe('the admin routes', () => {
+  async function adminToken(): Promise<string> {
+    await deps.staff.save({
+      email: 'auth-c@ngo.example',
+      role: 'admin',
+      name: 'Boss',
+      active: true,
+      cohortIds: [],
+    });
+    await call('POST', '/v1/staff/claim', { token: 'token-c', body: {} });
+    return 'token-c';
+  }
+
+  test('a learner is NOT_STAFF and a mentor is FORBIDDEN on every admin route', async () => {
+    expect((await call('GET', '/v1/staff/admin/setup', { token: 'token-a' })).status).toBe(403);
+    await deps.staff.save({
+      email: 'auth-c@ngo.example',
+      role: 'mentor',
+      name: 'M',
+      active: true,
+      cohortIds: [],
+    });
+    await call('POST', '/v1/staff/claim', { token: 'token-c', body: {} });
+    const res = await call('POST', '/v1/staff/admin/lab', {
+      token: 'token-c',
+      body: { name: 'L' },
+    });
+    expect([res.status, await json(res)]).toEqual([403, { error: 'FORBIDDEN' }]);
+  });
+
+  test('set up a lab and cohort, find and move a student, deactivate and reactivate', async () => {
+    const token = await adminToken();
+    const lab = (await json(
+      await call('POST', '/v1/staff/admin/lab', { token, body: { name: 'L' } }),
+    )) as { id: string };
+    const cohort = (await json(
+      await call('POST', '/v1/staff/admin/cohort', { token, body: { name: 'C', labId: lab.id } }),
+    )) as { id: string };
+    const setup = (await json(await call('GET', '/v1/staff/admin/setup', { token }))) as {
+      labs: { id: string }[];
+      cohorts: { id: string }[];
+      staff: { name: string }[];
+    };
+    expect(setup.labs.map((l) => l.id)).toContain(lab.id);
+    expect(setup.cohorts.map((c) => c.id)).toContain(cohort.id);
+    expect(setup.staff.map((s) => s.name)).toContain('Boss');
+    await call('POST', '/v1/staff/admin/student', {
+      token,
+      body: { learnerId: a, cohortId: cohort.id },
+    });
+    const found = (await json(
+      await call('GET', `/v1/staff/admin/students?cohortId=${cohort.id}`, { token }),
+    )) as { students: { id: string }[] };
+    expect(found.students.map((s) => s.id)).toEqual([a]);
+    await call('POST', '/v1/staff/admin/deactivate', {
+      token,
+      body: { learnerId: a, active: false },
+    });
+    const pull = await call('GET', '/v1/sync/pull?after=0', { token: 'token-a' });
+    expect([pull.status, await json(pull)]).toEqual([403, { error: 'DEACTIVATED' }]);
+    await call('POST', '/v1/staff/admin/deactivate', {
+      token,
+      body: { learnerId: a, active: true },
+    });
+    expect((await call('GET', '/v1/sync/pull?after=0', { token: 'token-a' })).status).toBe(200);
+  });
+
+  test('a switch key that does not exist is refused', async () => {
+    const token = await adminToken();
+    const res = await call('POST', '/v1/staff/admin/switch', {
+      token,
+      body: { key: 'teleport', enabledForAll: true },
+    });
+    expect(res.status).toBe(400);
   });
 });

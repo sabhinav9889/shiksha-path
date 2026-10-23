@@ -36,10 +36,40 @@ export function contrastRatio(a: string, b: string): number {
   return (hi + FLARE) / (lo + FLARE);
 }
 
+/** The app's page colour (`--color-bg`): brand colours are also used as text on it. */
+export const PAGE_BACKGROUND = '#f4f5fa';
+
+/** Readable as a background for white text and as text on the page (Plan 3b review M4). */
+export function isReadable(colour: string): boolean {
+  return (
+    contrastRatio('#ffffff', colour) >= MIN_CONTRAST &&
+    contrastRatio(PAGE_BACKGROUND, colour) >= MIN_CONTRAST
+  );
+}
+
 const readableColour = z
   .string()
   .regex(HEX_COLOUR)
-  .refine((c) => contrastRatio('#ffffff', c) >= MIN_CONTRAST, 'white text would be hard to read');
+  .refine(isReadable, 'the colour would be hard to read on white or on the page');
+
+const DARK_SHARE = 0.7;
+const SOFT_SHARE = 0.1;
+
+function mapChannels(hex: string, f: (c: number) => number): string {
+  return `#${CHANNEL_STARTS.map((at) =>
+    Math.round(f(parseInt(hex.slice(at, at + 2), HEX_BASE)))
+      .toString(HEX_BASE)
+      .padStart(2, '0'),
+  ).join('')}`;
+}
+
+/** The pressed (`-dark`) and tinted (`-soft`) shades the app derives from the primary. */
+export function primaryShades(primary: string): { dark: string; soft: string } {
+  return {
+    dark: mapChannels(primary, (c) => c * DARK_SHARE),
+    soft: mapChannels(primary, (c) => CHANNEL_MAX - (CHANNEL_MAX - c) * SOFT_SHARE),
+  };
+}
 
 const name = z.strictObject({
   hi: z.string().trim().min(1).max(MAX_NAME),

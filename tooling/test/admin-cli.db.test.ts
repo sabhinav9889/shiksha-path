@@ -1,6 +1,7 @@
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import postgres from 'postgres';
 import { afterAll, beforeEach, describe, expect, test } from 'vitest';
 import { localStack } from '../../supabase/tests/stack.js';
 import { makeAdminDeps, runAdmin, type AdminIo } from '../admin/commands.js';
@@ -13,6 +14,7 @@ const env = {
   CODE_PEPPER: 'admin-test-pepper-0123456789abcdef0',
 };
 const admin = makeAdminDeps(env);
+const cleanupSql = postgres(env.SUPABASE_DB_URL, { max: 1 });
 let lines: string[];
 const io: AdminIo = { out: (line) => lines.push(line), err: (line) => lines.push(`! ${line}`) };
 const run = (...argv: string[]): Promise<number> => runAdmin(argv, admin, io);
@@ -23,13 +25,22 @@ beforeEach(() => {
 
 afterAll(async () => {
   await admin.close();
+  await cleanupSql.end();
 });
 
 describe('the admin tool', () => {
   test('--help lists every command and exits 0', async () => {
     expect(await run('--help')).toBe(0);
     const help = lines.join('\n');
-    const all = ['issue-code', 'reset-code', 'export', 'delete', 'retention', 'set-branding'];
+    const all = [
+      'issue-code',
+      'reset-code',
+      'export',
+      'delete',
+      'retention',
+      'set-branding',
+      'add-staff',
+    ];
     for (const command of all) {
       expect(help).toContain(command);
     }
@@ -48,6 +59,15 @@ describe('the admin tool', () => {
     expect(out).not.toContain('प्रिया');
     const learnerId = /learner ([0-9a-f-]{36})/.exec(out)?.[1] ?? '';
     expect(await run('delete', '--learner', learnerId, '--yes')).toBe(0);
+  });
+
+  test('issue-code --cohort puts the new student in that cohort', async () => {
+    const cohortId = await admin.org.saveCohort({ name: `cli ${Date.now()}`, labId: null });
+    expect(await run('issue-code', '--name', 'C', '--cohort', cohortId)).toBe(0);
+    const learnerId = /learner ([0-9a-f-]{36})/.exec(lines.join('\n'))?.[1] ?? '';
+    expect(await admin.org.cohortOfLearner(learnerId)).toBe(cohortId);
+    await run('delete', '--learner', learnerId, '--yes');
+    await cleanupSql`delete from cohorts where id = ${cohortId}`;
   });
 
   test('export writes learner.json and the recordings into the folder', async () => {
@@ -116,6 +136,43 @@ describe('the admin tool', () => {
       ).toBe(0);
     } finally {
       rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('add-staff invites the first admin and prints only the staff id', async () => {
+    const email = `owner.${Date.now()}@ngo.example`;
+    expect(await run('add-staff', '--email', email, '--role', 'admin', '--name', 'Owner')).toBe(0);
+    const out = lines.join('\n');
+    expect(out).toMatch(/^staff [0-9a-f-]{36}$/m);
+    expect(out).not.toContain(email);
+    expect(await run('add-staff', '--email', email, '--role', 'admin', '--name', 'Owner')).toBe(1);
+    expect(await run('add-staff', '--email', 'x@y', '--role', 'boss', '--name', 'X')).toBe(1);
+    const staffId = /staff ([0-9a-f-]{36})/.exec(out)?.[1] ?? '';
+    await admin.staff.save({
+      id: staffId,
+      email,
+      role: 'admin',
+      name: 'Owner',
+      active: false,
+      cohortIds: [],
+    });
+  });
+
+  test('retention and set-branding need no CODE_PEPPER; issue-code still does (M6)', async () => {
+    const plain = makeAdminDeps({ ...env, CODE_PEPPER: undefined });
+    const runPlain = (...argv: string[]): Promise<number> => runAdmin(argv, plain, io);
+    const dir = mkdtempSync(join(tmpdir(), 'shiksha-brand-'));
+    try {
+      expect(await runPlain('retention', '--dry-run')).toBe(0);
+      const path = join(dir, 'brand.json');
+      const name = { hi: 'शिक्षा पथ', en: 'Shiksha Path' };
+      writeFileSync(path, JSON.stringify({ name, primary: '#2f3ab2', accent: '#b45309' }));
+      expect(await runPlain('set-branding', '--file', path, '--dry-run')).toBe(0);
+      expect(await runPlain('issue-code', '--name', 'X')).toBe(1);
+      expect(lines.join('\n')).toMatch(/CODE_PEPPER/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      await plain.close();
     }
   });
 

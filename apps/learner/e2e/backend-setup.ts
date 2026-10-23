@@ -6,6 +6,8 @@ import { randomUUID } from 'node:crypto';
 import { expect, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import postgres from 'postgres';
+import { PgAttendanceRepo } from '../../../packages/server/src/adapters/pg-attendance-repo.js';
+import { PgAuditRepo } from '../../../packages/server/src/adapters/pg-audit-repo.js';
 import { PgCodeRepo } from '../../../packages/server/src/adapters/pg-code-repo.js';
 import { PgLearnerRepo } from '../../../packages/server/src/adapters/pg-learner-repo.js';
 import { PgRateLimiter } from '../../../packages/server/src/adapters/pg-rate-limiter.js';
@@ -16,6 +18,7 @@ import { PgRecordingRepo } from '../../../packages/server/src/adapters/pg-record
 import { createSupabaseRecordingStorage } from '../../../packages/server/src/adapters/supabase-recording-storage.js';
 import { issueCode } from '../../../packages/server/src/services/codes.js';
 import { deleteLearner } from '../../../packages/server/src/services/learner-data.js';
+import { makeAdminDeps, runAdmin } from '../../../tooling/admin/commands.js';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 
@@ -207,6 +210,8 @@ export async function deleteStudent(
 ): Promise<void> {
   await deleteLearner(
     {
+      attendance: new PgAttendanceRepo(sql),
+      audit: new PgAuditRepo(sql),
       data: new PgLearnerDataRepo(sql),
       recordings: new PgRecordingRepo(sql),
       storage: createSupabaseRecordingStorage(stack.apiUrl, stack.serviceKey),
@@ -221,4 +226,48 @@ export async function storedRecordings(stack: LocalStack, learnerId: string): Pr
   const admin = createClient(stack.apiUrl, stack.serviceKey, { auth: { persistSession: false } });
   const { data } = await admin.storage.from('recordings').list(learnerId);
   return (data ?? []).map((o) => o.name);
+}
+
+/** The owner adds the first admin with `npm run admin -- add-staff` (no code pepper needed). */
+export async function ownerAddsStaff(
+  stack: LocalStack,
+  staff: { email: string; role: 'admin' | 'mentor'; name: string },
+): Promise<void> {
+  const deps = makeAdminDeps({
+    SUPABASE_DB_URL: stack.dbUrl,
+    SUPABASE_URL: stack.apiUrl,
+    SUPABASE_SERVICE_ROLE_KEY: stack.serviceKey,
+  });
+  const lines: string[] = [];
+  const io = { out: (line: string) => lines.push(line), err: (line: string) => lines.push(line) };
+  try {
+    const argv = ['add-staff', '--email', staff.email, '--role', staff.role, '--name', staff.name];
+    const status = await runAdmin(argv, deps, io);
+    if (status !== 0) throw new Error(`add-staff failed: ${lines.join(' ')}`);
+  } finally {
+    await deps.close();
+  }
+}
+
+/** Google "comes back" to the staff section: the session lands under the staff key. */
+export async function returnToStaff(page: Page, stack: LocalStack, user: TestUser): Promise<void> {
+  const started = (): Promise<string | null> =>
+    page.evaluate(() => sessionStorage.getItem('shiksha.staff-signin'));
+  await expect.poll(started, { message: 'the staff sign-in started' }).toBe('1');
+  const entries = await sessionEntries(stack, user);
+  await page.evaluate(async (rows) => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const open = indexedDB.open('shiksha');
+      open.onsuccess = () => resolve(open.result);
+      open.onerror = () => reject(new Error('cannot open the app database'));
+    });
+    const tx = db.transaction('auth', 'readwrite');
+    for (const [name, value] of Object.entries(rows)) {
+      tx.objectStore('auth').put({ key: `staff:${name}`, value });
+    }
+    await new Promise<void>((resolve) => (tx.oncomplete = () => resolve()));
+    db.close();
+  }, entries);
+  await page.goto('about:blank');
+  await page.goto('/#/staff');
 }

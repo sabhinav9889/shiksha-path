@@ -197,3 +197,65 @@ describe('recordings rows', () => {
     expect(bucket).toEqual({ public: false, file_size_limit: 1048576 });
   });
 });
+
+describe('staff see only what their role allows (2 mentors, 2 cohorts)', () => {
+  async function mentorOf(cohortId: string, role = 'mentor'): Promise<string> {
+    const authId = randomUUID();
+    await sql`insert into auth.users (id, instance_id, aud, role, email)
+              values (${authId}, '00000000-0000-0000-0000-000000000000', 'authenticated',
+                      'authenticated', ${`${authId}@ngo.example`})`;
+    const [staff] = await sql<{ id: string }[]>`
+      insert into staff (email, role, name, auth_user_id)
+      values (${`${authId}@ngo.example`}, ${role}, 'M', ${authId}) returning id`;
+    if (role === 'mentor') {
+      await sql`insert into staff_cohorts (staff_id, cohort_id) values (${staff?.id ?? ''}, ${cohortId})`;
+    }
+    return authId;
+  }
+
+  afterEach(async () => {
+    await sql`delete from auth.users where email like '%@ngo.example'`;
+    await sql`delete from staff where email like '%@ngo.example'`;
+  });
+
+  test("a mentor reads their cohort's learners, events and recordings, and nothing else", async () => {
+    for (const learner of [a, b]) {
+      await sql`insert into recordings (id, learner_id, lesson_id, item_id, mime, bytes,
+                                       duration_ms, recorded_at)
+                values (${randomUUID()}, ${learner.id}, 'ef1-02', 's1', 'audio/webm', 1, 1, now())`;
+    }
+    const mentorA = await mentorOf(a.cohortId);
+    await asUser(sql, mentorA, async (tx) => {
+      expect((await tx`select id from learners`).map((r) => r.id)).toEqual([a.id]);
+      const events = await tx`select learner_id from learner_events`;
+      expect(events.length).toBeGreaterThan(0);
+      expect(events.every((e) => e.learner_id === a.id)).toBe(true);
+      expect((await tx`select learner_id from recordings`).map((r) => r.learner_id)).toEqual([
+        a.id,
+      ]);
+      expect(await tx`select 1 from learners where id = ${b.id}`).toHaveLength(0);
+    });
+  });
+
+  test('an admin reads every learner; a student sees no staff rows', async () => {
+    const admin = await mentorOf(a.cohortId, 'admin');
+    await asUser(sql, admin, async (tx) => {
+      const ids = (await tx`select id from learners where id in (${a.id}, ${b.id})`).map(
+        (r) => r.id,
+      );
+      expect(ids.sort()).toEqual([a.id, b.id].sort());
+    });
+    await mentorOf(b.cohortId);
+    await asUser(sql, a.authId, async (tx) => {
+      expect(await tx`select id from staff`).toHaveLength(0);
+    });
+  });
+
+  test('an inactive mentor reads nothing', async () => {
+    const mentorA = await mentorOf(a.cohortId);
+    await sql`update staff set active = false where auth_user_id = ${mentorA}`;
+    await asUser(sql, mentorA, async (tx) => {
+      expect(await tx`select id from learners`).toHaveLength(0);
+    });
+  });
+});

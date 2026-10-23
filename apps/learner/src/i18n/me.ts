@@ -15,6 +15,10 @@ export const meStrings = {
   'me.never': { hi: 'अभी तक sync नहीं हुआ', en: 'Not synced yet' },
   'me.syncNow': { hi: 'अभी sync करें', en: 'Sync now' },
   'me.syncDone': { hi: 'पाठ अपडेट हो गए', en: 'Lessons are up to date' },
+  'me.deactivated': {
+    hi: 'आपकी प्रोफ़ाइल अभी बंद है — अपने मेंटर से बात करें',
+    en: 'Your profile is paused — please talk to your mentor',
+  },
   'me.remove': { hi: 'इस फ़ोन से प्रोफ़ाइल हटाएँ', en: 'Remove profile from this phone' },
   'me.removeConfirm': {
     hi: 'हटाने के लिए अपना PIN डालें। Google से जुड़ी प्रोफ़ाइल बाद में वापस लाई जा सकती है।',
