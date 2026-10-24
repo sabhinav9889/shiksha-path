@@ -29,7 +29,13 @@ async function linkOnce(
   if (await deps.staff.byAuthUser(authUserId)) throw new ApiFailure('FORBIDDEN');
   // A student deleted on request stays deleted: their old id is never made a learner again.
   if ((await deps.data.deleted([request.profileId])).length > 0) throw new ApiFailure('FORBIDDEN');
-  if (await deps.learners.findById(request.profileId)) throw new ApiFailure('PROFILE_TAKEN');
+  if (await deps.learners.findById(request.profileId)) {
+    // Another request for this same sign-in may have created it since the lookup above: then it
+    // is this identity's own learner, not someone else's.
+    const mine = await deps.learners.findByAuthUser(authUserId);
+    if (mine) return { learnerId: mine.id, name: mine.name, created: false };
+    throw new ApiFailure('PROFILE_TAKEN');
+  }
   await deps.learners.createLinked({ id: request.profileId, name: request.name, authUserId });
   return { learnerId: request.profileId, name: request.name, created: true };
 }
