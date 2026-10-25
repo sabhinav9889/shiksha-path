@@ -5,9 +5,9 @@ Active tasks. Read this at the start of every session. Details live in `.claude/
 
 **Statuses:** `in-progress` · `blocked` · `shipped` · `on-hold`
 
-| Task                                  | Status      | Assignee | Branch                 | Next step                                                                         | Detail                                                    |
-| ------------------------------------- | ----------- | -------- | ---------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Plan 4a – mentor view and admin panel | in-progress | Claude   | `feature/mentor-admin` | Final whole-branch review, then PR; owner then adds the first admin (runbook §10) | [plan](docs/superpowers/plans/2026-10-22-mentor-admin.md) |
+| Task                      | Status      | Assignee | Branch                      | Next step                                                                                 | Detail              |
+| ------------------------- | ----------- | -------- | --------------------------- | ----------------------------------------------------------------------------------------- | ------------------- |
+| Hackathon submission docs | in-progress | Claude   | `docs/hackathon-submission` | Owner reviews README, `docs/ai-development.md`, `docs/qa.md`; then PR, deploy, demo video | [README](README.md) |
 
 ## Archive
 
@@ -24,3 +24,7 @@ Shipped tasks move here with their merge date.
 - Plan 3b plan · merged 2026-10-22 (PR #14)
 - Plan 3b – backend and sync, part 2 · merged 2026-10-22 (PR #15)
 - Plan 4a plan · merged 2026-10-22 (PR #16)
+- Plan 4a – mentor view and admin panel · merged 2026-10-23 (PR #17); owner still adds the first
+  admin (runbook §10)
+- Plans 4b to 6b (written, not built) · merged 2026-10-24 (PR #18)
+- Fix: a link that loses a race to its own sign-in · merged 2026-10-24 (PR #19)

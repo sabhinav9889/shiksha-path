@@ -15,3 +15,4 @@ Read the relevant one before touching that area.
 | [commit-body-lines-read-as-footers.md](commit-body-lines-read-as-footers.md)               | A body line like `word: text` fails commitlint as a footer                             |
 | [lint-limits-to-design-for.md](lint-limits-to-design-for.md)                               | Line, function, complexity and file-size limits that force late refactors              |
 | [playwright-project-flag-after-the-filter.md](playwright-project-flag-after-the-filter.md) | `--project` swallows the file filter; rebuild the app; register new specs              |
+| [db-tests-need-functions-env-local.md](db-tests-need-functions-env-local.md)               | `npm run test:db` fails one test in a fresh checkout until `.env.local` is copied      |
