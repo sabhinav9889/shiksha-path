@@ -28,6 +28,7 @@
     "db:reset": "supabase db reset",
     "test:db": "vitest run -c vitest.db.config.ts",
     "admin": "tsx tooling/admin/cli.ts",
+    "package:submission": "node tooling/package-submission.mjs",
     "functions:build": "node tooling/build-functions.mjs",
     "functions:serve": "npm run functions:build && supabase functions serve api --no-verify-jwt --env-file supabase/functions/.env.local"
   },
