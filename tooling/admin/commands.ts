@@ -6,10 +6,12 @@ import { brandingInput } from '@shiksha/api-contract';
 import { z } from 'zod';
 import { PgAttendanceRepo } from '../../packages/server/src/adapters/pg-attendance-repo.js';
 import { PgAuditRepo } from '../../packages/server/src/adapters/pg-audit-repo.js';
+import { PgEventRepo } from '../../packages/server/src/adapters/pg-event-repo.js';
 import { PgBrandingRepo } from '../../packages/server/src/adapters/pg-branding-repo.js';
 import { PgCodeRepo } from '../../packages/server/src/adapters/pg-code-repo.js';
 import { PgOrgRepo } from '../../packages/server/src/adapters/pg-org-repo.js';
 import { PgStaffRepo } from '../../packages/server/src/adapters/pg-staff-repo.js';
+import { PgSummaryRepo } from '../../packages/server/src/adapters/pg-summary-repo.js';
 import { PgLearnerDataRepo } from '../../packages/server/src/adapters/pg-learner-data-repo.js';
 import { PgLearnerRepo } from '../../packages/server/src/adapters/pg-learner-repo.js';
 import { PgRateLimiter } from '../../packages/server/src/adapters/pg-rate-limiter.js';
@@ -18,13 +20,16 @@ import { PgSwitchRepo } from '../../packages/server/src/adapters/pg-switch-repo.
 import { createSql } from '../../packages/server/src/adapters/pg.js';
 import { createSupabaseAuth } from '../../packages/server/src/adapters/supabase-auth.js';
 import { createSupabaseRecordingStorage } from '../../packages/server/src/adapters/supabase-recording-storage.js';
+import { runSeedDemo } from './demo.js';
 import { setBranding } from '../../packages/server/src/services/branding.js';
 import { issueCode, resetCode, type CodeDeps } from '../../packages/server/src/services/codes.js';
 import type {
   BrandingRepo,
+  EventRepo,
   OrgRepo,
   StaffRepo,
   StaffRole,
+  SummaryRepo,
 } from '../../packages/server/src/ports.js';
 import { ApiFailure } from '../../packages/server/src/services/failure.js';
 import {
@@ -46,6 +51,8 @@ export interface AdminDeps {
   branding: BrandingRepo;
   staff: StaffRepo;
   org: OrgRepo;
+  events: EventRepo;
+  summaries: SummaryRepo;
   close(): Promise<void>;
 }
 
@@ -101,6 +108,8 @@ export function makeAdminDeps(env: Record<string, string | undefined>): AdminDep
     branding: new PgBrandingRepo(sql),
     staff: new PgStaffRepo(sql),
     org: new PgOrgRepo(sql),
+    events: new PgEventRepo(sql),
+    summaries: new PgSummaryRepo(sql),
     close: () => sql.end(),
   };
 }
@@ -114,6 +123,7 @@ export const USAGE = `Usage: npm run admin -- <command> [options]
   retention                                   Delete recordings past their time (runs nightly)
   set-branding --file <json>                  Name {hi, en}, primary and accent colours (#rrggbb)
   add-staff --email <e> --role admin|mentor --name <n>   Invite staff (the first admin starts here)
+  seed-demo [--remove]                        12 made-up students for showing the screens (needs CODE_PEPPER)
 
 Every command takes --dry-run (say what would happen) and --help.
 Reads SUPABASE_DB_URL, SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from the environment, and
@@ -285,6 +295,13 @@ function usage(io: AdminIo, problem: string): number {
   return 1;
 }
 
+const seedDemoCommand: Command = async (args, deps, io) =>
+  runSeedDemo(
+    deps,
+    { remove: args.options.has('remove'), dryRun: args.options.has('dry-run') },
+    io,
+  );
+
 const COMMANDS: Record<string, Command> = {
   'issue-code': issue,
   'reset-code': reset,
@@ -293,6 +310,7 @@ const COMMANDS: Record<string, Command> = {
   retention,
   'set-branding': brand,
   'add-staff': addStaff,
+  'seed-demo': seedDemoCommand,
 };
 
 /** Run one command; returns the exit code. Refusals from the services exit 1 with a reason. */
