@@ -9,6 +9,19 @@ Active tasks. Read this at the start of every session. Details live in `.claude/
 | ------------------------------------- | ----------- | -------- | ---------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | Plan 4a – mentor view and admin panel | in-progress | Claude   | `feature/mentor-admin` | Final whole-branch review, then PR; owner then adds the first admin (runbook §10) | [plan](docs/superpowers/plans/2026-10-22-mentor-admin.md) |
 
+## Backlog
+
+Not started. Move a line into the table above when someone picks it up.
+
+- **Staff language switch (owner request, 2026-10-26).** Mentors and admins need a Hindi/English
+  choice. Today the staff screens use the signed-in learner profile's language and fall back to
+  Hindi, so staff can never get English even though every staff string has an English version
+  (`apps/learner/src/staff/i18n.ts`, `admin-i18n.ts`). Add a switch in the staff bar
+  (`StaffNav.svelte`), remember it per browser (builder's call: `localStorage`, wrapped in
+  try/catch), default from the browser language, and make `StaffApp.svelte` use it instead of
+  `appState.lang`. Test: switching shows English on the cohort, student and admin pages; the
+  learner profiles' language is untouched. Natural home: Plan 4b (not yet in its task list).
+
 ## Archive
 
 Shipped tasks move here with their merge date.
