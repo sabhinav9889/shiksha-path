@@ -28,6 +28,10 @@
   let typed = $state('');
   let overrides = $state<Partial<Record<FeatureKey, Choice>>>({});
   let failed = $state(false);
+  // Hindi has more than one way to write the same letter (nukta): compare them normalised.
+  const sameName = $derived(
+    typed.trim().normalize('NFC') === student.name.normalize('NFC'),
+  );
 
   async function run(work: (api: StaffApi) => Promise<{ ok: boolean }>): Promise<void> {
     const api = staffState.auth?.api;
@@ -110,7 +114,7 @@
       <label>{at('typeName', lang)} <input bind:value={typed} /></label>
       <button
         type="button"
-        disabled={typed.trim() !== student.name}
+        disabled={!sameName}
         onclick={() => run((api) => api.deleteStudent({ learnerId: student.id }))}
       >
         {at('removeNow', lang)}

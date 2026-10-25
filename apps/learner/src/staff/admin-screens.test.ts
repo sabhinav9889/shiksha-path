@@ -182,6 +182,28 @@ describe('the admin students page', () => {
   });
 });
 
+describe('the delete confirmation', () => {
+  test('accepts a name typed in a different Unicode form than the one stored', async () => {
+    // The same Hindi letter two ways: one code point (U+095C) and base letter plus nukta.
+    const stored = `ग${String.fromCharCode(0x095c)}`;
+    const typed = `ग${String.fromCharCode(0x0921, 0x093c)}`;
+    expect(stored).not.toBe(typed);
+    await student(stored, cohortA);
+    await openAdmin('students');
+    await fireEvent.click(await vi.waitFor(() => button(stored)));
+    const panel = await vi.waitFor(() => screen.getByTestId('student-actions'));
+    await fireEvent.click(within(panel).getByRole('button', { name: 'हटाएँ' }));
+    await fireEvent.click(
+      await vi.waitFor(() => within(panel).getByRole('button', { name: 'हाँ' })),
+    );
+    await fireEvent.input(within(panel).getByLabelText('पक्का करने के लिए छात्र का नाम लिखें'), {
+      target: { value: typed },
+    });
+    const confirm = within(panel).getByRole('button', { name: 'हमेशा के लिए हटाएँ' });
+    expect((confirm as HTMLButtonElement).disabled).toBe(false);
+  });
+});
+
 describe('the admin switches page', () => {
   test('shows each all-students value and saves a change', async () => {
     await openAdmin('switches');
