@@ -57,7 +57,7 @@
     "supabase": "^2.121.0",
     "svelte-check": "^4.7.7",
     "tsx": "^4.23.15",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "typescript-eslint": "^8.71.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5",
