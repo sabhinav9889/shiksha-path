@@ -251,6 +251,44 @@ describe('staff see only what their role allows (2 mentors, 2 cohorts)', () => {
     });
   });
 
+  test('summaries and attendance follow the same scope; students and writes are refused', async () => {
+    for (const learner of [a, b]) {
+      await sql`insert into learner_summaries (learner_id, summary)
+                values (${learner.id}, ${sql.json({ lessonsDone: 1 })})`;
+      await sql`insert into lab_attendance (learner_id, day, present)
+                values (${learner.id}, '2026-10-20', true)`;
+    }
+    const mentorA = await mentorOf(a.cohortId);
+    await asUser(sql, mentorA, async (tx) => {
+      const summaries = await tx`select learner_id from learner_summaries`;
+      expect(summaries.map((r) => r.learner_id)).toEqual([a.id]);
+      const attendance = await tx`select learner_id from lab_attendance`;
+      expect(attendance.map((r) => r.learner_id)).toEqual([a.id]);
+    });
+    await expect(
+      asUser(sql, mentorA, (tx) => tx`update learner_summaries set summary = '{}'::jsonb`),
+    ).rejects.toThrow();
+    await expect(
+      asUser(
+        sql,
+        mentorA,
+        (tx) =>
+          tx`insert into lab_attendance (learner_id, day, present)
+             values (${a.id}, '2026-10-21', true)`,
+      ),
+    ).rejects.toThrow();
+    const admin = await mentorOf(a.cohortId, 'admin');
+    await asUser(sql, admin, async (tx) => {
+      const both = await tx`select learner_id from learner_summaries
+                            where learner_id in (${a.id}, ${b.id})`;
+      expect(both.map((r) => r.learner_id).sort()).toEqual([a.id, b.id].sort());
+    });
+    await asUser(sql, a.authId, async (tx) => {
+      expect(await tx`select 1 from learner_summaries`).toHaveLength(0);
+      expect(await tx`select 1 from lab_attendance`).toHaveLength(0);
+    });
+  });
+
   test('an inactive mentor reads nothing', async () => {
     const mentorA = await mentorOf(a.cohortId);
     await sql`update staff set active = false where auth_user_id = ${mentorA}`;
