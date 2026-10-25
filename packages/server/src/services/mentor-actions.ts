@@ -74,6 +74,9 @@ export async function setLevel(
   return { eventId: event.id };
 }
 
+/** How many days back attendance can be marked or shown (India time). */
+const ATTENDANCE_DAYS = 30;
+
 /**
  * Mark a lab day for a whole cohort: listed learners present, the rest absent. Marking again
  * replaces that day. A future day or a learner outside the cohort writes nothing.
@@ -84,9 +87,16 @@ export async function markAttendance(
   input: { cohortId: string; day: string; present: string[] },
 ): Promise<{ marked: number }> {
   ownCohort(staff, input.cohortId);
-  if (input.day > istDay(new Date())) throw new ApiFailure('INVALID_REQUEST');
-  const members = (await deps.org.students([input.cohortId])).map((s) => s.id);
-  if (input.present.some((id) => !members.includes(id))) throw new ApiFailure('FORBIDDEN');
+  const today = istDay(new Date());
+  if (input.day > today || input.day < addDays(today, -ATTENDANCE_DAYS)) {
+    throw new ApiFailure('INVALID_REQUEST');
+  }
+  const students = await deps.org.students([input.cohortId]);
+  if (input.present.some((id) => !students.some((s) => s.id === id))) {
+    throw new ApiFailure('FORBIDDEN');
+  }
+  // A paused student is not in the lab: they are neither present nor marked absent.
+  const members = students.filter((s) => !s.deactivated).map((s) => s.id);
   const record = {
     staff,
     action: 'attendance_marked' as const,
@@ -103,8 +113,6 @@ export async function markAttendance(
   );
   return { marked };
 }
-
-const ATTENDANCE_DAYS = 30;
 
 /** The first IST day of the attendance window a student detail shows. */
 export const attendanceFrom = (): string => addDays(istDay(new Date()), -ATTENDANCE_DAYS);
