@@ -378,6 +378,29 @@ export function describeStaffContract(name: string, make: () => Promise<ServiceF
         ]);
       });
 
+      test('attendance skips a paused student, and refuses a day older than the 30-day window', async () => {
+        const mentor = await staffMember('mentor', [cohortA]);
+        const paused = await learnerIn(cohortA);
+        await f.org.setDeactivated(paused, true);
+        const day = today();
+        expect(
+          await markAttendance(f, mentor, { cohortId: cohortA, day, present: [learnerA] }),
+        ).toEqual({ marked: 1 });
+        expect((await studentDetail(f, mentor, paused)).attendance).toEqual([]);
+        const old = markAttendance(f, mentor, {
+          cohortId: cohortA,
+          day: addDays(day, -31),
+          present: [],
+        });
+        expect(await codeOf(old)).toBe('INVALID_REQUEST');
+        const edge = addDays(day, -30);
+        await markAttendance(f, mentor, { cohortId: cohortA, day: edge, present: [] });
+        expect((await studentDetail(f, mentor, learnerA)).attendance).toContainEqual({
+          date: edge,
+          present: false,
+        });
+      });
+
       test('attendance refuses a future day and a learner of another cohort, writing nothing', async () => {
         const mentor = await staffMember('mentor', [cohortA]);
         const tomorrow = addDays(today(), 1);

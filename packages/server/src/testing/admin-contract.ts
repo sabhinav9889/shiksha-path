@@ -81,6 +81,20 @@ export function describeAdminContract(name: string, make: () => Promise<ServiceF
         expect(flagged.students.map((s) => s.id)).toEqual([late]);
       });
 
+      test('renaming and moving at once writes one audit entry, not two', async () => {
+        const boss = await staffMember('admin', []);
+        await admin.editStudent(f, boss, {
+          learnerId: learnerA,
+          name: 'New Name',
+          cohortId: cohortB,
+        });
+        const mine = (await f.audit.page(null, 100)).filter((e) => e.staffId === boss.staffId);
+        expect(mine.map((e) => e.action)).toEqual(['student_edited']);
+        expect(mine[0]?.details).toEqual({ to: cohortB });
+        expect((await f.org.student(learnerA))?.name).toBe('New Name');
+        expect(await f.org.cohortOfLearner(learnerA)).toBe(cohortB);
+      });
+
       test('moving a student moves them out of the old mentor’s reach', async () => {
         const boss = await staffMember('admin', []);
         const mentorA = await staffMember('mentor', [cohortA]);

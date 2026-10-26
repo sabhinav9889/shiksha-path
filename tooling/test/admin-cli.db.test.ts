@@ -176,6 +176,22 @@ describe('the admin tool', () => {
     }
   });
 
+  test('seed-demo makes the fake cohort once, and --remove deletes only it', async () => {
+    await run('seed-demo', '--remove'); // a clean start, whatever an earlier run left
+    expect(await run('seed-demo', '--dry-run')).toBe(0);
+    expect(lines.join('\n')).toMatch(/would make 12 demo students/);
+    expect(await run('seed-demo')).toBe(0);
+    expect(lines.join('\n')).toMatch(/made 12 demo students/);
+    expect(await run('seed-demo')).toBe(1); // refused: already there
+    const [counted] = await cleanupSql<{ n: number }[]>`
+      select count(*)::int as n from learners l join cohorts c on c.id = l.cohort_id
+      where c.name like 'डेमो समूह%'`;
+    expect(counted?.n).toBe(12);
+    lines = [];
+    expect(await run('seed-demo', '--remove')).toBe(0);
+    expect(lines.join('\n')).toMatch(/removed 12 demo students/);
+  });
+
   test('the environment is checked, and secrets are never printed', async () => {
     expect(() => makeAdminDeps({ ...env, CODE_PEPPER: 'short' })).toThrow(/CODE_PEPPER/);
     await run('--help');

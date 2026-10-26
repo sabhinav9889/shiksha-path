@@ -3,12 +3,14 @@
   import { appState } from '../app-state.svelte.js';
   import { router } from '../router.svelte.js';
   import { st, type StaffKey } from './i18n.js';
+  import StaffLangToggle from './StaffLangToggle.svelte';
+  import { staffLang } from './staff-lang.svelte.js';
   import { staffState } from './staff-state.svelte.js';
   import StaffNav from './StaffNav.svelte';
   import StaffView from './StaffView.svelte';
 
   /** The staff section (spec §8): its own Google session, never a learner profile's. */
-  const lang = $derived(appState.lang);
+  const lang = $derived(staffLang.lang);
   let busy = $state(true);
   let problem = $state<StaffKey | null>(null);
 
@@ -75,6 +77,7 @@
       {:else}
         <button type="button" onclick={signIn}>{st('signIn', lang)}</button>
       {/if}
+      <StaffLangToggle />
       <a href="#/profiles">{st('backToApp', lang)}</a>
     </div>
   {/if}

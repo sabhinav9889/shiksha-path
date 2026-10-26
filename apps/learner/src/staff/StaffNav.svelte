@@ -3,6 +3,7 @@
   import type { Lang } from '../i18n/index.js';
   import { routeHref, type Route } from '../router.svelte.js';
   import { st, type StaffKey } from './i18n.js';
+  import StaffLangToggle from './StaffLangToggle.svelte';
 
   let { me, lang, onsignout }: { me: StaffMe; lang: Lang; onsignout: () => void } = $props();
 
@@ -36,6 +37,7 @@
       <a href={routeHref(link.route)}>{st(link.label, lang)}</a>
     {/each}
   </div>
+  <StaffLangToggle />
   <button type="button" onclick={onsignout}>{st('signOut', lang)}</button>
 </nav>
 

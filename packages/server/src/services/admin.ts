@@ -169,19 +169,20 @@ export async function editStudent(
   requireAdmin(staff);
   await inScope(deps, staff, input.learnerId);
   const { learnerId, name, cohortId } = input;
-  if (name !== undefined) {
-    const record = { staff, action: 'student_edited' as const, learnerId, details: {} };
-    await withAudit(deps, record, () => deps.org.renameLearner(learnerId, name));
-  }
-  if (cohortId !== undefined) {
-    const record = {
-      staff,
-      action: 'student_moved' as const,
-      learnerId,
-      details: { to: cohortId },
-    };
-    await withAudit(deps, record, () => deps.org.setLearnerCohort(learnerId, cohortId));
-  }
+  // One action, one audit entry: a rename together with a move is a single `student_edited`.
+  const renamed = name !== undefined;
+  const moved = cohortId !== undefined;
+  if (!renamed && !moved) return;
+  const record = {
+    staff,
+    action: renamed ? ('student_edited' as const) : ('student_moved' as const),
+    learnerId,
+    details: moved ? { to: cohortId } : {},
+  };
+  await withAudit(deps, record, async () => {
+    if (renamed) await deps.org.renameLearner(learnerId, name);
+    if (moved) await deps.org.setLearnerCohort(learnerId, cohortId);
+  });
 }
 
 /** Deactivate (sync refused, data kept) or reactivate a student. */
