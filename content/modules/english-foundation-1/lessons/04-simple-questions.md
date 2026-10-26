@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: simple questions
 level: 1
 order: 4
-review: pending
+review: approved
 title: { hi: आसान सवाल पूछना, en: Asking simple questions }
 items:
   - id: q1

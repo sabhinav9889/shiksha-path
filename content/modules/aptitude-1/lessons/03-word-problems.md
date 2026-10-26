@@ -5,7 +5,7 @@ module: aptitude-1
 topic: simple word problems
 level: 1
 order: 3
-review: pending
+review: approved
 title: { hi: छोटे गणित के सवाल, en: Simple word problems }
 items:
   - id: q1

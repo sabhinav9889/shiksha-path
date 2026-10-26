@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: polite words
 level: 1
 order: 6
-review: pending
+review: approved
 title: { hi: शिष्ट शब्द, en: Polite words }
 items:
   - id: q1

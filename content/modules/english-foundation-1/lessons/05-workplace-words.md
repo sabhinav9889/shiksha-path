@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: basic workplace words
 level: 1
 order: 5
-review: pending
+review: approved
 title: { hi: दफ़्तर के आम शब्द, en: Everyday workplace words }
 items:
   - id: q1
