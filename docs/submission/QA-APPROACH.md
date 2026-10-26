@@ -7,16 +7,17 @@ tested, how AI took part, and how its output was validated.
 
 | Layer                                                                   | What it proves                                                                                                                                                         | Size                                     |
 | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Unit and component tests (Vitest, `npm test`)                           | Learning logic, sync, the server services over in-memory repositories, every Svelte screen in jsdom                                                                    | about 1,000 tests                        |
+| Unit and component tests (Vitest, `npm test`)                           | Learning logic, sync, the server services over in-memory repositories, every Svelte screen in jsdom                                                                    | 1,006 tests (26 Oct run)                 |
 | Shared contract tests                                                   | One set of behaviour tests runs against **both** the in-memory repositories and real Postgres, so a fake can never drift from the database                             | part of the above and the database suite |
-| Database tests (`npm run test:db`, local Supabase)                      | The same contracts on Postgres, migrations, **row-level security with two students and two cohorts**, the served API                                                   | 157 tests                                |
+| Database tests (`npm run test:db`, local Supabase)                      | The same contracts on Postgres, migrations, **row-level security with two students and two cohorts**, the served API                                                   | 157 tests (26 Oct run)                   |
 | End-to-end (Playwright, `npm run test:e2e`, `npm run test:e2e:backend`) | A student learning offline, the real Google-style sign-in, recordings, backup codes, and the whole staff story against the local backend                               | 16 + 4 tests                             |
 | Layout checks inside the e2e                                            | No sideways scroll and every button at least 44 px at 360 px and 1024 px                                                                                               | in the e2e                               |
 | Static guards                                                           | Only adapters import Supabase or Postgres; no `console`; no `sql.unsafe` in adapters; lint limits (function length, complexity, file size); first-load JS under 120 KB | tests and CI                             |
 | Security scans in CI                                                    | `gitleaks`, `semgrep`, `trivy`, `npm audit`, on every PR                                                                                                               | CI                                       |
-| Content validation                                                      | The lesson build refuses a lesson with missing Hindi text, missing audio, or `review` not approved                                                                     | `npm run content:check`                  |
+| Content validation                                                      | The lesson build fails on missing Hindi text or missing audio, and leaves out any lesson not marked `review: approved` (with a warning)                                | `npm run content:check`                  |
 
-Coverage at the last run: 90% of statements and lines, 79% of branches (the project minimum is 70%).
+Coverage from a local `npm run test:cov` run on 26 October: 90.3% of statements, 91.8% of lines,
+79.1% of branches and 89.4% of functions (the project minimum is 70%).
 
 ```sh
 npm ci
@@ -60,8 +61,8 @@ npm run test:e2e         # student app end to end
 
 - No testing on the cheapest target phones (1 to 2 GB RAM) yet; the spec calls for it before a full
   cohort.
-- Only two sample lessons exist. The pilot content still has to be written and reviewed by
-  mentors.
+- Two approved sample lessons exist and seven more are drafted, awaiting review. The pilot content
+  still has to be written and reviewed by mentors.
 - The end-to-end tests use a stand-in for Google (a local user whose session is placed where the
   app keeps it). Real Google sign-in was checked by hand on the deployed app.
 - A few timing-sensitive tests can flake under full-suite load; known examples are listed in the

@@ -8,9 +8,32 @@ Plan: [Plan 3a](../superpowers/plans/2026-10-20-backend-sync.md) · Spec §5.4.
 
 ## Before you start
 
-- A Supabase account, a Google Cloud account and the Cloudflare Pages project for the app.
+- A Supabase account, a Google Cloud account and a Cloudflare account (section 0 makes the Pages
+  project that hosts the app).
 - The repo checked out, with `npm ci` run once.
 - The app's real address, for example `https://app.example.org` (written `<APP_URL>` below).
+
+## 0. Host the app (Cloudflare Pages)
+
+The app is plain static files, and so are the lessons. Both must be built and published together:
+the app downloads its lessons from `/content` on its own address, so a site built without the
+lesson build opens but has no lessons to download.
+
+1. In Cloudflare, open **Workers & Pages → Create application** and use the link **"Looking to
+   deploy Pages? Get started"**, then **Connect to Git**. Create a **Pages** project, **not a Worker**:
+   a Worker project runs `wrangler deploy` at the repository root, which fails in this monorepo.
+2. Pick the repository and the branch `main`, and set:
+   - **Build command:** `npm ci && npm run build -w @shiksha/learner-app && npm run content:build -- --out apps/learner/dist/content`
+   - **Build output directory:** `apps/learner/dist` (type it exactly, with no space before or after)
+   - **Environment variable:** `NODE_VERSION` = `22`
+3. Save and deploy. The address it gives (for example `https://shiksha-path.pages.dev`) is your
+   `<APP_URL>`.
+4. Check that the lessons are published: open `<APP_URL>/content/manifest.json`. It should show JSON
+   starting with `"schema_version": 1`. A 404 means the build command lacks the lesson build.
+
+Only lessons marked `review: approved` are published (`content/README.md` explains the files); the
+build prints a warning for each pending lesson it leaves out. To publish new or changed lessons,
+merge them to `main`: Cloudflare rebuilds, and phones download the new packs on their next sync.
 
 ## 1. Create the Supabase project
 
@@ -90,7 +113,8 @@ npx supabase functions deploy api --no-verify-jwt
    - `VITE_SUPABASE_URL` = `https://<PROJECT_REF>.supabase.co`
    - `VITE_SUPABASE_ANON_KEY` = the **anon / publishable** key from Supabase
      **Project Settings → API**.
-2. Redeploy the app. Never use the `service_role` or secret key here: the app is public.
+2. Redeploy the app (the build settings are in section 0). Never use the `service_role` or secret
+   key here: the app is public.
 
 ## 7. Check it on a real phone
 

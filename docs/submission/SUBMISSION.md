@@ -21,9 +21,9 @@ for the NGO's mentors and admins.
   codes, change a student's start lesson, mark lab attendance.
 - **Admins:** set up labs, cohorts and mentors, manage and pause students, delete a student's data
   on request, switch features on or off for everyone or one student, change the app's name and
-  colours (blocked if the text would be hard to read), and read an audit log of every staff action.
-- **Privacy built in:** students see only their own data, mentors only their cohorts; export and
-  deletion on request; nothing personal in logs or URLs; a staff session on a shared phone signs
+  colours (blocked if the text would be hard to read), and read an audit log of every staff change.
+- **Privacy built in:** students see only their own data, mentors only their cohorts; export (through the
+  admin command-line tool) and deletion on request; nothing personal in logs or URLs; a staff session on a shared phone signs
   itself out after 30 minutes.
 
 ## Architecture
@@ -52,14 +52,15 @@ Key ideas:
 - **The phone is the primary store.** Every learner action is an event with a unique id, saved
   locally, then uploaded. The server accepts each id once, so retries cannot double-count. Progress
   is replayed from the event log; events are never edited.
-- **Ports and adapters.** Business logic is plain TypeScript with no Supabase import. Only adapters
-  touch Supabase or Postgres, and a test fails the build if anything else does. Swapping the
+- **Ports and adapters.** Business logic is plain TypeScript with no Supabase import. On the server, only adapters
+  touch Supabase or Postgres, and a test fails the build if anything else does; the app uses
+  `supabase-js` only for sign-in. Swapping the
   provider means writing an adapter, not editing services.
 - **Shared contract tests.** The same behaviour tests run against in-memory repositories and real
   Postgres.
 - **Summaries, not raw logs.** Staff screens read a per-student summary refreshed after each upload.
 - **Content as files.** Lessons are Markdown and YAML in `content/`; a build validates them and
-  refuses anything not marked reviewed.
+  leaves out anything not marked approved.
 
 ## Technology stack
 
@@ -75,7 +76,7 @@ Each is written up with its reasons in [`docs/decisions/`](../decisions/README.m
 - Supabase as the backend, with portability rules so it can be replaced.
 - A PWA, not a native app: no store, instant updates, runs on cheap Androids.
 - Offline-first with an outbox and append-only events.
-- Svelte and Dexie: small bundles. A first-load budget of 120 KB gzipped is checked on every build.
+- Svelte and Dexie: small bundles. A first-load budget of 120 KB gzipped is checked in CI on every pull request.
 - One versioned `/v1` API; old phones keep working when new event types arrive.
 - Backup codes as Supabase Auth users, a keyed hash for lookup, rate limits in Postgres.
 - Roles and scope for mentors and admins, with the audit log's contents and anonymisation.
@@ -95,8 +96,9 @@ after this hackathon. It is not part of this submission.
 
 ## Limitations
 
-- **Only two sample lessons** exist (one English, one aptitude). The pilot needs about 20 lessons
-  and 20 puzzles written and reviewed by mentors.
+- **Two approved sample lessons** exist (one English, one aptitude), and seven more are drafted and
+  awaiting review. The lesson text was drafted by AI and has not been through a mentor review, which
+  the pilot process requires. The pilot needs about 20 lessons and 20 puzzles.
 - Not yet tested on the cheapest target phones or with real students; no guardian consent process
   is built in, that is the NGO's.
 - The nightly backup and the Google Workspace features need the owner's own accounts and keys, and
@@ -107,7 +109,8 @@ after this hackathon. It is not part of this submission.
 
 ## Dependencies
 
-Runtime: `svelte` (via the Vite plugin), `dexie`, `zod`, `@supabase/supabase-js`, `marked` and
+Runtime: `svelte` (via the Vite plugin), `dexie`, `zod`, `@supabase/supabase-js`, `postgres` (the database driver, used by the Edge Function and the admin
+tool), `workbox-window` and the service-worker code `vite-plugin-pwa` generates, `marked` and
 `yaml` (lesson build), `@fontsource/baloo-2` and `@fontsource/mukta` (fonts, bundled, no external
 requests). Tooling is listed in `package.json`. All dependencies are open source; `npm audit` runs
 in CI.
@@ -117,7 +120,8 @@ in CI.
 - **Built with AI:** Claude Code throughout. See [AI-DEVELOPMENT.md](AI-DEVELOPMENT.md).
 - **Work before the hackathon:** the repository's first commit is on 15 October 2026, after the
   hackathon started on 1 October. No code existed before it.
-- **Authorship:** one developer, directing the AI tools.
+- **Authorship:** one developer, directing the AI tools, plus one automated dependency-update commit
+  from Dependabot.
 - **Data:** no real student data is in the repository or the demo. Demo students are fake, made by
   `npm run admin -- seed-demo`, and can be removed with `--remove`.
 - **Secrets:** none in the repository or the ZIP. Keys live in the hosting and Supabase dashboards.

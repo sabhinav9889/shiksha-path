@@ -1,7 +1,8 @@
 # How AI was used to build Shiksha Path
 
-One developer directed Claude Code (Claude Opus and Sonnet models) from 15 to 26 October 2026:
-161 commits, 23 pull requests, about 18,600 lines of application source, and 110 test and end-to-end spec files. This
+One developer directed Claude Code (Claude Opus and Sonnet models) from 15 October 2026: more than 160 commits (142 of the 143 non-merge commits carry a Claude
+co-author trailer, 93 Opus and 49 Sonnet; the other is an automated dependency update), 22 merged
+pull requests, about 18,000 lines of application source, and 111 test and end-to-end spec files. This
 document says how the work was organised so that the AI was useful, how its output was checked, and
 what went wrong along the way. Every claim points at something in the repository.
 
@@ -14,7 +15,7 @@ Each piece of the product went through the same loop:
    the owner choosing between options the AI laid out. Decisions the owner must make are marked.
 2. **A written plan per piece** ([plans](../superpowers/plans/)). Each plan names the exact files,
    function signatures, Zod shapes, SQL, tests with their assertions, and the commands to run.
-   Values the owner must confirm are marked ⚑ with a recommended default, and the owner confirms
+   In the later plans, values the owner must confirm are marked ⚑ with a recommended default, and the owner confirms
    them before work starts.
 3. **Execution, test first.** The AI wrote the failing test, watched it fail for the right
    reason, then wrote the minimum code. A ledger (kept outside git while a plan ran) recorded every
@@ -25,8 +26,9 @@ Each piece of the product went through the same loop:
    code being written, using the plan's _Review Focus_ (input classes the tests did not cover).
 6. **One fix pass:** every Critical and Important finding gets a test that fails first. Minor
    findings are listed in the PR instead of being fixed on the spot.
-7. **A pull request** with the rulings and the deferred minors listed. The owner merges; the AI
-   never merges and never pushes to `main` (a hook and a git hook block it).
+7. **A pull request** with the rulings and the deferred minors listed. The owner merges: that is a rule in [`git-and-pr.md`](../../.claude/rules/git-and-pr.md), not
+   something GitHub enforces (the free plan has no branch protection). Hooks block the AI from
+   editing, committing and pushing on `main`.
 
 Eight plans have been executed and five more are written for the rest of the product; each is
 executed one at a time, so each
@@ -39,7 +41,7 @@ The aim was that a new AI session, or a different model, starts from the same fa
 | Context         | Where                                                                                                                                      | What it does                                                                                                                      |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
 | Entry point     | [`CLAUDE.md`](../../CLAUDE.md), [`AGENTS.md`](../../AGENTS.md), [`GEMINI.md`](../../GEMINI.md)                                             | Source of truth, session start steps, definition of done, links to the rules. Three files so any AI tool lands in the same place. |
-| Rules by area   | [`.claude/rules/`](../../.claude/rules/) (coding, architecture, security, privacy, database, testing, offline-sync, AI guardrails, git/PR) | Short rules the AI reads when its task touches that area. Limits are also enforced by ESLint, so a rule is never only advice.     |
+| Rules by area   | [`.claude/rules/`](../../.claude/rules/) (coding, architecture, security, privacy, database, testing, offline-sync, AI guardrails, git/PR) | Short rules the AI reads when its task touches that area. The coding limits are also enforced by ESLint.                          |
 | Standards       | [`docs/engineering-standards.md`](../engineering-standards.md)                                                                             | The patterns in use, and the "deliberately not using" list that needs a decision record to change.                                |
 | Decisions       | [`docs/decisions/`](../decisions/README.md) (8 records)                                                                                    | Why a thing is the way it is, so the AI does not re-argue it.                                                                     |
 | Traps           | [`docs/gotchas/`](../gotchas/README.md) (10 files)                                                                                         | Mistakes that happened once, written so they are not repeated. Several came straight from an AI failure below.                    |
@@ -72,23 +74,28 @@ from earlier tasks, what it produces for later ones), because an executor sees o
 AI output was never accepted on trust:
 
 - **The owner made the product decisions** (the ⚑ values, scope, what to defer) and merged every
-  PR. The AI could not merge.
+  PR (all 22 merge commits come from the owner's account through GitHub's web interface).
 - **Tests had to be seen failing first.** A test that passed before the code existed was treated
-  as broken. One fix was proved by breaking the code on purpose and watching the new test fail
+  as broken. Git shows a test and its fix in the same commit, so the red step is recorded in the
+  pull request descriptions (for example [PR #19](https://github.com/sabhinav9889/shiksha-path/pull/19)),
+  not in git history. One fix was proved by breaking the code on purpose and watching the new test fail
   (the `x-forwarded-for` rate-limit test).
 - **A fresh reviewer, not the author, judged each branch.** Its severity labels were re-graded by
   what a real student, mentor or admin would experience, not by whether the spec mentioned the
   input.
 - **The owner ran the real thing.** Setting up the real Supabase project, Google sign-in and
   hosting found problems no test had: the deployed site had no lesson packs (the host's build
-  never ran the content build), and the setup guide had no hosting step. Both are now documented.
+  never ran the content build), and the setup guide had no hosting step. Both are now documented: the runbook has a hosting section (section 0) with the lesson build in the build command.
 - **Security and privacy are checked as rules**, not left to the AI's judgement: row-level
   security on every table with an isolation test over two cohorts, parameterised SQL only (a test
   fails the build if an adapter builds SQL from a string), Zod at every boundary.
 
 ## 5. Learning from AI failures
 
-These are real, and each changed a rule or a test.
+These are real, and each changed a rule or a test. The review findings are in the descriptions of
+[PR #15](https://github.com/sabhinav9889/shiksha-path/pull/15) (Plan 3b) and
+[PR #17](https://github.com/sabhinav9889/shiksha-path/pull/17) (Plan 4a), and the race found by CI is
+[PR #19](https://github.com/sabhinav9889/shiksha-path/pull/19).
 
 | What went wrong                                                                                                                        | How it was found                              | What changed                                                                                                     |
 | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -101,7 +108,7 @@ These are real, and each changed a rule or a test.
 | Plan 4a's plan missed two screens (adding a student, pausing staff). They were found while executing.                                  | Execution                                     | Plans now trace every screen to its route and every end-to-end step to its screen.                               |
 | The runbook said to turn the email sign-in off. That breaks backup-code students.                                                      | Found while building backup codes (Plan 3b)   | Corrected in the runbook and noted in it.                                                                        |
 | A "gotcha" the AI wrote said a build file was committed when it is git-ignored.                                                        | Checking the claim before relying on it       | Fixed; claims about the repo are checked against the repo.                                                       |
-| The AI started a multi-agent workflow tool the developer had not asked for.                                                            | Noticed by the AI against the tool's own rule | Stopped before it wrote anything; recorded as a standing rule.                                                   |
+| The AI started a multi-agent workflow tool the developer had not asked for.                                                            | Noticed by the AI against the tool's own rule | Stopped before it wrote anything; recorded as a standing rule in the AI's memory notes (outside the repository). |
 
 ## 6. Efficiency choices
 
