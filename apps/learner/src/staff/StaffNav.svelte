@@ -1,11 +1,14 @@
 <script lang="ts">
   import type { StaffMe } from '@shiksha/api-contract/staff';
   import type { Lang } from '../i18n/index.js';
-  import { routeHref, type Route } from '../router.svelte.js';
+  import { routeHref, router, type Route } from '../router.svelte.js';
+  import { pageLabel } from './page-label.js';
   import { st, type StaffKey } from './i18n.js';
   import StaffLangToggle from './StaffLangToggle.svelte';
 
   let { me, lang, onsignout }: { me: StaffMe; lang: Lang; onsignout: () => void } = $props();
+
+  const here = $derived(pageLabel(router.current, me.role));
 
   const links = $derived<{ route: Route; label: StaffKey }[]>([
     { route: { name: 'staff', view: 'cohorts' }, label: 'cohorts' },
@@ -34,7 +37,11 @@
   </ul>
   <div class="links">
     {#each links as link (link.label)}
-      <a href={routeHref(link.route)}>{st(link.label, lang)}</a>
+      <a
+        href={routeHref(link.route)}
+        aria-current={link.label === here ? 'page' : undefined}
+        class:here={link.label === here}>{st(link.label, lang)}</a
+      >
     {/each}
   </div>
   <StaffLangToggle />
@@ -89,6 +96,12 @@
     color: var(--color-primary);
     font-weight: 600;
     text-decoration: none;
+  }
+
+  a.here {
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+    box-shadow: inset 0 -3px 0 var(--color-primary);
   }
 
   button {
