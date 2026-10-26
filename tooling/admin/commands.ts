@@ -3,7 +3,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { brandingInput } from '@shiksha/api-contract';
-import { z } from 'zod';
 import { PgAttendanceRepo } from '../../packages/server/src/adapters/pg-attendance-repo.js';
 import { PgAuditRepo } from '../../packages/server/src/adapters/pg-audit-repo.js';
 import { PgEventRepo } from '../../packages/server/src/adapters/pg-event-repo.js';
@@ -21,6 +20,7 @@ import { createSql } from '../../packages/server/src/adapters/pg.js';
 import { createSupabaseAuth } from '../../packages/server/src/adapters/supabase-auth.js';
 import { createSupabaseRecordingStorage } from '../../packages/server/src/adapters/supabase-recording-storage.js';
 import { runSeedDemo } from './demo.js';
+import { adminEnv, PEPPER_NEEDED } from './env.js';
 import { setBranding } from '../../packages/server/src/services/branding.js';
 import { issueCode, resetCode, type CodeDeps } from '../../packages/server/src/services/codes.js';
 import type {
@@ -55,16 +55,6 @@ export interface AdminDeps {
   summaries: SummaryRepo;
   close(): Promise<void>;
 }
-
-const MIN_PEPPER = 32;
-const PEPPER_NEEDED = 'CODE_PEPPER must be at least 32 characters';
-const adminEnv = z.object({
-  SUPABASE_DB_URL: z.string().min(1, 'SUPABASE_DB_URL is missing'),
-  SUPABASE_URL: z.string().min(1, 'SUPABASE_URL is missing'),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY is missing'),
-  // Only the code commands use it, so retention and branding run without it (Plan 3b M6).
-  CODE_PEPPER: z.string().min(MIN_PEPPER, PEPPER_NEEDED).optional(),
-});
 
 /** A setting this command needs is missing: the command stops with that message. */
 export class SettingMissing extends Error {}

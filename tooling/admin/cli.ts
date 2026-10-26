@@ -12,7 +12,15 @@ if (argv.length === 0 || argv.includes('--help')) {
   process.exit(argv.length === 0 ? 1 : 0);
 }
 
-const deps = makeAdminDeps(process.env);
+let deps: ReturnType<typeof makeAdminDeps>;
+try {
+  deps = makeAdminDeps(process.env);
+} catch (error) {
+  io.err(
+    `${(error as Error).message}. Set it in this terminal first (see the runbook, section 8).`,
+  );
+  process.exit(1);
+}
 try {
   process.exitCode = await runAdmin(argv, deps, io);
 } finally {
