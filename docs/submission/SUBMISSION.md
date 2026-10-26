@@ -96,9 +96,9 @@ after this hackathon. It is not part of this submission.
 
 ## Limitations
 
-- **Two approved sample lessons** exist (one English, one aptitude), and seven more are drafted and
-  awaiting review. The lesson text was drafted by AI and has not been through a mentor review, which
-  the pilot process requires. The pilot needs about 20 lessons and 20 puzzles.
+- **22 lessons** exist (14 English and 8 aptitude), roughly 45 to 50 minutes for a first-time learner (an estimate). The lesson text was drafted by AI and
+  read and approved by the developer, a Hindi reader, but it has not been through a mentor review,
+  which the pilot process requires. The pilot's full scope is larger.
 - Not yet tested on the cheapest target phones or with real students; no guardian consent process
   is built in, that is the NGO's.
 - The nightly backup and the Google Workspace features need the owner's own accounts and keys, and
