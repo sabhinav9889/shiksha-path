@@ -7,7 +7,8 @@ deploy changes what they see. This page is the procedure for submitting once and
 ## Before the deadline (by Thursday 29 October)
 
 1. Merge the last pull requests. Read and approve the lesson drafts first
-   (`review: pending` → `review: approved`, see the README).
+   (`review: pending` → `review: approved`, see [`content/README.md`](../../content/README.md); if you approve them
+   yourself instead of a mentor, say so in the disclosure).
 2. Redeploy the backend, then confirm it answers:
    ```sh
    npm run functions:build
@@ -35,7 +36,8 @@ deploy changes what they see. This page is the procedure for submitting once and
    ```
    It prints the commit count and a SHA-256. Keep that line with the ZIP.
 3. Unzip it somewhere else, run `npm ci && npm test`, and check the ZIP has no passwords, keys or
-   tokens. (CI already runs `gitleaks` over the whole history on every pull request.)
+   tokens. (`gitleaks` in CI scans each pull request's commits, and its scheduled run scans the whole history.
+   Run `gitleaks detect` yourself on the final clone if you can.)
 4. Record the demo (see [DEMO-SCRIPT.md](DEMO-SCRIPT.md)) and submit the ZIP, the video, the
    description and the AI-development and QA documents.
 

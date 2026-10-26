@@ -33,7 +33,7 @@ confirmed the builder's-call values in the plan on 2026-10-22.
   test. Progress stays append-only.
 - **Deactivating a student** stops their syncing (`DEACTIVATED`); the phone says so and keeps
   working offline. Turning them back on uploads what was done meanwhile.
-- **Every staff action is in the audit log**: who, what, which student, and ids, keys and
+- **Every staff change is in the audit log** (reads such as playing a recording are not logged): who, what, which student, and ids, keys and
   old → new values only. A code, a token or a comment's text is refused by the audit writer.
   Deleting a student keeps their audit entries but removes their id and marks them
   `learner: DELETED`.
