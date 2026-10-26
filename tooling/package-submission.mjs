@@ -63,6 +63,8 @@ try {
     '--quiet',
     values.ref === 'HEAD' ? git(repo, 'rev-parse', 'HEAD') : values.ref,
   );
+  // A fresh local clone keeps every object loose and uncompressed; packing them shrinks the ZIP a lot.
+  git(clone, 'gc', '--quiet');
   const scan = spawnSync('npx', ['secretlint', '--maskSecrets', `${clone}/**/*`], {
     cwd: resolve(import.meta.dirname, '..'),
     encoding: 'utf8',
