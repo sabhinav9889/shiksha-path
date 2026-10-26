@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: days of the week and parts of the day
 level: 1
 order: 7
-review: pending
+review: approved
 title: { hi: हफ़्ते के दिन और समय, en: Days and times of day }
 items:
   - id: q1

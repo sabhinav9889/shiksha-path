@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: telling the time
 level: 1
 order: 14
-review: pending
+review: approved
 title: { hi: समय बताना, en: Telling the time }
 items:
   - id: q1

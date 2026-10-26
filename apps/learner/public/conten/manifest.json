@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "built_at": "2026-10-26T16:16:12.920Z",
+  "preview": true,
+  "tracks": [
+    {
+      "id": "english",
+      "title": {
+        "hi": "अंग्रेज़ी",
+        "en": "English"
+      },
+      "order": 1
+    },
+    {
+      "id": "aptitude",
+      "title": {
+        "hi": "सोचने की ताक़त",
+        "en": "Aptitude"
+      },
+      "order": 2
+    }
+  ],
+  "modules": [
+    {
+      "id": "english-foundation-1",
+      "track": "english",
+      "title": {
+        "hi": "अंग्रेज़ी की नींव 1",
+        "en": "English Foundation 1"
+      },
+      "order": 1,
+      "version": "d99a14652b98",
+      "file": "modules/english-foundation-1.d99a14652b98.json",
+      "sha256": "9df168faed405c51b8fd17c65c225f0aaf2c9cb8c38fb652995be27c5f156295",
+      "bytes": 68644,
+      "audio_bytes": 0,
+      "lessons": [
+        {
+          "id": "ef1-01-greetings",
+          "order": 1,
+          "title": {
+            "hi": "नमस्ते कहना",
+            "en": "Saying hello"
+          }
+        },
+        {
+          "id": "ef1-02-my-name",
+          "order": 2,
+          "title": {
+            "hi": "अपना परिचय देना",
+            "en": "Introducing yourself"
+          }
+        },
+        {
+          "id": "ef1-03-numbers",
+          "order": 3,
+          "title": {
+            "hi": "एक से दस तक गिनती",
+            "en": "Numbers one to ten"
+          }
+        },
+        {
+          "id": "ef1-04-simple-questions",
+          "order": 4,
+          "title": {
+            "hi": "आसान सवाल पूछना",
+            "en": "Asking simple questions"
+          }
+        },
+        {
+          "id": "ef1-05-workplace-words",
+          "order": 5,
+          "title": {
+            "hi": "दफ़्तर के आम शब्द",
+            "en": "Everyday workplace words"
+          }
+        },
+        {
+          "id": "ef1-06-polite-words",
+          "order": 6,
+          "title": {
+            "hi": "शिष्ट शब्द",
+            "en": "Polite words"
+          }
+        },
+        {
+          "id": "ef1-07-days-and-time",
+          "order": 7,
+          "title": {
+            "hi": "हफ़्ते के दिन और समय",
+            "en": "Days and times of day"
+          }
+        },
+        {
+          "id": "ef1-08-family",
+          "order": 8,
+          "title": {
+            "hi": "परिवार और लोग",
+            "en": "Family and people"
+          }
+        },
+        {
+          "id": "ef1-09-common-verbs",
+          "order": 9,
+          "title": {
+            "hi": "रोज़ के काम",
+            "en": "Everyday actions"
+          }
+        },
+        {
+          "id": "ef1-10-things-at-work",
+          "order": 10,
+          "title": {
+            "hi": "दफ़्तर की चीज़ें",
+            "en": "Things at work"
+          }
+        },
+        {
+          "id": "ef1-11-asking-for-help",
+          "order": 11,
+          "title": {
+            "hi": "मदद माँगना",
+            "en": "Asking for help"
+          }
+        },
+        {
+          "id": "ef1-12-phone-calls",
+          "order": 12,
+          "title": {
+            "hi": "फ़ोन पर बात करना",
+            "en": "Phone calls"
+          }
+        },
+        {
+          "id": "ef1-13-am-is-are",
+          "order": 13,
+          "title": {
+            "hi": "am, is और are",
+            "en": "Using am, is and are"
+          }
+        },
+        {
+          "id": "ef1-14-telling-time",
+          "order": 14,
+          "title": {
+            "hi": "समय बताना",
+            "en": "Telling the time"
+          }
+        }
+      ]
+    },
+    {
+      "id": "aptitude-1",
+      "track": "aptitude",
+      "title": {
+        "hi": "सोचने की पहेलियाँ 1",
+        "en": "Aptitude 1"
+      },
+      "order": 2,
+      "version": "aa9ea8ecbfc0",
+      "file": "modules/aptitude-1.aa9ea8ecbfc0.json",
+      "sha256": "edd991cc10bb1ec25d67c1d399e00bdfdc11908944908609488916f5b064873d",
+      "bytes": 53387,
+      "audio_bytes": 0,
+      "lessons": [
+        {
+          "id": "apt1-01-patterns",
+          "order": 1,
+          "title": {
+            "hi": "संख्याओं का पैटर्न",
+            "en": "Number patterns"
+          }
+        },
+        {
+          "id": "apt1-02-odd-one-out",
+          "order": 2,
+          "title": {
+            "hi": "अलग कौन-सा है",
+            "en": "Odd one out"
+          }
+        },
+        {
+          "id": "apt1-03-word-problems",
+          "order": 3,
+          "title": {
+            "hi": "छोटे गणित के सवाल",
+            "en": "Simple word problems"
+          }
+        },
+        {
+          "id": "apt1-04-letter-patterns",
+          "order": 4,
+          "title": {
+            "hi": "अक्षरों का पैटर्न",
+            "en": "Letter patterns"
+          }
+        },
+        {
+          "id": "apt1-05-comparing",
+          "order": 5,
+          "title": {
+            "hi": "तुलना करना",
+            "en": "Comparing"
+          }
+        },
+        {
+          "id": "apt1-06-if-then",
+          "order": 6,
+          "title": {
+            "hi": "अगर-तो वाले सवाल",
+            "en": "If-then reasoning"
+          }
+        },
+        {
+          "id": "apt1-07-money",
+          "order": 7,
+          "title": {
+            "hi": "पैसों के सवाल",
+            "en": "Money problems"
+          }
+        },
+        {
+          "id": "apt1-08-time-and-calendar",
+          "order": 8,
+          "title": {
+            "hi": "समय और कैलेंडर",
+            "en": "Time and calendar"
+          }
+        }
+      ]
+    }
+  ],
+  "placement": {
+    "file": "placement.cbfedfcb19d0.json",
+    "version": "cbfedfcb19d0",
+    "sha256": "4bf8cba0261778e8e9855228f1fac043dd475be87aab78e302135682411436ea",
+    "bytes": 1176,
+    "audio_bytes": 0
+  }
+}

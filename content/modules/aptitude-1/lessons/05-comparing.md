@@ -5,7 +5,7 @@ module: aptitude-1
 topic: comparing
 level: 1
 order: 5
-review: pending
+review: approved
 title: { hi: तुलना करना, en: Comparing }
 items:
   - id: q1

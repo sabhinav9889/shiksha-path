@@ -5,7 +5,7 @@ module: aptitude-1
 topic: money word problems
 level: 1
 order: 7
-review: pending
+review: approved
 title: { hi: पैसों के सवाल, en: Money problems }
 items:
   - id: q1

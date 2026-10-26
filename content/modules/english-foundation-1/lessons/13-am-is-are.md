@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: am, is and are
 level: 1
 order: 13
-review: pending
+review: approved
 title: { hi: "am, is और are", en: "Using am, is and are" }
 items:
   - id: q1
