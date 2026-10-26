@@ -5,7 +5,7 @@ module: aptitude-1
 topic: odd one out
 level: 1
 order: 2
-review: pending
+review: approved
 title: { hi: अलग कौन-सा है, en: Odd one out }
 items:
   - id: q1

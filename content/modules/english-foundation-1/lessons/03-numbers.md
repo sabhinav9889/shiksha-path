@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: numbers one to ten
 level: 1
 order: 3
-review: pending
+review: approved
 title: { hi: एक से दस तक गिनती, en: Numbers one to ten }
 items:
   - id: q1

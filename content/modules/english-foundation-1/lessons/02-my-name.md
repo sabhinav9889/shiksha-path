@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: introducing yourself
 level: 1
 order: 2
-review: pending
+review: approved
 title: { hi: अपना परिचय देना, en: Introducing yourself }
 items:
   - id: q1
