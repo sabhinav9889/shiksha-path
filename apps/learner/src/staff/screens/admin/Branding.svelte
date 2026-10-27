@@ -1,8 +1,9 @@
 <script lang="ts">
   import { contrastRatio, isReadable, PAGE_BACKGROUND } from '@shiksha/api-contract';
-  import { appState } from '../../../app-state.svelte.js';
+  import { appState, reloadBranding } from '../../../app-state.svelte.js';
   import type { Lang } from '../../../i18n/index.js';
   import { at, type AdminKey } from '../../admin-i18n.js';
+  import { refreshBranding } from '../../../runtime/branding.js';
   import { st } from '../../i18n.js';
   import { staffState } from '../../staff-state.svelte.js';
 
@@ -43,6 +44,11 @@
     const result = await staffState.auth?.api.setBranding(body);
     failed = !result?.ok;
     saved = !failed;
+    // Show it in this app now: phones pick it up on their own at their next sync.
+    if (saved && appState.runtime) {
+      await refreshBranding(appState.runtime);
+      await reloadBranding();
+    }
   }
 
   const colours: { key: 'primary' | 'accent'; label: AdminKey }[] = [
