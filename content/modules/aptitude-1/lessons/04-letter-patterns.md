@@ -5,7 +5,7 @@ module: aptitude-1
 topic: letter patterns
 level: 1
 order: 4
-review: pending
+review: approved
 title: { hi: अक्षरों का पैटर्न, en: Letter patterns }
 items:
   - id: q1

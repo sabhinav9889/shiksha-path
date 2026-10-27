@@ -61,8 +61,8 @@ npm run test:e2e         # student app end to end
 
 - No testing on the cheapest target phones (1 to 2 GB RAM) yet; the spec calls for it before a full
   cohort.
-- Two approved sample lessons exist and seven more are drafted, awaiting review. The pilot content
-  still has to be written and reviewed by mentors.
+- 22 lessons exist, drafted by AI and approved by the developer (a Hindi reader). They have not been
+  through a mentor review, which the pilot process requires.
 - The end-to-end tests use a stand-in for Google (a local user whose session is placed where the
   app keeps it). Real Google sign-in was checked by hand on the deployed app.
 - A few timing-sensitive tests can flake under full-suite load; known examples are listed in the

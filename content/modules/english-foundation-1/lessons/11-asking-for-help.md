@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: asking for help
 level: 1
 order: 11
-review: pending
+review: approved
 title: { hi: मदद माँगना, en: Asking for help }
 items:
   - id: q1

@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: family and people
 level: 1
 order: 8
-review: pending
+review: approved
 title: { hi: परिवार और लोग, en: Family and people }
 items:
   - id: q1

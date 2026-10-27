@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: everyday actions
 level: 1
 order: 9
-review: pending
+review: approved
 title: { hi: रोज़ के काम, en: Everyday actions }
 items:
   - id: q1

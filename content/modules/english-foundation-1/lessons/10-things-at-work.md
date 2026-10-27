@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: things in an office
 level: 1
 order: 10
-review: pending
+review: approved
 title: { hi: दफ़्तर की चीज़ें, en: Things at work }
 items:
   - id: q1

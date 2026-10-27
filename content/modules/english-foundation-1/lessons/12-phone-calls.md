@@ -5,7 +5,7 @@ module: english-foundation-1
 topic: answering phone calls
 level: 1
 order: 12
-review: pending
+review: approved
 title: { hi: फ़ोन पर बात करना, en: Phone calls }
 items:
   - id: q1

@@ -1,0 +1,1456 @@
+{
+  "schema_version": 1,
+  "id": "aptitude-1",
+  "version": "aa9ea8ecbfc0",
+  "track": "aptitude",
+  "title": { "hi": "सोचने की पहेलियाँ 1", "en": "Aptitude 1" },
+  "hi_ratio": 0.8,
+  "lessons": [
+    {
+      "id": "apt1-01-patterns",
+      "order": 1,
+      "topic": "number patterns",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "संख्याओं का पैटर्न", "en": "Number patterns" },
+      "html": {
+        "hi": "<p>पैटर्न वाली पहेली में देखें कि <strong>हर कदम पर क्या बदल रहा है</strong>: जुड़ रहा है, घट रहा है, या दुगना हो रहा है।</p>\n<p>उदाहरण: 2, 4, 6, 8 – हर बार <strong>2 जुड़ रहा है</strong>, तो अगली संख्या 10 है।</p>\n<p>IT कंपनियों के hiring test में ऐसे सवाल अक्सर आते हैं।</p>\n",
+        "en": "<p>In a pattern puzzle, look at <strong>what changes at each step</strong>: something is added, taken away, or doubled.</p>\n<p>Example: 2, 4, 6, 8 – each step <strong>adds 2</strong>, so the next number is 10.</p>\n<p>IT companies often use questions like these in hiring tests.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "अगली संख्या क्या है? 2, 4, 6, 8, ?",
+            "en": "What comes next? 2, 4, 6, 8, ?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "10", "en": "10" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "9", "en": "9" },
+              "why_wrong": {
+                "hi": "हर बार 2 जुड़ रहा है, 1 नहीं।",
+                "en": "Each step adds 2, not 1."
+              }
+            }
+          ],
+          "explanation": { "hi": "8 + 2 = 10", "en": "8 + 2 = 10" }
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "अगली संख्या क्या है? 5, 10, 15, 20, ?",
+            "en": "What comes next? 5, 10, 15, 20, ?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "25", "en": "25" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "30", "en": "30" },
+              "why_wrong": {
+                "hi": "हर बार 5 जुड़ रहा है, 10 नहीं।",
+                "en": "Each step adds 5, not 10."
+              }
+            }
+          ],
+          "explanation": { "hi": "20 + 5 = 25", "en": "20 + 5 = 25" }
+        },
+        {
+          "id": "q3",
+          "prompt": {
+            "hi": "अगली संख्या क्या है? 1, 2, 4, 8, ?",
+            "en": "What comes next? 1, 2, 4, 8, ?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "16", "en": "16" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "10", "en": "10" },
+              "why_wrong": {
+                "hi": "हर संख्या पिछली की दुगनी है।",
+                "en": "Each number doubles the one before."
+              }
+            }
+          ],
+          "explanation": { "hi": "8 × 2 = 16", "en": "8 × 2 = 16" }
+        },
+        {
+          "id": "q4",
+          "prompt": {
+            "hi": "अगली संख्या क्या है? 20, 17, 14, 11, ?",
+            "en": "What comes next? 20, 17, 14, 11, ?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "8", "en": "8" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "9", "en": "9" },
+              "why_wrong": { "hi": "हर बार 3 घट रहा है।", "en": "Each step takes away 3." }
+            }
+          ],
+          "explanation": { "hi": "11 − 3 = 8", "en": "11 − 3 = 8" }
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "अगली संख्या क्या है? 3, 6, 9, 12, ?",
+            "en": "What comes next? 3, 6, 9, 12, ?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "15", "en": "15" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "14", "en": "14" },
+              "why_wrong": {
+                "hi": "हर बार 3 जुड़ रहा है, 2 नहीं।",
+                "en": "Each step adds 3, not 2."
+              }
+            }
+          ],
+          "explanation": { "hi": "12 + 3 = 15", "en": "12 + 3 = 15" }
+        }
+      ]
+    },
+    {
+      "id": "apt1-02-odd-one-out",
+      "order": 2,
+      "topic": "odd one out",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "अलग कौन-सा है", "en": "Odd one out" },
+      "html": {
+        "hi": "<p><strong>अलग कौन-सा है</strong> वाले सवाल में चीज़ों के बीच समानता ढूँढ़ें। जो उस समानता में नहीं आता, वही जवाब है।</p>\n<p>उदाहरण: 2, 4, 6, 9 में पहले तीन सम संख्याएँ हैं, इसलिए <strong>9</strong> अलग है।</p>\n",
+        "en": "<p>In an <strong>odd one out</strong> question, find what most of the items share. The one that does not share it is the answer.</p>\n<p>Example: in 2, 4, 6, 9 the first three are even, so <strong>9</strong> is the odd one.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "कौन-सा अलग है? 2, 4, 6, 9",
+            "en": "Which one is different? 2, 4, 6, 9"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "9", "en": "9" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "6", "en": "6" },
+              "why_wrong": {
+                "hi": "6 एक सम संख्या है, बाक़ी 2, 4, 6 की तरह।",
+                "en": "6 is even, like 2 and 4."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "2", "en": "2" },
+              "why_wrong": {
+                "hi": "2 एक सम संख्या है, बाक़ी 4, 6 की तरह।",
+                "en": "2 is even, like 4 and 6."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "2, 4, 6 सम संख्याएँ हैं। 9 विषम है।",
+            "en": "2, 4 and 6 are even. 9 is odd."
+          }
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "कौन-सा अलग है? सेब, आम, केला, कुर्सी",
+            "en": "Which one is different? Apple, mango, banana, chair"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "कुर्सी", "en": "Chair" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "आम", "en": "Mango" },
+              "why_wrong": {
+                "hi": "आम एक फल है, सेब और केले की तरह।",
+                "en": "A mango is a fruit, like apple and banana."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "केला", "en": "Banana" },
+              "why_wrong": {
+                "hi": "केला एक फल है, सेब और आम की तरह।",
+                "en": "A banana is a fruit, like apple and mango."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "सेब, आम और केला फल हैं। कुर्सी फल नहीं है।",
+            "en": "Apple, mango and banana are fruits. A chair is not."
+          }
+        },
+        {
+          "id": "q3",
+          "prompt": {
+            "hi": "कौन-सा अलग है? 3, 6, 9, 11",
+            "en": "Which one is different? 3, 6, 9, 11"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "11", "en": "11" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "9", "en": "9" },
+              "why_wrong": {
+                "hi": "9, 3 के पहाड़े में आता है।",
+                "en": "9 is in the 3 times table."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "6", "en": "6" },
+              "why_wrong": {
+                "hi": "6, 3 के पहाड़े में आता है।",
+                "en": "6 is in the 3 times table."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "3, 6, 9, 3 के पहाड़े में हैं। 11 नहीं है।",
+            "en": "3, 6 and 9 are in the 3 times table. 11 is not."
+          }
+        },
+        {
+          "id": "q4",
+          "prompt": {
+            "hi": "कौन-सा अलग है? सोमवार, मंगलवार, जनवरी, बुधवार",
+            "en": "Which one is different? Monday, Tuesday, January, Wednesday"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "जनवरी", "en": "January" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "मंगलवार", "en": "Tuesday" },
+              "why_wrong": {
+                "hi": "मंगलवार हफ़्ते का एक दिन है।",
+                "en": "Tuesday is a day of the week."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "बुधवार", "en": "Wednesday" },
+              "why_wrong": {
+                "hi": "बुधवार हफ़्ते का एक दिन है।",
+                "en": "Wednesday is a day of the week."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "बाक़ी सब दिन हैं। जनवरी एक महीना है।",
+            "en": "The others are days. January is a month."
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "कौन-सा अलग है? 10, 20, 30, 35",
+            "en": "Which one is different? 10, 20, 30, 35"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "35", "en": "35" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "20", "en": "20" },
+              "why_wrong": {
+                "hi": "20, 10 के पहाड़े में आता है।",
+                "en": "20 is in the 10 times table."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "30", "en": "30" },
+              "why_wrong": {
+                "hi": "30, 10 के पहाड़े में आता है।",
+                "en": "30 is in the 10 times table."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "10, 20, 30 सब 10 के पहाड़े में हैं। 35 नहीं है।",
+            "en": "10, 20 and 30 are in the 10 times table. 35 is not."
+          }
+        }
+      ]
+    },
+    {
+      "id": "apt1-03-word-problems",
+      "order": 3,
+      "topic": "simple word problems",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "छोटे गणित के सवाल", "en": "Simple word problems" },
+      "html": {
+        "hi": "<p>गणित के छोटे सवालों में पहले देखें कि क्या हो रहा है।</p>\n<ul>\n<li><strong>और मिले, कुल, साथ</strong> – जोड़ना (+)</li>\n<li><strong>खा लिए, खो गए, बचे</strong> – घटाना (−)</li>\n<li><strong>हर एक में इतने, कुल कितने</strong> – गुणा (×)</li>\n<li><strong>बराबर बाँटना</strong> – भाग (÷)</li>\n</ul>\n",
+        "en": "<p>In a word problem, first notice what is happening.</p>\n<ul>\n<li><strong>gets more, total, together</strong> – add (+)</li>\n<li><strong>eaten, lost, left</strong> – subtract (−)</li>\n<li><strong>each has this many, how many in all</strong> – multiply (×)</li>\n<li><strong>share equally</strong> – divide (÷)</li>\n</ul>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "रवि के पास 5 पेन हैं। उसे 3 और मिले। अब कितने पेन हैं?",
+            "en": "Ravi has 5 pens. He gets 3 more. How many pens now?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "8", "en": "8" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "2", "en": "2" },
+              "why_wrong": {
+                "hi": "और मिले हैं, इसलिए जोड़ना है, घटाना नहीं।",
+                "en": "He got more, so add, do not subtract."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "15", "en": "15" },
+              "why_wrong": {
+                "hi": "यहाँ जोड़ना है, गुणा नहीं: 5 + 3।",
+                "en": "Add here, do not multiply: 5 + 3."
+              }
+            }
+          ],
+          "explanation": { "hi": "5 + 3 = 8", "en": "5 + 3 = 8" }
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "एक डिब्बे में 12 बिस्कुट थे। 4 खा लिए गए। कितने बचे?",
+            "en": "A box had 12 biscuits. 4 were eaten. How many are left?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "8", "en": "8" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "16", "en": "16" },
+              "why_wrong": {
+                "hi": "खा लिए गए, यानी घटाना है: 12 − 4।",
+                "en": "They were eaten, so subtract: 12 − 4."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "6", "en": "6" },
+              "why_wrong": { "hi": "12 − 4 करें, 12 ÷ 2 नहीं।", "en": "Do 12 − 4, not 12 ÷ 2." }
+            }
+          ],
+          "explanation": { "hi": "12 − 4 = 8", "en": "12 − 4 = 8" }
+        },
+        {
+          "id": "q3",
+          "prompt": {
+            "hi": "एक पैकेट में 6 पेंसिल हैं। 3 पैकेट में कितनी पेंसिल होंगी?",
+            "en": "One packet has 6 pencils. How many pencils in 3 packets?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "18", "en": "18" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "9", "en": "9" },
+              "why_wrong": {
+                "hi": "हर पैकेट में 6 हैं, इसलिए 6 × 3 करें, 6 + 3 नहीं।",
+                "en": "Each packet has 6, so do 6 × 3, not 6 + 3."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "2", "en": "2" },
+              "why_wrong": {
+                "hi": "यहाँ गुणा करना है, भाग नहीं।",
+                "en": "Multiply here, do not divide."
+              }
+            }
+          ],
+          "explanation": { "hi": "6 × 3 = 18", "en": "6 × 3 = 18" }
+        },
+        {
+          "id": "q4",
+          "prompt": {
+            "hi": "20 टॉफ़ी 4 बच्चों में बराबर बाँटी गईं। हर बच्चे को कितनी मिलीं?",
+            "en": "20 toffees are shared equally among 4 children. How many does each get?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "5", "en": "5" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "16", "en": "16" },
+              "why_wrong": {
+                "hi": "बराबर बाँटना है, यानी भाग: 20 ÷ 4।",
+                "en": "Sharing equally means divide: 20 ÷ 4."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "24", "en": "24" },
+              "why_wrong": {
+                "hi": "बाँटने में जोड़ते नहीं, भाग देते हैं।",
+                "en": "Sharing means divide, not add."
+              }
+            }
+          ],
+          "explanation": { "hi": "20 ÷ 4 = 5", "en": "20 ÷ 4 = 5" }
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "सीमा के पास 10 रुपये थे। उसने 4 रुपये की टॉफ़ी और 3 रुपये की पेंसिल ली। कितने रुपये बचे?",
+            "en": "Seema had 10 rupees. She bought a 4 rupee toffee and a 3 rupee pencil. How much is left?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "3 रुपये", "en": "3 rupees" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "6 रुपये", "en": "6 rupees" },
+              "why_wrong": {
+                "hi": "दोनों चीज़ों के पैसे घटाने हैं: 10 − 4 − 3।",
+                "en": "Subtract both prices: 10 − 4 − 3."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "7 रुपये", "en": "7 rupees" },
+              "why_wrong": {
+                "hi": "यह सिर्फ़ टॉफ़ी के बाद बचे पैसे हैं, पेंसिल के बाद नहीं।",
+                "en": "That is only after the toffee, not after the pencil."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "4 + 3 = 7 रुपये ख़र्च हुए। 10 − 7 = 3",
+            "en": "4 + 3 = 7 rupees spent. 10 − 7 = 3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "apt1-04-letter-patterns",
+      "order": 4,
+      "topic": "letter patterns",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "अक्षरों का पैटर्न", "en": "Letter patterns" },
+      "html": {
+        "hi": "<p>अक्षरों के पैटर्न में <strong>A से Z तक का क्रम</strong> याद रखें। फिर देखें कि हर कदम पर क्या हो रहा है:</p>\n<ul>\n<li>अक्षर <strong>आगे</strong> जा रहे हैं या <strong>पीछे</strong>?</li>\n<li>बीच में <strong>कितने अक्षर छूट</strong> रहे हैं?</li>\n</ul>\n<p>उदाहरण: A, C, E, G – हर बार <strong>एक अक्षर छूट</strong> रहा है (B, D, F)। G के बाद H छोड़ें, तो अगला अक्षर <strong>I</strong> है।</p>\n<p>मदद के लिए कागज़ पर A से Z तक लिख लें और उँगली से गिनें।</p>\n",
+        "en": "<p>For letter patterns, remember the <strong>order from A to Z</strong>. Then see what happens at each step:</p>\n<ul>\n<li>Are the letters going <strong>forwards</strong> or <strong>backwards</strong>?</li>\n<li><strong>How many letters are skipped</strong> in between?</li>\n</ul>\n<p>Example: A, C, E, G – <strong>one letter is skipped</strong> each time (B, D, F). Skip H after G, so the next letter is <strong>I</strong>.</p>\n<p>To help, write A to Z on paper and count with your finger.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "अगला अक्षर क्या है? A, C, E, G, ?",
+            "en": "What comes next? A, C, E, G, ?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "I", "en": "I" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "H", "en": "H" },
+              "why_wrong": {
+                "hi": "हर बार एक अक्षर छूट रहा है। G के बाद H छोड़कर I आएगा।",
+                "en": "One letter is skipped each time. After G, skip H and write I."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "K", "en": "K" },
+              "why_wrong": {
+                "hi": "यहाँ सिर्फ़ एक अक्षर छोड़ना है, तीन नहीं।",
+                "en": "Skip only one letter, not three."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "A (B) C (D) E (F) G (H) I – हर बार एक अक्षर छूटता है।",
+            "en": "A (B) C (D) E (F) G (H) I – one letter is skipped each time."
+          }
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "अगला अक्षर क्या है? B, D, F, H, ?",
+            "en": "What comes next? B, D, F, H, ?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "J", "en": "J" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "I", "en": "I" },
+              "why_wrong": {
+                "hi": "I, H के ठीक बाद है। यहाँ एक अक्षर छोड़ना है।",
+                "en": "I comes right after H. Here one letter is skipped."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "K", "en": "K" },
+              "why_wrong": {
+                "hi": "K तक जाने में दो अक्षर छूटते हैं। सिर्फ़ एक छोड़ना है।",
+                "en": "Going to K skips two letters. Skip only one."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "B (C) D (E) F (G) H (I) J – हर बार एक अक्षर छूटता है।",
+            "en": "B (C) D (E) F (G) H (I) J – one letter is skipped each time."
+          }
+        },
+        {
+          "id": "q3",
+          "prompt": {
+            "hi": "अगला अक्षर क्या है? Z, Y, X, W, ?",
+            "en": "What comes next? Z, Y, X, W, ?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "V", "en": "V" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "X", "en": "X" },
+              "why_wrong": {
+                "hi": "अक्षर उल्टे क्रम में चल रहे हैं। W के बाद पीछे की ओर V आता है।",
+                "en": "The letters go backwards. Going back from W gives V."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "U", "en": "U" },
+              "why_wrong": {
+                "hi": "हर बार सिर्फ़ एक अक्षर पीछे जाना है। U में V छूट गया।",
+                "en": "Go back only one letter each time. U skips V."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "Z, Y, X, W, V – हर बार एक अक्षर पीछे।",
+            "en": "Z, Y, X, W, V – one letter back each time."
+          }
+        },
+        {
+          "id": "q4",
+          "prompt": {
+            "hi": "अगला अक्षर क्या है? P, Q, R, S, ?",
+            "en": "What comes next? P, Q, R, S, ?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "T", "en": "T" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "U", "en": "U" },
+              "why_wrong": {
+                "hi": "यहाँ कोई अक्षर नहीं छूट रहा। S के ठीक बाद T आता है।",
+                "en": "No letter is skipped here. T comes right after S."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "R", "en": "R" },
+              "why_wrong": {
+                "hi": "R पहले ही आ चुका है। अक्षर आगे बढ़ रहे हैं।",
+                "en": "R has already come. The letters move forward."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "P, Q, R, S, T – हर बार अगला अक्षर।",
+            "en": "P, Q, R, S, T – the next letter each time."
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "अगला अक्षर क्या है? A, D, G, J, ?",
+            "en": "What comes next? A, D, G, J, ?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "M", "en": "M" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "K", "en": "K" },
+              "why_wrong": {
+                "hi": "K, J के ठीक बाद है। यहाँ हर बार दो अक्षर छोड़ने हैं।",
+                "en": "K comes right after J. Here two letters are skipped each time."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "L", "en": "L" },
+              "why_wrong": {
+                "hi": "यहाँ दो अक्षर छोड़ने हैं, एक नहीं: J (K, L) M।",
+                "en": "Skip two letters, not one: J (K, L) M."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "A (B, C) D (E, F) G (H, I) J (K, L) M – हर बार दो अक्षर छूटते हैं।",
+            "en": "A (B, C) D (E, F) G (H, I) J (K, L) M – two letters are skipped each time."
+          }
+        },
+        {
+          "id": "q6",
+          "prompt": {
+            "hi": "अगला अक्षर क्या है? Y, W, U, S, ?",
+            "en": "What comes next? Y, W, U, S, ?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "Q", "en": "Q" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "R", "en": "R" },
+              "why_wrong": {
+                "hi": "पीछे जाते हुए हर बार एक अक्षर छूट रहा है। S के बाद R छोड़कर Q आएगा।",
+                "en": "Going back, one letter is skipped each time. After S, skip R and write Q."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "T", "en": "T" },
+              "why_wrong": {
+                "hi": "अक्षर उल्टे क्रम में चल रहे हैं, आगे नहीं।",
+                "en": "The letters go backwards, not forwards."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "Y (X) W (V) U (T) S (R) Q – पीछे की ओर, हर बार एक अक्षर छूटता है।",
+            "en": "Y (X) W (V) U (T) S (R) Q – going backwards, one letter is skipped each time."
+          }
+        }
+      ]
+    },
+    {
+      "id": "apt1-05-comparing",
+      "order": 5,
+      "topic": "comparing",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "तुलना करना", "en": "Comparing" },
+      "html": {
+        "hi": "<p>तुलना वाले सवाल में सबको <strong>एक लाइन में क्रम से</strong> लिख लें।</p>\n<p>उदाहरण: रवि, अमन से लंबा है। अमन, सीमा से लंबा है।\nलाइन बनेगी: <strong>रवि &gt; अमन &gt; सीमा</strong>। अब सबसे लंबा (रवि) और सबसे छोटा (सीमा) आसानी से दिखता है।</p>\n<p>संख्याओं की तुलना में:</p>\n<ul>\n<li>ज़्यादा अंकों वाली संख्या बड़ी होती है (504 &gt; 54)।</li>\n<li>अंक बराबर हों, तो <strong>बाईं ओर से</strong> एक-एक अंक मिलाएँ (504 &gt; 450)।</li>\n</ul>\n",
+        "en": "<p>In a comparing question, write everyone <strong>in order on one line</strong>.</p>\n<p>Example: Ravi is taller than Aman. Aman is taller than Seema.\nThe line is: <strong>Ravi &gt; Aman &gt; Seema</strong>. Now the tallest (Ravi) and the shortest (Seema) are easy to see.</p>\n<p>When comparing numbers:</p>\n<ul>\n<li>A number with more digits is bigger (504 &gt; 54).</li>\n<li>If they have the same number of digits, compare digit by digit <strong>from the left</strong> (504 &gt; 450).</li>\n</ul>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "रवि, अमन से लंबा है। अमन, सीमा से लंबा है। सबसे लंबा कौन है?",
+            "en": "Ravi is taller than Aman. Aman is taller than Seema. Who is the tallest?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "रवि", "en": "Ravi" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "अमन", "en": "Aman" },
+              "why_wrong": {
+                "hi": "अमन, सीमा से लंबा है, पर रवि अमन से भी लंबा है।",
+                "en": "Aman is taller than Seema, but Ravi is taller than Aman."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "सीमा", "en": "Seema" },
+              "why_wrong": {
+                "hi": "सीमा तो सबसे छोटी है। अमन उससे लंबा है।",
+                "en": "Seema is the shortest. Aman is taller than her."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "क्रम: रवि > अमन > सीमा। सबसे लंबा रवि है।",
+            "en": "Order: Ravi > Aman > Seema. Ravi is the tallest."
+          }
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "रिया, प्रिया से भारी है। प्रिया, सीमा से भारी है। सबसे हल्का कौन है?",
+            "en": "Riya is heavier than Priya. Priya is heavier than Seema. Who is the lightest?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "सीमा", "en": "Seema" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "रिया", "en": "Riya" },
+              "why_wrong": {
+                "hi": "रिया सबसे भारी है। सवाल सबसे हल्के का है।",
+                "en": "Riya is the heaviest. The question asks for the lightest."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "प्रिया", "en": "Priya" },
+              "why_wrong": {
+                "hi": "प्रिया, सीमा से भारी है, इसलिए सबसे हल्की नहीं है।",
+                "en": "Priya is heavier than Seema, so she is not the lightest."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "क्रम: रिया > प्रिया > सीमा। सबसे हल्की सीमा है।",
+            "en": "Order: Riya > Priya > Seema. Seema is the lightest."
+          }
+        },
+        {
+          "id": "q3",
+          "prompt": {
+            "hi": "सबसे बड़ी संख्या कौन-सी है? 405, 450, 54, 504",
+            "en": "Which is the biggest number? 405, 450, 54, 504"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "504", "en": "504" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "450", "en": "450" },
+              "why_wrong": {
+                "hi": "पहले सैकड़े का अंक देखें। 504 में 5 है, 450 में 4।",
+                "en": "Look at the hundreds digit first. 504 has 5, 450 has 4."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "54", "en": "54" },
+              "why_wrong": {
+                "hi": "54 में सिर्फ़ दो अंक हैं। तीन अंकों वाली संख्या बड़ी होती है।",
+                "en": "54 has only two digits. A three-digit number is bigger."
+              }
+            },
+            {
+              "id": "d",
+              "text": { "hi": "405", "en": "405" },
+              "why_wrong": {
+                "hi": "405 में सैकड़े का अंक 4 है, जो 5 से छोटा है।",
+                "en": "405 has 4 in the hundreds place, which is less than 5."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "सैकड़े का अंक: 504 में 5, 450 और 405 में 4। इसलिए 504 सबसे बड़ी है।",
+            "en": "Hundreds digit: 5 in 504, 4 in 450 and 405. So 504 is the biggest."
+          }
+        },
+        {
+          "id": "q4",
+          "prompt": {
+            "hi": "सबसे छोटी संख्या कौन-सी है? 98, 89, 809, 890",
+            "en": "Which is the smallest number? 98, 89, 809, 890"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "89", "en": "89" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "98", "en": "98" },
+              "why_wrong": {
+                "hi": "98 में दहाई का अंक 9 है, 89 में 8। इसलिए 89 छोटी है।",
+                "en": "98 has 9 tens, 89 has 8 tens. So 89 is smaller."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "809", "en": "809" },
+              "why_wrong": {
+                "hi": "809 तीन अंकों की संख्या है। यह दो अंकों वाली संख्याओं से बड़ी है।",
+                "en": "809 has three digits. It is bigger than the two-digit numbers."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "दो अंकों वाली 98 और 89 छोटी हैं। दहाई में 8 < 9, इसलिए 89 सबसे छोटी है।",
+            "en": "The two-digit numbers 98 and 89 are smaller. In the tens, 8 < 9, so 89 is the smallest."
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "अमन, रवि से तेज़ दौड़ता है। प्रिया, अमन से तेज़ दौड़ती है। सबसे धीमा कौन है?",
+            "en": "Aman runs faster than Ravi. Priya runs faster than Aman. Who is the slowest?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "रवि", "en": "Ravi" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "प्रिया", "en": "Priya" },
+              "why_wrong": {
+                "hi": "प्रिया सबसे तेज़ है। सवाल सबसे धीमे का है।",
+                "en": "Priya is the fastest. The question asks for the slowest."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "अमन", "en": "Aman" },
+              "why_wrong": {
+                "hi": "अमन, रवि से तेज़ है, इसलिए सबसे धीमा नहीं है।",
+                "en": "Aman is faster than Ravi, so he is not the slowest."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "क्रम (तेज़ से धीमा): प्रिया > अमन > रवि। सबसे धीमा रवि है।",
+            "en": "Order (fast to slow): Priya > Aman > Ravi. Ravi is the slowest."
+          }
+        },
+        {
+          "id": "q6",
+          "prompt": {
+            "hi": "थैला A का वज़न 5 किलो है। थैला B, A से 2 किलो भारी है। थैला C, B से 1 किलो हल्का है। सबसे भारी थैला कौन-सा है?",
+            "en": "Bag A weighs 5 kg. Bag B is 2 kg heavier than A. Bag C is 1 kg lighter than B. Which bag is the heaviest?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "थैला B", "en": "Bag B" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "थैला C", "en": "Bag C" },
+              "why_wrong": {
+                "hi": "C, B से 1 किलो हल्का है: 7 − 1 = 6 किलो।",
+                "en": "C is 1 kg lighter than B: 7 − 1 = 6 kg."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "थैला A", "en": "Bag A" },
+              "why_wrong": {
+                "hi": "A सिर्फ़ 5 किलो का है। B उससे 2 किलो भारी है।",
+                "en": "A is only 5 kg. B is 2 kg heavier."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "A = 5 किलो, B = 5 + 2 = 7 किलो, C = 7 − 1 = 6 किलो। सबसे भारी B है।",
+            "en": "A = 5 kg, B = 5 + 2 = 7 kg, C = 7 − 1 = 6 kg. B is the heaviest."
+          }
+        }
+      ]
+    },
+    {
+      "id": "apt1-06-if-then",
+      "order": 6,
+      "topic": "simple logic",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "अगर-तो वाले सवाल", "en": "If-then reasoning" },
+      "html": {
+        "hi": "<p>ऐसे सवालों में सिर्फ़ <strong>सवाल में दी गई बातें</strong> मानें, अपनी ओर से कुछ न जोड़ें।</p>\n<ul>\n<li><strong>सभी</strong> – हर एक पर बात लागू होती है।</li>\n<li><strong>कुछ</strong> – कुछ पर लागू होती है, सब पर नहीं। इसलिए किसी एक के बारे में अक्सर <strong>पक्का नहीं कह सकते</strong>।</li>\n<li><strong>अगर … तो …</strong> – अगर पहली बात हुई, तो दूसरी बात भी होगी।</li>\n</ul>\n<p>उदाहरण: सभी पक्षियों के पंख होते हैं। कौआ पक्षी है। तो <strong>कौए के पंख होते हैं</strong>।</p>\n",
+        "en": "<p>In these questions, use <strong>only the facts given in the question</strong>. Do not add anything of your own.</p>\n<ul>\n<li><strong>All</strong> – it is true for every one.</li>\n<li><strong>Some</strong> – it is true for some, not all. So about one person or thing, you often <strong>cannot say for sure</strong>.</li>\n<li><strong>If … then …</strong> – if the first thing happens, the second thing happens too.</li>\n</ul>\n<p>Example: All birds have wings. A crow is a bird. So <strong>a crow has wings</strong>.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "सभी पक्षियों के पंख होते हैं। कौआ एक पक्षी है। क्या कौए के पंख होते हैं?",
+            "en": "All birds have wings. A crow is a bird. Does a crow have wings?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "हाँ", "en": "Yes" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "नहीं", "en": "No" },
+              "why_wrong": {
+                "hi": "सभी पक्षियों के पंख हैं, और कौआ भी पक्षी है।",
+                "en": "All birds have wings, and a crow is a bird too."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "पक्का नहीं कह सकते", "en": "Cannot say for sure" },
+              "why_wrong": {
+                "hi": "'सभी' का मतलब है हर एक पक्षी। इसलिए पक्का कह सकते हैं।",
+                "en": "'All' means every single bird. So we can say for sure."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "सभी पक्षियों के पंख हैं। कौआ पक्षी है। तो कौए के पंख हैं।",
+            "en": "All birds have wings. A crow is a bird. So a crow has wings."
+          }
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "रिया की कक्षा के सभी बच्चे नीली कमीज़ पहनते हैं। अमन रिया की कक्षा में है। अमन किस रंग की कमीज़ पहनता है?",
+            "en": "All students in Riya's class wear a blue shirt. Aman is in Riya's class. What colour shirt does Aman wear?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "नीली", "en": "Blue" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "सफ़ेद", "en": "White" },
+              "why_wrong": {
+                "hi": "सवाल में सफ़ेद कमीज़ की कोई बात नहीं है। सभी बच्चे नीली पहनते हैं।",
+                "en": "The question says nothing about white. All the students wear blue."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "पक्का नहीं कह सकते", "en": "Cannot say for sure" },
+              "why_wrong": {
+                "hi": "'सभी बच्चे' में अमन भी आता है, इसलिए पक्का कह सकते हैं।",
+                "en": "'All students' includes Aman, so we can say for sure."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "सभी बच्चे नीली कमीज़ पहनते हैं। अमन उसी कक्षा में है। तो अमन नीली कमीज़ पहनता है।",
+            "en": "All the students wear blue. Aman is in that class. So Aman wears a blue shirt."
+          }
+        },
+        {
+          "id": "q3",
+          "prompt": {
+            "hi": "अगर बारिश होती है, तो ज़मीन गीली हो जाती है। आज बारिश हो रही है। क्या ज़मीन गीली होगी?",
+            "en": "If it rains, the ground gets wet. It is raining today. Will the ground be wet?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "हाँ", "en": "Yes" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "नहीं", "en": "No" },
+              "why_wrong": {
+                "hi": "बारिश हो रही है, और बारिश से ज़मीन गीली होती है।",
+                "en": "It is raining, and rain makes the ground wet."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "पक्का नहीं कह सकते", "en": "Cannot say for sure" },
+              "why_wrong": {
+                "hi": "'अगर' वाली बात पूरी हो गई है (बारिश हो रही है), इसलिए 'तो' वाली बात भी होगी।",
+                "en": "The 'if' part has happened (it is raining), so the 'then' part happens too."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "अगर बारिश → ज़मीन गीली। आज बारिश है, तो ज़मीन गीली होगी।",
+            "en": "If rain → wet ground. It is raining, so the ground will be wet."
+          }
+        },
+        {
+          "id": "q4",
+          "prompt": {
+            "hi": "कुछ बच्चों को क्रिकेट पसंद है। रवि एक बच्चा है। क्या रवि को पक्का क्रिकेट पसंद है?",
+            "en": "Some children like cricket. Ravi is a child. Does Ravi surely like cricket?"
+          },
+          "type": "aptitude",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "पक्का नहीं कह सकते", "en": "Cannot say for sure" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "हाँ, पक्का", "en": "Yes, surely" },
+              "why_wrong": {
+                "hi": "'कुछ' का मतलब सभी नहीं है। हो सकता है रवि उनमें न हो।",
+                "en": "'Some' does not mean all. Ravi may not be one of them."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "नहीं, बिल्कुल नहीं", "en": "No, not at all" },
+              "why_wrong": {
+                "hi": "कुछ बच्चों को क्रिकेट पसंद है। हो सकता है रवि उनमें से एक हो।",
+                "en": "Some children do like cricket. Ravi may be one of them."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "'कुछ' बच्चों को पसंद है, सबको नहीं। रवि उनमें हो भी सकता है, नहीं भी। इसलिए पक्का नहीं कह सकते।",
+            "en": "'Some' children like it, not all. Ravi may or may not be one of them. So we cannot say for sure."
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "दुकान हर रविवार को बंद रहती है। आज दुकान खुली है। क्या आज रविवार है?",
+            "en": "The shop is closed every Sunday. Today the shop is open. Is today Sunday?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "नहीं", "en": "No" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "हाँ", "en": "Yes" },
+              "why_wrong": {
+                "hi": "रविवार को दुकान बंद होती है। आज खुली है, तो आज रविवार नहीं हो सकता।",
+                "en": "On Sunday the shop is closed. It is open today, so today cannot be Sunday."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "पक्का नहीं कह सकते", "en": "Cannot say for sure" },
+              "why_wrong": {
+                "hi": "अगर आज रविवार होता, तो दुकान ज़रूर बंद होती। इसलिए पक्का कह सकते हैं।",
+                "en": "If today were Sunday, the shop would surely be closed. So we can say for sure."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "रविवार → दुकान बंद। आज दुकान खुली है, इसलिए आज रविवार नहीं है।",
+            "en": "Sunday → shop closed. The shop is open today, so today is not Sunday."
+          }
+        }
+      ]
+    },
+    {
+      "id": "apt1-07-money",
+      "order": 7,
+      "topic": "money word problems",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "पैसों के सवाल", "en": "Money problems" },
+      "html": {
+        "hi": "<p>पैसों के सवाल रोज़ की ज़िंदगी में काम आते हैं, जैसे दुकान पर या दफ़्तर में हिसाब करते समय।</p>\n<ul>\n<li><strong>कुल कितने लगे</strong> – सब दाम जोड़ें (+)</li>\n<li><strong>कितने वापस मिले, कितने बचे</strong> – घटाएँ (−)</li>\n<li><strong>एक का दाम पता है, कई का निकालना है</strong> – गुणा करें (×)</li>\n<li><strong>कई का दाम पता है, एक का निकालना है</strong> – भाग दें (÷)</li>\n</ul>\n<p>उदाहरण: 4 केले 20 रुपये के हैं। एक केला = 20 ÷ 4 = <strong>5 रुपये</strong>।</p>\n",
+        "en": "<p>Money problems are useful in daily life, like when you check a bill at a shop or in an office.</p>\n<ul>\n<li><strong>total cost</strong> – add all the prices (+)</li>\n<li><strong>change back, money left</strong> – subtract (−)</li>\n<li><strong>price of one is known, find many</strong> – multiply (×)</li>\n<li><strong>price of many is known, find one</strong> – divide (÷)</li>\n</ul>\n<p>Example: 4 bananas cost 20 rupees. One banana = 20 ÷ 4 = <strong>5 rupees</strong>.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "रवि ने 50 रुपये का नोट दिया और 15 रुपये का पेन ख़रीदा। उसे कितने रुपये वापस मिलेंगे?",
+            "en": "Ravi gives a 50 rupee note and buys a 15 rupee pen. How much change does he get back?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "35 रुपये", "en": "35 rupees" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "65 रुपये", "en": "65 rupees" },
+              "why_wrong": {
+                "hi": "वापस मिलने वाले पैसे में घटाना है, जोड़ना नहीं: 50 − 15।",
+                "en": "For change, subtract, do not add: 50 − 15."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "45 रुपये", "en": "45 rupees" },
+              "why_wrong": {
+                "hi": "आपने सिर्फ़ 5 घटाए। पूरे 15 घटाने हैं।",
+                "en": "You took away only 5. Take away the full 15."
+              }
+            }
+          ],
+          "explanation": { "hi": "50 − 15 = 35 रुपये", "en": "50 − 15 = 35 rupees" }
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "प्रिया ने 20 रुपये की कॉपी, 10 रुपये का पेन और 5 रुपये का रबर ख़रीदा। कुल कितने रुपये लगे?",
+            "en": "Priya buys a 20 rupee notebook, a 10 rupee pen and a 5 rupee eraser. What is the total cost?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "35 रुपये", "en": "35 rupees" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "30 रुपये", "en": "30 rupees" },
+              "why_wrong": {
+                "hi": "रबर के 5 रुपये भी जोड़ने हैं।",
+                "en": "Add the 5 rupees for the eraser too."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "25 रुपये", "en": "25 rupees" },
+              "why_wrong": {
+                "hi": "पेन के 10 रुपये भी जोड़ने हैं।",
+                "en": "Add the 10 rupees for the pen too."
+              }
+            }
+          ],
+          "explanation": { "hi": "20 + 10 + 5 = 35 रुपये", "en": "20 + 10 + 5 = 35 rupees" }
+        },
+        {
+          "id": "q3",
+          "prompt": {
+            "hi": "4 केले 20 रुपये के हैं। 1 केला कितने का है?",
+            "en": "4 bananas cost 20 rupees. What is the price of 1 banana?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "5 रुपये", "en": "5 rupees" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "80 रुपये", "en": "80 rupees" },
+              "why_wrong": {
+                "hi": "एक का दाम निकालने के लिए भाग देना है, गुणा नहीं: 20 ÷ 4।",
+                "en": "To find the price of one, divide, do not multiply: 20 ÷ 4."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "16 रुपये", "en": "16 rupees" },
+              "why_wrong": { "hi": "20 − 4 नहीं, 20 ÷ 4 करना है।", "en": "Do 20 ÷ 4, not 20 − 4." }
+            }
+          ],
+          "explanation": { "hi": "20 ÷ 4 = 5 रुपये", "en": "20 ÷ 4 = 5 rupees" }
+        },
+        {
+          "id": "q4",
+          "prompt": {
+            "hi": "1 पेंसिल 6 रुपये की है। 5 पेंसिल कितने की होंगी?",
+            "en": "1 pencil costs 6 rupees. How much do 5 pencils cost?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "30 रुपये", "en": "30 rupees" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "11 रुपये", "en": "11 rupees" },
+              "why_wrong": {
+                "hi": "हर पेंसिल 6 की है, इसलिए 6 × 5 करें, 6 + 5 नहीं।",
+                "en": "Each pencil costs 6, so do 6 × 5, not 6 + 5."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "36 रुपये", "en": "36 rupees" },
+              "why_wrong": {
+                "hi": "यह 6 पेंसिल का दाम है। 5 पेंसिल के लिए 6 × 5 करें।",
+                "en": "That is the price of 6 pencils. For 5 pencils, do 6 × 5."
+              }
+            }
+          ],
+          "explanation": { "hi": "6 × 5 = 30 रुपये", "en": "6 × 5 = 30 rupees" }
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "सीमा के पास 100 रुपये हैं। उसने 2 किताबें ख़रीदीं। हर किताब 30 रुपये की है। कितने रुपये बचे?",
+            "en": "Seema has 100 rupees. She buys 2 books. Each book costs 30 rupees. How much is left?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "40 रुपये", "en": "40 rupees" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "70 रुपये", "en": "70 rupees" },
+              "why_wrong": {
+                "hi": "यह सिर्फ़ 1 किताब के बाद बचे पैसे हैं। किताबें 2 हैं।",
+                "en": "That is what is left after only 1 book. She bought 2."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "60 रुपये", "en": "60 rupees" },
+              "why_wrong": {
+                "hi": "60 रुपये तो ख़र्च हुए हैं। बचे पैसे के लिए 100 − 60 करें।",
+                "en": "60 rupees is what she spent. For what is left, do 100 − 60."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "30 × 2 = 60 रुपये ख़र्च हुए। 100 − 60 = 40",
+            "en": "30 × 2 = 60 rupees spent. 100 − 60 = 40"
+          }
+        },
+        {
+          "id": "q6",
+          "prompt": {
+            "hi": "अमन के पास 10 रुपये के 3 नोट और 5 रुपये के 2 सिक्के हैं। उसके पास कुल कितने रुपये हैं?",
+            "en": "Aman has three 10 rupee notes and two 5 rupee coins. How much money does he have in all?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "40 रुपये", "en": "40 rupees" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "35 रुपये", "en": "35 rupees" },
+              "why_wrong": {
+                "hi": "5 रुपये के 2 सिक्के 10 रुपये होते हैं, 5 नहीं।",
+                "en": "Two 5 rupee coins make 10 rupees, not 5."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "30 रुपये", "en": "30 rupees" },
+              "why_wrong": {
+                "hi": "यह सिर्फ़ नोटों का पैसा है। सिक्के भी जोड़ने हैं।",
+                "en": "That is only the notes. Add the coins too."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "10 × 3 = 30, 5 × 2 = 10। 30 + 10 = 40 रुपये",
+            "en": "10 × 3 = 30, 5 × 2 = 10. 30 + 10 = 40 rupees"
+          }
+        }
+      ]
+    },
+    {
+      "id": "apt1-08-time-and-calendar",
+      "order": 8,
+      "topic": "time and calendar",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "समय और कैलेंडर", "en": "Time and calendar" },
+      "html": {
+        "hi": "<p>दिनों और महीनों का <strong>क्रम याद</strong> रखें:</p>\n<ul>\n<li>दिन: सोमवार, मंगलवार, बुधवार, गुरुवार, शुक्रवार, शनिवार, रविवार (हफ़्ते में 7 दिन)</li>\n<li>महीने: जनवरी, फ़रवरी, मार्च, अप्रैल, मई, जून, जुलाई, अगस्त, सितंबर, अक्टूबर, नवंबर, दिसंबर (साल में 12 महीने)</li>\n</ul>\n<p>&quot;3 दिन बाद&quot; गिनते समय <strong>आज को न गिनें</strong>, अगले दिन से 1, 2, 3 गिनें।</p>\n<p>समय में: शुरू होने का समय + कितने घंटे = ख़त्म होने का समय। जैसे 9 बजे + 2 घंटे = <strong>11 बजे</strong>।</p>\n",
+        "en": "<p>Remember the <strong>order</strong> of days and months:</p>\n<ul>\n<li>Days: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday (7 days in a week)</li>\n<li>Months: January, February, March, April, May, June, July, August, September, October, November, December (12 months in a year)</li>\n</ul>\n<p>When counting &quot;3 days after&quot;, <strong>do not count today</strong>. Count 1, 2, 3 from the next day.</p>\n<p>For time: start time + number of hours = end time. For example, 9 o&#39;clock + 2 hours = <strong>11 o&#39;clock</strong>.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "आज सोमवार है। 3 दिन बाद कौन-सा दिन होगा?",
+            "en": "Today is Monday. What day will it be after 3 days?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "गुरुवार", "en": "Thursday" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "बुधवार", "en": "Wednesday" },
+              "why_wrong": {
+                "hi": "आज (सोमवार) को नहीं गिनना है। अगले दिन से गिनें: मंगलवार 1, बुधवार 2, गुरुवार 3।",
+                "en": "Do not count today (Monday). Start from the next day: Tuesday 1, Wednesday 2, Thursday 3."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "शुक्रवार", "en": "Friday" },
+              "why_wrong": {
+                "hi": "शुक्रवार 4 दिन बाद आता है, 3 दिन बाद नहीं।",
+                "en": "Friday comes after 4 days, not 3."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "सोमवार → मंगलवार (1) → बुधवार (2) → गुरुवार (3)",
+            "en": "Monday → Tuesday (1) → Wednesday (2) → Thursday (3)"
+          }
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "क्लास सुबह 9 बजे शुरू होती है और 2 घंटे चलती है। क्लास कब ख़त्म होगी?",
+            "en": "A class starts at 9 in the morning and lasts 2 hours. When does it end?"
+          },
+          "type": "aptitude",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "सुबह 11 बजे", "en": "11 in the morning" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "सुबह 10 बजे", "en": "10 in the morning" },
+              "why_wrong": {
+                "hi": "10 बजे तक सिर्फ़ 1 घंटा होता है। क्लास 2 घंटे की है।",
+                "en": "Until 10 is only 1 hour. The class is 2 hours long."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "सुबह 7 बजे", "en": "7 in the morning" },
+              "why_wrong": {
+                "hi": "ख़त्म होने का समय बाद में आता है, इसलिए 2 घंटे जोड़ें, घटाएँ नहीं।",
+                "en": "The end time comes later, so add 2 hours, do not subtract."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "9 + 2 = 11, यानी सुबह 11 बजे।",
+            "en": "9 + 2 = 11, so 11 in the morning."
+          }
+        },
+        {
+          "id": "q3",
+          "prompt": {
+            "hi": "एक हफ़्ते में कितने दिन होते हैं?",
+            "en": "How many days are there in a week?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "7", "en": "7" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "5", "en": "5" },
+              "why_wrong": {
+                "hi": "सोमवार से शुक्रवार 5 दिन हैं, पर शनिवार और रविवार भी हफ़्ते में आते हैं।",
+                "en": "Monday to Friday is 5 days, but Saturday and Sunday are also in the week."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "6", "en": "6" },
+              "why_wrong": {
+                "hi": "रविवार को भी गिनना है। कुल 7 दिन होते हैं।",
+                "en": "Count Sunday too. There are 7 days in all."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "सोमवार, मंगलवार, बुधवार, गुरुवार, शुक्रवार, शनिवार, रविवार = 7 दिन",
+            "en": "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday = 7 days"
+          }
+        },
+        {
+          "id": "q4",
+          "prompt": {
+            "hi": "मार्च के बाद कौन-सा महीना आता है?",
+            "en": "Which month comes after March?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "अप्रैल", "en": "April" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "मई", "en": "May" },
+              "why_wrong": {
+                "hi": "मई, अप्रैल के बाद आता है। मार्च के ठीक बाद अप्रैल है।",
+                "en": "May comes after April. April comes right after March."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "फ़रवरी", "en": "February" },
+              "why_wrong": {
+                "hi": "फ़रवरी, मार्च से पहले आता है, बाद में नहीं।",
+                "en": "February comes before March, not after."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "जनवरी, फ़रवरी, मार्च, अप्रैल – मार्च के बाद अप्रैल।",
+            "en": "January, February, March, April – April comes after March."
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "आज शुक्रवार है। कल (बीता हुआ) कौन-सा दिन था?",
+            "en": "Today is Friday. What day was yesterday?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "गुरुवार", "en": "Thursday" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "शनिवार", "en": "Saturday" },
+              "why_wrong": {
+                "hi": "शनिवार आने वाला कल है। बीता हुआ कल गुरुवार था।",
+                "en": "Saturday is tomorrow. Yesterday was Thursday."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "बुधवार", "en": "Wednesday" },
+              "why_wrong": {
+                "hi": "बुधवार 2 दिन पहले था। कल सिर्फ़ 1 दिन पहले है।",
+                "en": "Wednesday was 2 days ago. Yesterday is just 1 day ago."
+              }
+            }
+          ],
+          "explanation": {
+            "hi": "शुक्रवार से 1 दिन पीछे = गुरुवार।",
+            "en": "One day before Friday = Thursday."
+          }
+        },
+        {
+          "id": "q6",
+          "prompt": {
+            "hi": "रिया की परीक्षा 2 हफ़्ते बाद है। यह कितने दिन बाद है?",
+            "en": "Riya's exam is 2 weeks away. How many days is that?"
+          },
+          "type": "aptitude",
+          "options": [
+            { "id": "a", "text": { "hi": "14 दिन", "en": "14 days" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "7 दिन", "en": "7 days" },
+              "why_wrong": {
+                "hi": "7 दिन सिर्फ़ 1 हफ़्ता है। यहाँ 2 हफ़्ते हैं।",
+                "en": "7 days is only 1 week. Here it is 2 weeks."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "9 दिन", "en": "9 days" },
+              "why_wrong": { "hi": "7 + 2 नहीं, 7 × 2 करना है।", "en": "Do 7 × 2, not 7 + 2." }
+            }
+          ],
+          "explanation": {
+            "hi": "1 हफ़्ता = 7 दिन। 7 × 2 = 14 दिन",
+            "en": "1 week = 7 days. 7 × 2 = 14 days"
+          }
+        }
+      ]
+    }
+  ],
+  "test_out": {
+    "pass_mark": 0.8,
+    "items": [
+      {
+        "id": "t1",
+        "prompt": { "hi": "अगली संख्या? 10, 20, 30, ?", "en": "What comes next? 10, 20, 30, ?" },
+        "type": "aptitude",
+        "options": [
+          { "id": "a", "text": { "hi": "40", "en": "40" }, "correct": true },
+          {
+            "id": "b",
+            "text": { "hi": "35", "en": "35" },
+            "why_wrong": { "hi": "हर बार 10 जुड़ रहा है।", "en": "Each step adds 10." }
+          }
+        ],
+        "explanation": { "hi": "30 + 10 = 40", "en": "30 + 10 = 40" }
+      },
+      {
+        "id": "t2",
+        "prompt": { "hi": "अगली संख्या? 2, 6, 18, ?", "en": "What comes next? 2, 6, 18, ?" },
+        "type": "aptitude",
+        "options": [
+          { "id": "a", "text": { "hi": "54", "en": "54" }, "correct": true },
+          {
+            "id": "b",
+            "text": { "hi": "36", "en": "36" },
+            "why_wrong": {
+              "hi": "हर संख्या 3 गुना हो रही है।",
+              "en": "Each number is multiplied by 3."
+            }
+          }
+        ],
+        "explanation": { "hi": "18 × 3 = 54", "en": "18 × 3 = 54" }
+      }
+    ]
+  },
+  "audio": []
+}

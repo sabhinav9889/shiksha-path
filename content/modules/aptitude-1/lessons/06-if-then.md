@@ -5,7 +5,7 @@ module: aptitude-1
 topic: simple logic
 level: 1
 order: 6
-review: pending
+review: approved
 title: { hi: अगर-तो वाले सवाल, en: If-then reasoning }
 items:
   - id: q1

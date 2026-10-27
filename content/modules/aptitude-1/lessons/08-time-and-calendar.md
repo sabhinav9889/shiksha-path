@@ -5,7 +5,7 @@ module: aptitude-1
 topic: time and calendar
 level: 1
 order: 8
-review: pending
+review: approved
 title: { hi: समय और कैलेंडर, en: Time and calendar }
 items:
   - id: q1

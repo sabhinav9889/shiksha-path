@@ -1,0 +1,1957 @@
+{
+  "schema_version": 1,
+  "id": "english-foundation-1",
+  "version": "d99a14652b98",
+  "track": "english",
+  "title": { "hi": "अंग्रेज़ी की नींव 1", "en": "English Foundation 1" },
+  "hi_ratio": 0.8,
+  "lessons": [
+    {
+      "id": "ef1-01-greetings",
+      "order": 1,
+      "topic": "greetings",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "नमस्ते कहना", "en": "Saying hello" },
+      "html": {
+        "hi": "<p>नई जगह पर लोगों से मिलते समय सबसे पहले <strong>नमस्ते</strong> कहते हैं। English में इसे <strong>Hello</strong> (हेलो) कहते हैं।</p>\n<ul>\n<li><strong>Hello</strong> (हेलो) – नमस्ते</li>\n<li><strong>Good morning</strong> (गुड मॉर्निंग) – सुबह की नमस्ते</li>\n<li><strong>Nice to meet you</strong> (नाइस टू मीट यू) – आपसे मिलकर अच्छा लगा</li>\n</ul>\n<p>Office में &quot;Hi&quot; से ज़्यादा <strong>Hello</strong> या <strong>Good morning</strong> अच्छा लगता है।</p>\n",
+        "en": "<p>When you meet people somewhere new, you start with a greeting.</p>\n<ul>\n<li><strong>Hello</strong> – a polite greeting for any time of day</li>\n<li><strong>Good morning</strong> – a greeting before noon</li>\n<li><strong>Nice to meet you</strong> – said when you meet someone for the first time</li>\n</ul>\n<p>At work, <strong>Hello</strong> or <strong>Good morning</strong> sounds better than &quot;Hi&quot;.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": { "hi": "'Hello' का मतलब क्या है?", "en": "What does 'Hello' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "नमस्ते", "en": "A greeting" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "अलविदा", "en": "Goodbye" },
+              "why_wrong": {
+                "hi": "अलविदा को English में 'Goodbye' कहते हैं।",
+                "en": "That is 'Goodbye', said when leaving."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "धन्यवाद", "en": "Thank you" },
+              "why_wrong": {
+                "hi": "धन्यवाद को English में 'Thank you' कहते हैं।",
+                "en": "That is 'Thank you'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "सुबह office में किसी से मिलें तो क्या कहें?",
+            "en": "What do you say when you meet someone at work in the morning?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "Good morning", "en": "Good morning" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "Good night", "en": "Good night" },
+              "why_wrong": {
+                "hi": "'Good night' रात को सोने से पहले कहते हैं।",
+                "en": "'Good night' is said before going to sleep."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "Goodbye", "en": "Goodbye" },
+              "why_wrong": {
+                "hi": "'Goodbye' जाते समय कहते हैं, मिलते समय नहीं।",
+                "en": "'Goodbye' is for leaving, not meeting."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Hello, my ___ is Priya.",
+          "answers": ["name"],
+          "common_wrong": [
+            {
+              "answer": "naam",
+              "why_wrong": {
+                "hi": "'नाम' को English में 'name' लिखते हैं।",
+                "en": "In English the word is 'name'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["Nice", "to", "meet", "you"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: Nice to meet you. (आपसे मिलकर अच्छा लगा।)",
+            "en": "The sentence is: Nice to meet you."
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "'Nice to meet you' का मतलब?",
+            "en": "What does 'Nice to meet you' mean?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "आपसे मिलकर अच्छा लगा", "en": "I am happy to meet you" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "फिर मिलेंगे", "en": "See you again" },
+              "why_wrong": {
+                "hi": "'फिर मिलेंगे' को English में 'See you again' कहते हैं।",
+                "en": "That is 'See you again'."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ef1-02-my-name",
+      "order": 2,
+      "topic": "introducing yourself",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "अपना परिचय देना", "en": "Introducing yourself" },
+      "html": {
+        "hi": "<p>नए लोगों से मिलकर अपने बारे में बताना सीखें।</p>\n<ul>\n<li><strong>My name is Riya.</strong> (माय नेम इज़ रिया) – मेरा नाम रिया है।</li>\n<li><strong>I am from Bihar.</strong> (आई एम फ्रॉम बिहार) – मैं बिहार से हूँ।</li>\n<li><strong>I am a student.</strong> (आई एम अ स्टूडेंट) – मैं एक विद्यार्थी हूँ।</li>\n<li><strong>How are you?</strong> (हाउ आर यू) – आप कैसे हैं? जवाब: <strong>I am fine, thank you.</strong> (आई एम फाइन, थैंक यू)</li>\n</ul>\n",
+        "en": "<p>Learn to tell people about yourself when you meet them.</p>\n<ul>\n<li><strong>My name is Riya.</strong> – says your name</li>\n<li><strong>I am from Bihar.</strong> – says where you come from</li>\n<li><strong>I am a student.</strong> – says what you do</li>\n<li><strong>How are you?</strong> – answer with <strong>I am fine, thank you.</strong></li>\n</ul>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "'My name is Riya' का मतलब क्या है?",
+            "en": "What does 'My name is Riya' mean?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "मेरा नाम रिया है", "en": "Riya is my name" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "मेरी उम्र रिया है", "en": "Riya is my age" },
+              "why_wrong": {
+                "hi": "उम्र को English में 'age' कहते हैं, 'name' नहीं।",
+                "en": "Age is 'age'. 'Name' means नाम."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "मैं रिया से मिला", "en": "I met Riya" },
+              "why_wrong": {
+                "hi": "'मैं रिया से मिला' का English है 'I met Riya'।",
+                "en": "That would be 'I met Riya'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "My ___ is Riya.",
+          "answers": ["name"],
+          "common_wrong": [
+            {
+              "answer": "naam",
+              "why_wrong": {
+                "hi": "'नाम' को English में 'name' लिखते हैं।",
+                "en": "In English the word is 'name'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["I", "am", "from", "Bihar"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: I am from Bihar. (मैं बिहार से हूँ।)",
+            "en": "The sentence is: I am from Bihar."
+          }
+        },
+        {
+          "id": "q4",
+          "prompt": {
+            "hi": "कोई पूछे 'How are you?' तो क्या जवाब दें?",
+            "en": "Someone asks 'How are you?'. What do you answer?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "I am fine, thank you", "en": "I am fine, thank you" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "My name is Riya", "en": "My name is Riya" },
+              "why_wrong": {
+                "hi": "यह 'What is your name?' का जवाब है।",
+                "en": "That answers 'What is your name?'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "Good night", "en": "Good night" },
+              "why_wrong": {
+                "hi": "'Good night' सोने से पहले कहते हैं।",
+                "en": "'Good night' is said before sleeping."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q5",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "I am a ___.",
+          "answers": ["student"]
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["I", "am", "a", "student"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: I am a student. (मैं एक विद्यार्थी हूँ।)",
+            "en": "The sentence is: I am a student."
+          }
+        }
+      ]
+    },
+    {
+      "id": "ef1-03-numbers",
+      "order": 3,
+      "topic": "numbers one to ten",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "एक से दस तक गिनती", "en": "Numbers one to ten" },
+      "html": {
+        "hi": "<p>एक से दस तक की गिनती English में।</p>\n<ul>\n<li><strong>One</strong> (वन) 1 · <strong>Two</strong> (टू) 2 · <strong>Three</strong> (थ्री) 3 · <strong>Four</strong> (फोर) 4 · <strong>Five</strong> (फाइव) 5</li>\n<li><strong>Six</strong> (सिक्स) 6 · <strong>Seven</strong> (सेवन) 7 · <strong>Eight</strong> (एट) 8 · <strong>Nine</strong> (नाइन) 9 · <strong>Ten</strong> (टेन) 10</li>\n</ul>\n<p>Office में फ़ोन नंबर, तारीख़ और पैसे बताने में यही गिनती काम आती है।</p>\n",
+        "en": "<p>Counting from one to ten in English.</p>\n<ul>\n<li><strong>One, two, three, four, five</strong></li>\n<li><strong>Six, seven, eight, nine, ten</strong></li>\n</ul>\n<p>You use these for phone numbers, dates and money at work.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": { "hi": "'Five' का मतलब क्या है?", "en": "What does 'Five' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "पाँच", "en": "5" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "पंद्रह", "en": "15" },
+              "why_wrong": {
+                "hi": "पंद्रह को English में 'fifteen' कहते हैं।",
+                "en": "15 is 'fifteen'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "पचास", "en": "50" },
+              "why_wrong": { "hi": "पचास को English में 'fifty' कहते हैं।", "en": "50 is 'fifty'." }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": { "hi": "'Seven' का मतलब क्या है?", "en": "What does 'Seven' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "सात", "en": "7" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "छह", "en": "6" },
+              "why_wrong": { "hi": "छह को English में 'six' कहते हैं।", "en": "6 is 'six'." }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "आठ", "en": "8" },
+              "why_wrong": { "hi": "आठ को English में 'eight' कहते हैं।", "en": "8 is 'eight'." }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Two plus three is ___.",
+          "answers": ["five", "5"]
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "There are ___ days in a week.",
+          "answers": ["seven", "7"]
+        },
+        {
+          "id": "q5",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["I", "have", "three", "books"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: I have three books. (मेरे पास तीन किताबें हैं।)",
+            "en": "The sentence is: I have three books."
+          }
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "'Ten' का मतलब क्या है?", "en": "What does 'Ten' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "दस", "en": "10" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "तीन", "en": "3" },
+              "why_wrong": { "hi": "तीन को English में 'three' कहते हैं।", "en": "3 is 'three'." }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "नौ", "en": "9" },
+              "why_wrong": { "hi": "नौ को English में 'nine' कहते हैं।", "en": "9 is 'nine'." }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ef1-04-simple-questions",
+      "order": 4,
+      "topic": "simple questions",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "आसान सवाल पूछना", "en": "Asking simple questions" },
+      "html": {
+        "hi": "<p>सवाल पूछने के लिए ये छोटे शब्द काम आते हैं।</p>\n<ul>\n<li><strong>What</strong> (वॉट) – क्या · <strong>What is your name?</strong> – आपका नाम क्या है?</li>\n<li><strong>Where</strong> (वेयर) – कहाँ · <strong>Where do you live?</strong> – आप कहाँ रहते हैं?</li>\n<li><strong>Who</strong> (हू) – कौन</li>\n<li><strong>How</strong> (हाउ) – कैसे · <strong>How are you?</strong> – आप कैसे हैं?</li>\n</ul>\n",
+        "en": "<p>These short words start most simple questions.</p>\n<ul>\n<li><strong>What</strong> – <strong>What is your name?</strong></li>\n<li><strong>Where</strong> – <strong>Where do you live?</strong></li>\n<li><strong>Who</strong> – asks about a person</li>\n<li><strong>How</strong> – <strong>How are you?</strong></li>\n</ul>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "'What is your name?' का मतलब क्या है?",
+            "en": "What does 'What is your name?' mean?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "आपका नाम क्या है?", "en": "Which name do you have?" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "आप कहाँ रहते हैं?", "en": "Where do you live?" },
+              "why_wrong": {
+                "hi": "यह 'Where do you live?' का मतलब है।",
+                "en": "That is 'Where do you live?'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "आप कैसे हैं?", "en": "How are you?" },
+              "why_wrong": {
+                "hi": "यह 'How are you?' का मतलब है।",
+                "en": "That is 'How are you?'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "'Where do you live?' का सही जवाब कौन-सा है?",
+            "en": "Which is a good answer to 'Where do you live?'"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "I live in Patna", "en": "I live in Patna" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "I am fine", "en": "I am fine" },
+              "why_wrong": {
+                "hi": "यह 'How are you?' का जवाब है।",
+                "en": "That answers 'How are you?'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "My name is Aman", "en": "My name is Aman" },
+              "why_wrong": {
+                "hi": "यह 'What is your name?' का जवाब है।",
+                "en": "That answers 'What is your name?'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "___ is your name?",
+          "answers": ["what"]
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["Where", "do", "you", "live"],
+          "why_wrong": {
+            "hi": "पूरा सवाल है: Where do you live? (आप कहाँ रहते हैं?)",
+            "en": "The question is: Where do you live?"
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "___ are you?",
+          "answers": ["how"]
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "'Who' का मतलब क्या है?", "en": "What does 'Who' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "कौन", "en": "Which person" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "क्या", "en": "What" },
+              "why_wrong": {
+                "hi": "'क्या' को English में 'What' कहते हैं।",
+                "en": "'What' means क्या."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "कहाँ", "en": "Where" },
+              "why_wrong": {
+                "hi": "'कहाँ' को English में 'Where' कहते हैं।",
+                "en": "'Where' means कहाँ."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ef1-05-workplace-words",
+      "order": 5,
+      "topic": "basic workplace words",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "दफ़्तर के आम शब्द", "en": "Everyday workplace words" },
+      "html": {
+        "hi": "<p>दफ़्तर में रोज़ काम आने वाले शब्द।</p>\n<ul>\n<li><strong>Office</strong> (ऑफ़िस) – दफ़्तर</li>\n<li><strong>Manager</strong> (मैनेजर) – जो टीम का काम संभालता है</li>\n<li><strong>Team</strong> (टीम) – साथ काम करने वाला समूह</li>\n<li><strong>Meeting</strong> (मीटिंग) – बैठक</li>\n<li><strong>Email</strong> (ईमेल) – इंटरनेट से भेजी जाने वाली चिट्ठी</li>\n</ul>\n",
+        "en": "<p>Words you will hear at work every day.</p>\n<ul>\n<li><strong>Office</strong> – where people work</li>\n<li><strong>Manager</strong> – the person who leads the team</li>\n<li><strong>Team</strong> – a group working together</li>\n<li><strong>Meeting</strong> – when people gather to talk about work</li>\n<li><strong>Email</strong> – a message sent by internet</li>\n</ul>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": { "hi": "'Office' का मतलब क्या है?", "en": "What does 'Office' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "दफ़्तर", "en": "A place where people work" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "दुकान", "en": "A shop" },
+              "why_wrong": {
+                "hi": "दुकान को English में 'shop' कहते हैं।",
+                "en": "A shop is a 'shop'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "घर", "en": "Home" },
+              "why_wrong": { "hi": "घर को English में 'home' कहते हैं।", "en": "Home is 'home'." }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": { "hi": "'Manager' कौन होता है?", "en": "Who is a 'Manager'?" },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "जो टीम का काम संभालता है", "en": "The person who leads the team" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "ग्राहक", "en": "A customer" },
+              "why_wrong": {
+                "hi": "ग्राहक को English में 'customer' कहते हैं।",
+                "en": "A customer buys from the company."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "विद्यार्थी", "en": "A student" },
+              "why_wrong": {
+                "hi": "विद्यार्थी को English में 'student' कहते हैं।",
+                "en": "That is a 'student'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "I work in an ___.",
+          "answers": ["office"]
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["We", "have", "a", "meeting"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: We have a meeting. (हमारी एक बैठक है।)",
+            "en": "The sentence is: We have a meeting."
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Please check your ___.",
+          "answers": ["email"]
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "'Team' का मतलब क्या है?", "en": "What does 'Team' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "साथ काम करने वाला समूह", "en": "A group working together" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "अकेले काम करना", "en": "Working alone" },
+              "why_wrong": {
+                "hi": "अकेले काम करने को 'alone' कहते हैं।",
+                "en": "Working alone is 'alone'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "छुट्टी", "en": "A holiday" },
+              "why_wrong": {
+                "hi": "छुट्टी को English में 'holiday' कहते हैं।",
+                "en": "A holiday is a day off."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ef1-06-polite-words",
+      "order": 6,
+      "topic": "polite words",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "शिष्ट शब्द", "en": "Polite words" },
+      "html": {
+        "hi": "<p>शिष्ट शब्द बातचीत को अच्छा बनाते हैं।</p>\n<ul>\n<li><strong>Please</strong> (प्लीज़) – कृपया</li>\n<li><strong>Thank you</strong> (थैंक यू) – धन्यवाद · जवाब: <strong>You are welcome</strong> (यू आर वेलकम)</li>\n<li><strong>Sorry</strong> (सॉरी) – माफ़ कीजिए, ग़लती होने पर</li>\n<li><strong>Excuse me</strong> (एक्सक्यूज़ मी) – किसी को रोककर कुछ पूछने से पहले</li>\n</ul>\n",
+        "en": "<p>Polite words make every conversation easier.</p>\n<ul>\n<li><strong>Please</strong> – a polite way to ask</li>\n<li><strong>Thank you</strong> – answer with <strong>You are welcome</strong></li>\n<li><strong>Sorry</strong> – when you make a mistake</li>\n<li><strong>Excuse me</strong> – before you ask someone a question</li>\n</ul>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": { "hi": "'Please' का मतलब क्या है?", "en": "What does 'Please' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "कृपया", "en": "A polite way to ask" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "माफ़ कीजिए", "en": "Sorry" },
+              "why_wrong": {
+                "hi": "'माफ़ कीजिए' को English में 'Sorry' या 'Excuse me' कहते हैं।",
+                "en": "That is 'Sorry' or 'Excuse me'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "धन्यवाद", "en": "Thank you" },
+              "why_wrong": {
+                "hi": "धन्यवाद को English में 'Thank you' कहते हैं।",
+                "en": "That is 'Thank you'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "___ you for your help.",
+          "answers": ["thank"]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["Thank", "you", "very", "much"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: Thank you very much. (आपका बहुत धन्यवाद।)",
+            "en": "The sentence is: Thank you very much."
+          }
+        },
+        {
+          "id": "q4",
+          "prompt": {
+            "hi": "आपका पैर किसी से टकरा गया। क्या कहेंगे?",
+            "en": "You bumped into someone. What do you say?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "Sorry", "en": "Sorry" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "Welcome", "en": "Welcome" },
+              "why_wrong": {
+                "hi": "'Welcome' किसी के आने पर कहते हैं।",
+                "en": "'Welcome' is said when someone arrives."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "Good night", "en": "Good night" },
+              "why_wrong": {
+                "hi": "'Good night' सोने से पहले कहते हैं।",
+                "en": "'Good night' is said before sleeping."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "कोई 'Thank you' कहे तो जवाब में क्या कहें?",
+            "en": "Someone says 'Thank you'. What do you answer?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "You are welcome", "en": "You are welcome" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "Good morning", "en": "Good morning" },
+              "why_wrong": {
+                "hi": "'Good morning' सुबह मिलने पर कहते हैं।",
+                "en": "'Good morning' is a greeting for the morning."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "___ me, where is the office?",
+          "answers": ["excuse"]
+        }
+      ]
+    },
+    {
+      "id": "ef1-07-days-and-time",
+      "order": 7,
+      "topic": "days of the week and parts of the day",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "हफ़्ते के दिन और समय", "en": "Days and times of day" },
+      "html": {
+        "hi": "<p>हफ़्ते में सात दिन होते हैं। English में दिनों के नाम हमेशा बड़े अक्षर (capital letter) से लिखते हैं।</p>\n<ul>\n<li><strong>Monday</strong> (मंडे) सोमवार · <strong>Tuesday</strong> (ट्यूज़डे) मंगलवार · <strong>Wednesday</strong> (वेन्ज़डे) बुधवार</li>\n<li><strong>Thursday</strong> (थर्सडे) गुरुवार · <strong>Friday</strong> (फ्राइडे) शुक्रवार · <strong>Saturday</strong> (सैटरडे) शनिवार · <strong>Sunday</strong> (संडे) रविवार</li>\n</ul>\n<p>हिंदी में &quot;कल&quot; के दो मतलब हैं, पर English में दो अलग शब्द हैं।</p>\n<ul>\n<li><strong>Today</strong> (टुडे) – आज</li>\n<li><strong>Tomorrow</strong> (टुमॉरो) – आने वाला कल</li>\n<li><strong>Yesterday</strong> (येस्टरडे) – बीता हुआ कल</li>\n</ul>\n<p>दिन के हिस्से:</p>\n<ul>\n<li><strong>Morning</strong> (मॉर्निंग) – सुबह · <strong>Good morning</strong></li>\n<li><strong>Afternoon</strong> (आफ़्टरनून) – दोपहर · <strong>Good afternoon</strong></li>\n<li><strong>Evening</strong> (ईवनिंग) – शाम · <strong>Good evening</strong></li>\n</ul>\n",
+        "en": "<p>There are seven days in a week. Always start the name of a day with a capital letter.</p>\n<ul>\n<li><strong>Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday</strong></li>\n</ul>\n<p>Three words help you talk about days:</p>\n<ul>\n<li><strong>Today</strong> – this day</li>\n<li><strong>Tomorrow</strong> – the day after today</li>\n<li><strong>Yesterday</strong> – the day before today</li>\n</ul>\n<p>Parts of the day:</p>\n<ul>\n<li><strong>Morning</strong> – before noon · <strong>Good morning</strong></li>\n<li><strong>Afternoon</strong> – after noon · <strong>Good afternoon</strong></li>\n<li><strong>Evening</strong> – after the afternoon, before night · <strong>Good evening</strong></li>\n</ul>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": { "hi": "'Monday' का मतलब क्या है?", "en": "What does 'Monday' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "सोमवार", "en": "The day after Sunday" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "मंगलवार", "en": "Tuesday" },
+              "why_wrong": {
+                "hi": "मंगलवार को English में 'Tuesday' कहते हैं।",
+                "en": "That is 'Tuesday'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "रविवार", "en": "Sunday" },
+              "why_wrong": {
+                "hi": "रविवार को English में 'Sunday' कहते हैं।",
+                "en": "That is 'Sunday'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": { "hi": "'Tomorrow' का मतलब क्या है?", "en": "What does 'Tomorrow' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "आने वाला कल", "en": "The day after today" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "बीता हुआ कल", "en": "The day before today" },
+              "why_wrong": {
+                "hi": "बीते हुए कल को English में 'yesterday' कहते हैं।",
+                "en": "That is 'yesterday'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "आज", "en": "This day" },
+              "why_wrong": { "hi": "आज को English में 'today' कहते हैं।", "en": "That is 'today'." }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Today is Monday. Tomorrow is ___.",
+          "answers": ["tuesday"],
+          "common_wrong": [
+            {
+              "answer": "sunday",
+              "why_wrong": {
+                "hi": "Sunday तो Monday से एक दिन पहले आता है। Monday के बाद Tuesday आता है।",
+                "en": "Sunday comes before Monday. Tuesday comes after it."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["We", "have", "a", "holiday", "on", "Sunday"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: We have a holiday on Sunday. (रविवार को हमारी छुट्टी होती है।)",
+            "en": "The sentence is: We have a holiday on Sunday."
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "शाम को दफ़्तर में किसी से मिलें तो क्या कहें?",
+            "en": "What do you say when you meet someone at work in the evening?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "Good evening", "en": "Good evening" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "Good morning", "en": "Good morning" },
+              "why_wrong": {
+                "hi": "'Good morning' सुबह कहते हैं, शाम को नहीं।",
+                "en": "'Good morning' is for the morning, not the evening."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "Good night", "en": "Good night" },
+              "why_wrong": {
+                "hi": "'Good night' रात को सोने से पहले या विदा लेते समय कहते हैं।",
+                "en": "'Good night' is said at night when you leave or go to sleep."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "The day after Friday is ___.",
+          "answers": ["saturday"],
+          "common_wrong": [
+            {
+              "answer": "thursday",
+              "why_wrong": {
+                "hi": "Thursday तो Friday से पहले आता है। Friday के बाद Saturday आता है।",
+                "en": "Thursday comes before Friday. Saturday comes after it."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q7",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["Yesterday", "was", "Sunday"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: Yesterday was Sunday. (बीता हुआ कल रविवार था।)",
+            "en": "The sentence is: Yesterday was Sunday."
+          }
+        }
+      ]
+    },
+    {
+      "id": "ef1-08-family",
+      "order": 8,
+      "topic": "family and people",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "परिवार और लोग", "en": "Family and people" },
+      "html": {
+        "hi": "<p>परिवार और आसपास के लोगों के नाम English में।</p>\n<ul>\n<li><strong>Mother</strong> (मदर) – माँ</li>\n<li><strong>Father</strong> (फ़ादर) – पिता</li>\n<li><strong>Brother</strong> (ब्रदर) – भाई</li>\n<li><strong>Sister</strong> (सिस्टर) – बहन</li>\n<li><strong>Friend</strong> (फ़्रेंड) – दोस्त</li>\n<li><strong>Teacher</strong> (टीचर) – शिक्षक, पढ़ाने वाले</li>\n</ul>\n<p>किसी का परिचय कराने के लिए कहें: <strong>This is my ...</strong> (दिस इज़ माय) – ये मेरे/मेरी ... हैं।</p>\n<ul>\n<li><strong>This is my mother.</strong> – ये मेरी माँ हैं।</li>\n<li><strong>This is my friend Priya.</strong> – यह मेरी दोस्त प्रिया है।</li>\n</ul>\n<p>लड़के या आदमी के लिए <strong>He</strong> (ही), लड़की या महिला के लिए <strong>She</strong> (शी) कहते हैं।</p>\n",
+        "en": "<p>Words for your family and the people around you.</p>\n<ul>\n<li><strong>Mother</strong>, <strong>Father</strong>, <strong>Brother</strong>, <strong>Sister</strong></li>\n<li><strong>Friend</strong> – a person you like and spend time with</li>\n<li><strong>Teacher</strong> – a person who teaches you</li>\n</ul>\n<p>To introduce someone, say <strong>This is my ...</strong></p>\n<ul>\n<li><strong>This is my mother.</strong></li>\n<li><strong>This is my friend Priya.</strong></li>\n</ul>\n<p>Use <strong>He</strong> for a boy or man, and <strong>She</strong> for a girl or woman.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": { "hi": "'Mother' का मतलब क्या है?", "en": "What does 'Mother' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "माँ", "en": "Your mom" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "पिता", "en": "Father" },
+              "why_wrong": {
+                "hi": "पिता को English में 'father' कहते हैं।",
+                "en": "That is 'father'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "बहन", "en": "Sister" },
+              "why_wrong": {
+                "hi": "बहन को English में 'sister' कहते हैं।",
+                "en": "That is 'sister'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": { "hi": "'Brother' का मतलब क्या है?", "en": "What does 'Brother' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "भाई", "en": "A boy with the same parents as you" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "दोस्त", "en": "Friend" },
+              "why_wrong": {
+                "hi": "दोस्त को English में 'friend' कहते हैं।",
+                "en": "That is 'friend'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "शिक्षक", "en": "Teacher" },
+              "why_wrong": {
+                "hi": "शिक्षक को English में 'teacher' कहते हैं।",
+                "en": "That is 'teacher'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["This", "is", "my", "sister"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: This is my sister. (यह मेरी बहन है।)",
+            "en": "The sentence is: This is my sister."
+          }
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Seema teaches us English. She is our ___.",
+          "answers": ["teacher"],
+          "common_wrong": [
+            {
+              "answer": "teach",
+              "why_wrong": {
+                "hi": "'teach' का मतलब है पढ़ाना। पढ़ाने वाले व्यक्ति को 'teacher' कहते हैं।",
+                "en": "'Teach' is the action. The person is a 'teacher'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "अपने पिता का परिचय किसी से कैसे कराएँगे?",
+            "en": "How do you introduce your father to someone?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "This is my father", "en": "This is my father" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "This is my mother", "en": "This is my mother" },
+              "why_wrong": {
+                "hi": "'Mother' का मतलब माँ है। पिता को 'father' कहते हैं।",
+                "en": "'Mother' means your mom. Use 'father'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "This is my brother", "en": "This is my brother" },
+              "why_wrong": {
+                "hi": "'Brother' का मतलब भाई है। पिता को 'father' कहते हैं।",
+                "en": "'Brother' is a brother. Use 'father'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["Ravi", "is", "my", "friend"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: Ravi is my friend. (रवि मेरा दोस्त है।)",
+            "en": "The sentence is: Ravi is my friend."
+          }
+        },
+        {
+          "id": "q7",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Aman is my brother. ___ is a student.",
+          "answers": ["he"],
+          "common_wrong": [
+            {
+              "answer": "she",
+              "why_wrong": {
+                "hi": "'She' लड़की या महिला के लिए आता है। अमन लड़का है, इसलिए 'He' आएगा।",
+                "en": "'She' is for a girl or woman. Aman is a boy, so use 'He'."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ef1-09-common-verbs",
+      "order": 9,
+      "topic": "everyday actions",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "रोज़ के काम", "en": "Everyday actions" },
+      "html": {
+        "hi": "<p>रोज़ के कामों के लिए English के आसान शब्द (verbs)।</p>\n<ul>\n<li><strong>Go</strong> (गो) – जाना · <strong>Come</strong> (कम) – आना</li>\n<li><strong>Eat</strong> (ईट) – खाना · <strong>Drink</strong> (ड्रिंक) – पीना</li>\n<li><strong>Read</strong> (रीड) – पढ़ना · <strong>Write</strong> (राइट) – लिखना</li>\n<li><strong>Work</strong> (वर्क) – काम करना · <strong>Sleep</strong> (स्लीप) – सोना</li>\n</ul>\n<p><strong>I, We, You, They</strong> के साथ verb जैसा है वैसा रहता है:</p>\n<ul>\n<li><strong>I eat rice.</strong> (आई ईट राइस) – मैं चावल खाता/खाती हूँ।</li>\n<li><strong>We go to school.</strong> – हम स्कूल जाते हैं।</li>\n</ul>\n<p><strong>He, She</strong> या एक व्यक्ति के नाम के साथ verb में <strong>-s</strong> लगता है:</p>\n<ul>\n<li><strong>She reads a book.</strong> (शी रीड्स अ बुक) – वह एक किताब पढ़ती है।</li>\n<li><strong>Ravi works in an office.</strong> – रवि एक दफ़्तर में काम करता है।</li>\n</ul>\n",
+        "en": "<p>Simple action words (verbs) for every day.</p>\n<ul>\n<li><strong>Go</strong>, <strong>Come</strong>, <strong>Eat</strong>, <strong>Drink</strong></li>\n<li><strong>Read</strong>, <strong>Write</strong>, <strong>Work</strong>, <strong>Sleep</strong></li>\n</ul>\n<p>With <strong>I, we, you, they</strong>, the verb stays the same:</p>\n<ul>\n<li><strong>I eat rice.</strong></li>\n<li><strong>We go to school.</strong></li>\n</ul>\n<p>With <strong>he, she</strong> or one person&#39;s name, add <strong>-s</strong> to the verb:</p>\n<ul>\n<li><strong>She reads a book.</strong></li>\n<li><strong>Ravi works in an office.</strong></li>\n</ul>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": { "hi": "'Eat' का मतलब क्या है?", "en": "What does 'Eat' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "खाना खाना", "en": "To have food" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "पीना", "en": "Drink" },
+              "why_wrong": {
+                "hi": "पीने को English में 'drink' कहते हैं।",
+                "en": "That is 'drink'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "सोना (नींद लेना)", "en": "Sleep" },
+              "why_wrong": {
+                "hi": "सोने (नींद) को English में 'sleep' कहते हैं।",
+                "en": "That is 'sleep'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": { "hi": "'Write' का मतलब क्या है?", "en": "What does 'Write' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "लिखना", "en": "To put words on paper" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "पढ़ना", "en": "Read" },
+              "why_wrong": {
+                "hi": "पढ़ने को English में 'read' कहते हैं।",
+                "en": "That is 'read'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "बोलना", "en": "Speak" },
+              "why_wrong": {
+                "hi": "बोलने को English में 'speak' कहते हैं।",
+                "en": "That is 'speak'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Priya ___ water. (प्रिया पानी पीती है।)",
+          "answers": ["drinks"],
+          "common_wrong": [
+            {
+              "answer": "drink",
+              "why_wrong": {
+                "hi": "He, She या किसी एक व्यक्ति के नाम के साथ verb में -s लगता है: drinks।",
+                "en": "With he, she or one person's name, add -s: drinks."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "We ___ rice every day. (हम रोज़ चावल खाते हैं।)",
+          "answers": ["eat"],
+          "common_wrong": [
+            {
+              "answer": "eats",
+              "why_wrong": {
+                "hi": "'We' के साथ verb में -s नहीं लगता: We eat।",
+                "en": "With 'we', do not add -s: We eat."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q5",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["She", "reads", "a", "book"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: She reads a book. (वह एक किताब पढ़ती है।)",
+            "en": "The sentence is: She reads a book."
+          }
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["Ravi", "works", "in", "an", "office"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: Ravi works in an office. (रवि एक दफ़्तर में काम करता है।)",
+            "en": "The sentence is: Ravi works in an office."
+          }
+        },
+        {
+          "id": "q7",
+          "prompt": {
+            "hi": "'Please come here' का मतलब क्या है?",
+            "en": "What does 'Please come here' mean?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "कृपया यहाँ आइए", "en": "Please walk to this place" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "कृपया वहाँ जाइए", "en": "Please go there" },
+              "why_wrong": {
+                "hi": "'जाइए' को English में 'go' कहते हैं। 'Come' का मतलब है आना।",
+                "en": "That is 'go'. 'Come' means to move towards the speaker."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "कृपया यहाँ बैठिए", "en": "Please sit here" },
+              "why_wrong": { "hi": "बैठने को English में 'sit' कहते हैं।", "en": "That is 'sit'." }
+            }
+          ]
+        },
+        {
+          "id": "q8",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Aman ___ at ten at night. (अमन रात दस बजे सोता है।)",
+          "answers": ["sleeps"],
+          "common_wrong": [
+            {
+              "answer": "sleep",
+              "why_wrong": {
+                "hi": "एक व्यक्ति के नाम के साथ verb में -s लगता है: Aman sleeps।",
+                "en": "With one person's name, add -s: Aman sleeps."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ef1-10-things-at-work",
+      "order": 10,
+      "topic": "things in an office",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "दफ़्तर की चीज़ें", "en": "Things at work" },
+      "html": {
+        "hi": "<p>दफ़्तर में रोज़ दिखने वाली चीज़ों के नाम।</p>\n<ul>\n<li><strong>Computer</strong> (कंप्यूटर) – कंप्यूटर</li>\n<li><strong>Phone</strong> (फ़ोन) – फ़ोन</li>\n<li><strong>Chair</strong> (चेयर) – कुर्सी</li>\n<li><strong>Desk</strong> (डेस्क) – काम करने की मेज़</li>\n<li><strong>Pen</strong> (पेन) – कलम</li>\n<li><strong>Paper</strong> (पेपर) – काग़ज़</li>\n<li><strong>Printer</strong> (प्रिंटर) – काग़ज़ पर छापने वाली मशीन</li>\n<li><strong>Bag</strong> (बैग) – थैला</li>\n</ul>\n<p>कोई चीज़ दिखाने के लिए कहें: <strong>This is my desk.</strong> (दिस इज़ माय डेस्क) – यह मेरी मेज़ है।</p>\n",
+        "en": "<p>Names of things you see in an office every day.</p>\n<ul>\n<li><strong>Computer</strong>, <strong>Phone</strong>, <strong>Printer</strong></li>\n<li><strong>Chair</strong> – a seat for one person</li>\n<li><strong>Desk</strong> – a table where you work</li>\n<li><strong>Pen</strong> and <strong>Paper</strong> – for writing</li>\n<li><strong>Bag</strong> – to carry your things</li>\n</ul>\n<p>To show something, say: <strong>This is my desk.</strong></p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": { "hi": "'Chair' का मतलब क्या है?", "en": "What does 'Chair' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "कुर्सी", "en": "A seat for one person" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "मेज़", "en": "Desk" },
+              "why_wrong": {
+                "hi": "मेज़ को English में 'desk' या 'table' कहते हैं।",
+                "en": "That is a 'desk' or 'table'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "दरवाज़ा", "en": "Door" },
+              "why_wrong": {
+                "hi": "दरवाज़े को English में 'door' कहते हैं।",
+                "en": "That is a 'door'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "काग़ज़ पर छापने (print करने) वाली मशीन को क्या कहते हैं?",
+            "en": "What do we call the machine that prints on paper?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "Printer", "en": "Printer" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "Phone", "en": "Phone" },
+              "why_wrong": {
+                "hi": "'Phone' से हम बात करते हैं, छापते नहीं।",
+                "en": "We talk on a phone. It does not print."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "Bag", "en": "Bag" },
+              "why_wrong": {
+                "hi": "'Bag' (थैला) में हम सामान रखते हैं।",
+                "en": "We carry things in a bag."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Please give me a ___ and some paper. (कृपया मुझे एक पेन और थोड़ा काग़ज़ दीजिए।)",
+          "answers": ["pen"],
+          "common_wrong": [
+            {
+              "answer": "pain",
+              "why_wrong": {
+                "hi": "'pain' का मतलब दर्द है। लिखने वाली कलम को 'pen' लिखते हैं।",
+                "en": "'Pain' means hurt. The word for writing is 'pen'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["This", "is", "my", "desk"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: This is my desk. (यह मेरी मेज़ है।)",
+            "en": "The sentence is: This is my desk."
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": { "hi": "'Paper' का मतलब क्या है?", "en": "What does 'Paper' mean?" },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "काग़ज़", "en": "Sheets you write on" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "कलम", "en": "Pen" },
+              "why_wrong": { "hi": "कलम को English में 'pen' कहते हैं।", "en": "That is a 'pen'." }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "किताब", "en": "Book" },
+              "why_wrong": {
+                "hi": "किताब को English में 'book' कहते हैं।",
+                "en": "That is a 'book'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "My computer is on the ___. (मेरा कंप्यूटर मेज़ पर है।)",
+          "answers": ["desk", "table"]
+        },
+        {
+          "id": "q7",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["Please", "print", "this", "page"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: Please print this page. (कृपया यह पेज प्रिंट कीजिए।)",
+            "en": "The sentence is: Please print this page."
+          }
+        }
+      ]
+    },
+    {
+      "id": "ef1-11-asking-for-help",
+      "order": 11,
+      "topic": "asking for help",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "मदद माँगना", "en": "Asking for help" },
+      "html": {
+        "hi": "<p>नई जगह पर कुछ समझ न आए तो मदद माँगना बिल्कुल ठीक है। ये वाक्य काम आएँगे।</p>\n<ul>\n<li><strong>Can you help me?</strong> (कैन यू हेल्प मी) – क्या आप मेरी मदद कर सकते हैं?</li>\n<li><strong>I do not understand.</strong> (आई डू नॉट अंडरस्टैंड) – मुझे समझ नहीं आया।</li>\n<li><strong>Please say it again.</strong> (प्लीज़ से इट अगेन) – कृपया फिर से बोलिए।</li>\n<li><strong>Sorry, I am late.</strong> (सॉरी, आई एम लेट) – माफ़ कीजिए, मुझे देर हो गई।</li>\n</ul>\n<p>मदद मिलने के बाद <strong>Thank you</strong> कहना न भूलें।</p>\n",
+        "en": "<p>It is fine to ask for help when you do not understand something. These sentences help.</p>\n<ul>\n<li><strong>Can you help me?</strong> – asks someone for help</li>\n<li><strong>I do not understand.</strong> – says the words were not clear to you</li>\n<li><strong>Please say it again.</strong> – asks someone to repeat</li>\n<li><strong>Sorry, I am late.</strong> – said when you arrive after the right time</li>\n</ul>\n<p>After someone helps you, say <strong>Thank you</strong>.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "'Can you help me?' का मतलब क्या है?",
+            "en": "What does 'Can you help me?' mean?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "क्या आप मेरी मदद कर सकते हैं?", "en": "Will you please help me?" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "क्या आप मेरे साथ चलेंगे?", "en": "Will you come with me?" },
+              "why_wrong": {
+                "hi": "यह 'Will you come with me?' का मतलब है। 'Help' का मतलब है मदद।",
+                "en": "That is 'Will you come with me?'. 'Help' means मदद."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "क्या आप मुझे जानते हैं?", "en": "Do you know me?" },
+              "why_wrong": {
+                "hi": "यह 'Do you know me?' का मतलब है।",
+                "en": "That is 'Do you know me?'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "आपको किसी की बात समझ नहीं आई। क्या कहेंगे?",
+            "en": "You did not understand what someone said. What do you say?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "Sorry, I do not understand", "en": "Sorry, I do not understand" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "I am fine", "en": "I am fine" },
+              "why_wrong": {
+                "hi": "'I am fine' का मतलब है 'मैं ठीक हूँ'। यह 'How are you?' का जवाब है।",
+                "en": "'I am fine' answers 'How are you?'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "Nice to meet you", "en": "Nice to meet you" },
+              "why_wrong": {
+                "hi": "यह पहली बार मिलने पर कहते हैं।",
+                "en": "That is said when you meet someone for the first time."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "I do not ___. (मुझे समझ नहीं आया।)",
+          "answers": ["understand"],
+          "common_wrong": [
+            {
+              "answer": "understood",
+              "why_wrong": {
+                "hi": "'do not' के बाद verb का सादा रूप आता है: I do not understand।",
+                "en": "After 'do not', use the simple form: I do not understand."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["Please", "say", "it", "again"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: Please say it again. (कृपया फिर से बोलिए।)",
+            "en": "The sentence is: Please say it again."
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Sorry, I am ___. (माफ़ कीजिए, मुझे देर हो गई।)",
+          "answers": ["late"],
+          "common_wrong": [
+            {
+              "answer": "let",
+              "why_wrong": {
+                "hi": "'let' अलग शब्द है। देर के लिए 'late' (लेट) लिखते हैं।",
+                "en": "'Let' is a different word. Use 'late'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q6",
+          "prompt": {
+            "hi": "'Please say it again' कब कहते हैं?",
+            "en": "When do you say 'Please say it again'?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "जब बात साफ़ सुनाई न दे", "en": "When you did not hear clearly" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": {
+                "hi": "जब किसी से पहली बार मिलें",
+                "en": "When you meet someone for the first time"
+              },
+              "why_wrong": {
+                "hi": "पहली बार मिलने पर 'Nice to meet you' कहते हैं।",
+                "en": "Then you say 'Nice to meet you'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "जब घर जा रहे हों", "en": "When you are going home" },
+              "why_wrong": {
+                "hi": "घर जाते समय 'Goodbye' कहते हैं।",
+                "en": "Then you say 'Goodbye'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q7",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["Can", "you", "help", "me"],
+          "why_wrong": {
+            "hi": "पूरा सवाल है: Can you help me? (क्या आप मेरी मदद कर सकते हैं?)",
+            "en": "The question is: Can you help me?"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ef1-12-phone-calls",
+      "order": 12,
+      "topic": "answering phone calls",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "फ़ोन पर बात करना", "en": "Phone calls" },
+      "html": {
+        "hi": "<p>दफ़्तर में फ़ोन पर शिष्टता से बात करना बहुत ज़रूरी है।</p>\n<ul>\n<li><strong>Hello, this is Riya speaking.</strong> (हेलो, दिस इज़ रिया स्पीकिंग) – हेलो, मैं रिया बोल रही हूँ।</li>\n<li><strong>Can I speak to Mr. Sharma?</strong> (कैन आई स्पीक टू मिस्टर शर्मा) – क्या मेरी शर्मा जी से बात हो सकती है?</li>\n<li><strong>Please wait.</strong> (प्लीज़ वेट) – कृपया रुकिए।</li>\n<li><strong>Thank you for calling.</strong> (थैंक यू फ़ॉर कॉलिंग) – फ़ोन करने के लिए धन्यवाद।</li>\n</ul>\n<p>फ़ोन पर &quot;I am Riya&quot; से ज़्यादा <strong>This is Riya speaking</strong> अच्छा लगता है।</p>\n",
+        "en": "<p>Speaking politely on the phone is important at work.</p>\n<ul>\n<li><strong>Hello, this is Riya speaking.</strong> – says who you are</li>\n<li><strong>Can I speak to Mr. Sharma?</strong> – asks for the person you want</li>\n<li><strong>Please wait.</strong> – asks the caller to stay on the line</li>\n<li><strong>Thank you for calling.</strong> – a polite way to end the call</li>\n</ul>\n<p>On the phone, <strong>This is Riya speaking</strong> sounds better than &quot;I am Riya&quot;.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "दफ़्तर का फ़ोन उठाकर सबसे पहले क्या कहें?",
+            "en": "What do you say first when you answer the office phone?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "Hello", "en": "Hello" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "Goodbye", "en": "Goodbye" },
+              "why_wrong": {
+                "hi": "'Goodbye' बात ख़त्म करते समय कहते हैं।",
+                "en": "'Goodbye' is said at the end of a call."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "Sorry", "en": "Sorry" },
+              "why_wrong": {
+                "hi": "'Sorry' ग़लती होने पर कहते हैं।",
+                "en": "'Sorry' is said when you make a mistake."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "'Please wait' का मतलब क्या है?",
+            "en": "What does 'Please wait' mean?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "कृपया रुकिए", "en": "Please stay for a short time" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "कृपया बैठिए", "en": "Please sit" },
+              "why_wrong": {
+                "hi": "बैठने को English में 'sit' कहते हैं।",
+                "en": "That is 'Please sit'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "कृपया फिर से बोलिए", "en": "Please say it again" },
+              "why_wrong": {
+                "hi": "यह 'Please say it again' का मतलब है।",
+                "en": "That is 'Please say it again'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Hello, this is Riya ___. (हेलो, मैं रिया बोल रही हूँ।)",
+          "answers": ["speaking"],
+          "common_wrong": [
+            {
+              "answer": "speak",
+              "why_wrong": {
+                "hi": "फ़ोन पर अपना नाम बताते समय 'speaking' कहते हैं: this is Riya speaking।",
+                "en": "On the phone we say: this is Riya speaking."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["This", "is", "Aman", "speaking"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: This is Aman speaking. (मैं अमन बोल रहा हूँ।)",
+            "en": "The sentence is: This is Aman speaking."
+          }
+        },
+        {
+          "id": "q5",
+          "prompt": {
+            "hi": "'Can I speak to Mr. Sharma?' का मतलब क्या है?",
+            "en": "What does 'Can I speak to Mr. Sharma?' mean?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": {
+                "hi": "क्या मेरी शर्मा जी से बात हो सकती है?",
+                "en": "May I talk to Mr. Sharma?"
+              },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "क्या शर्मा जी घर पर हैं?", "en": "Is Mr. Sharma at home?" },
+              "why_wrong": {
+                "hi": "यह 'Is Mr. Sharma at home?' का मतलब है। 'Speak to' का मतलब है बात करना।",
+                "en": "That is 'Is Mr. Sharma at home?'. 'Speak to' means talk to."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "क्या आप शर्मा जी हैं?", "en": "Are you Mr. Sharma?" },
+              "why_wrong": {
+                "hi": "यह 'Are you Mr. Sharma?' का मतलब है।",
+                "en": "That is 'Are you Mr. Sharma?'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["Please", "wait", "a", "minute"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: Please wait a minute. (कृपया एक मिनट रुकिए।)",
+            "en": "The sentence is: Please wait a minute."
+          }
+        },
+        {
+          "id": "q7",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Thank you for ___. (फ़ोन करने के लिए धन्यवाद।)",
+          "answers": ["calling"],
+          "common_wrong": [
+            {
+              "answer": "call",
+              "why_wrong": {
+                "hi": "'Thank you for' के बाद '-ing' वाला रूप आता है: calling।",
+                "en": "After 'Thank you for', use the -ing form: calling."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ef1-13-am-is-are",
+      "order": 13,
+      "topic": "am, is and are",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "am, is और are", "en": "Using am, is and are" },
+      "html": {
+        "hi": "<p>हिंदी में &quot;हूँ, है, हैं&quot; के लिए English में <strong>am, is, are</strong> लगाते हैं।</p>\n<ul>\n<li><strong>I am</strong> (आई एम) – मैं हूँ · <strong>I am a student.</strong></li>\n<li><strong>He is</strong> (ही इज़) – वह है · <strong>He is my brother.</strong></li>\n<li><strong>She is</strong> (शी इज़) – वह है · <strong>She is a teacher.</strong></li>\n<li><strong>It is</strong> (इट इज़) – यह है · <strong>It is a pen.</strong></li>\n<li><strong>We are</strong> (वी आर) – हम हैं · <strong>We are friends.</strong></li>\n<li><strong>You are</strong> (यू आर) – आप हैं · <strong>You are late.</strong></li>\n<li><strong>They are</strong> (दे आर) – वे हैं · <strong>They are in the office.</strong></li>\n</ul>\n<p>याद रखें: <strong>I</strong> के साथ <strong>am</strong>, एक व्यक्ति या चीज़ के साथ <strong>is</strong>, और <strong>you, we, they</strong> के साथ <strong>are</strong>।</p>\n",
+        "en": "<p>Use <strong>am, is, are</strong> to say what someone or something is.</p>\n<ul>\n<li><strong>I am</strong> – <strong>I am a student.</strong></li>\n<li><strong>He is / She is / It is</strong> – <strong>She is a teacher.</strong></li>\n<li><strong>We are / You are / They are</strong> – <strong>They are in the office.</strong></li>\n</ul>\n<p>Remember: <strong>am</strong> with <strong>I</strong>, <strong>is</strong> with one person or thing, and <strong>are</strong> with <strong>you, we, they</strong>.</p>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": { "hi": "'He' के साथ कौन-सा शब्द आता है?", "en": "Which word goes with 'He'?" },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "is", "en": "is" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "am", "en": "am" },
+              "why_wrong": {
+                "hi": "'am' सिर्फ़ 'I' के साथ आता है।",
+                "en": "'Am' goes only with 'I'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "are", "en": "are" },
+              "why_wrong": {
+                "hi": "'are' को you, we और they के साथ लगाते हैं।",
+                "en": "'Are' goes with you, we and they."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "I ___ happy today.",
+          "answers": ["am"],
+          "common_wrong": [
+            {
+              "answer": "is",
+              "why_wrong": {
+                "hi": "'I' के साथ हमेशा 'am' आता है: I am।",
+                "en": "With 'I', always use 'am': I am."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "They ___ my friends.",
+          "answers": ["are"],
+          "common_wrong": [
+            {
+              "answer": "is",
+              "why_wrong": {
+                "hi": "'They' (वे, कई लोग) के साथ 'are' आता है।",
+                "en": "'They' means many people, so use 'are'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "Seema ___ a teacher.",
+          "answers": ["is"],
+          "common_wrong": [
+            {
+              "answer": "are",
+              "why_wrong": {
+                "hi": "सीमा एक व्यक्ति है, इसलिए 'is' आएगा।",
+                "en": "Seema is one person, so use 'is'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q5",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["We", "are", "in", "the", "office"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: We are in the office. (हम दफ़्तर में हैं।)",
+            "en": "The sentence is: We are in the office."
+          }
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["He", "is", "my", "manager"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: He is my manager. (वे मेरे मैनेजर हैं।)",
+            "en": "The sentence is: He is my manager."
+          }
+        },
+        {
+          "id": "q7",
+          "prompt": { "hi": "सही वाक्य चुनें", "en": "Choose the correct sentence" },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "They are students", "en": "They are students" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "They is students", "en": "They is students" },
+              "why_wrong": {
+                "hi": "'They' के साथ 'is' नहीं, 'are' आता है।",
+                "en": "Use 'are' with 'they', not 'is'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "They am students", "en": "They am students" },
+              "why_wrong": {
+                "hi": "'am' सिर्फ़ 'I' के साथ आता है।",
+                "en": "'Am' goes only with 'I'."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ef1-14-telling-time",
+      "order": 14,
+      "topic": "telling the time",
+      "level": 1,
+      "hi_ratio": 0.8,
+      "title": { "hi": "समय बताना", "en": "Telling the time" },
+      "html": {
+        "hi": "<p>घड़ी देखकर समय बताना सीखें।</p>\n<ul>\n<li><strong>What time is it?</strong> (वॉट टाइम इज़ इट) – कितने बजे हैं?</li>\n<li><strong>It is nine o&#39;clock.</strong> (इट इज़ नाइन ओक्लॉक) – नौ बजे हैं। (9:00)</li>\n<li><strong>It is half past ten.</strong> (इट इज़ हाफ़ पास्ट टेन) – साढ़े दस बजे हैं। (10:30)</li>\n</ul>\n<p>पूरे घंटे के लिए <strong>o&#39;clock</strong> और आधे घंटे के लिए <strong>half past</strong> कहते हैं।</p>\n<p>किसी काम का समय बताने के लिए <strong>at</strong> लगाएँ:</p>\n<ul>\n<li><strong>I start work at nine.</strong> (आई स्टार्ट वर्क ऐट नाइन) – मेरा काम नौ बजे शुरू होता है।</li>\n</ul>\n",
+        "en": "<p>Learn to tell the time from a clock.</p>\n<ul>\n<li><strong>What time is it?</strong> – asks for the time</li>\n<li><strong>It is nine o&#39;clock.</strong> – 9:00</li>\n<li><strong>It is half past ten.</strong> – 10:30</li>\n</ul>\n<p>Say <strong>o&#39;clock</strong> for a full hour and <strong>half past</strong> for thirty minutes after the hour.</p>\n<p>Use <strong>at</strong> to say when something happens:</p>\n<ul>\n<li><strong>I start work at nine.</strong></li>\n</ul>\n"
+      },
+      "audio": null,
+      "items": [
+        {
+          "id": "q1",
+          "prompt": {
+            "hi": "'What time is it?' का मतलब क्या है?",
+            "en": "What does 'What time is it?' mean?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "कितने बजे हैं?", "en": "Tell me the time" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "आज कौन-सा दिन है?", "en": "What day is it today?" },
+              "why_wrong": {
+                "hi": "यह 'What day is it today?' का मतलब है। 'Time' का मतलब है समय।",
+                "en": "That is 'What day is it today?'. 'Time' is about the clock."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "आप कहाँ हैं?", "en": "Where are you?" },
+              "why_wrong": {
+                "hi": "यह 'Where are you?' का मतलब है।",
+                "en": "That is 'Where are you?'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "prompt": {
+            "hi": "घड़ी में 9:00 बजे हैं। English में कैसे कहेंगे?",
+            "en": "The clock shows 9:00. How do you say it?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            {
+              "id": "a",
+              "text": { "hi": "It is nine o'clock", "en": "It is nine o'clock" },
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": { "hi": "It is ten o'clock", "en": "It is ten o'clock" },
+              "why_wrong": {
+                "hi": "'Ten' का मतलब दस है। नौ को 'nine' कहते हैं।",
+                "en": "'Ten' is 10. 9 is 'nine'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "It is half past nine", "en": "It is half past nine" },
+              "why_wrong": {
+                "hi": "'Half past nine' का मतलब साढ़े नौ (9:30) है।",
+                "en": "'Half past nine' is 9:30."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "prompt": {
+            "hi": "'Half past ten' का मतलब क्या है?",
+            "en": "What does 'Half past ten' mean?"
+          },
+          "type": "mcq_meaning",
+          "options": [
+            { "id": "a", "text": { "hi": "साढ़े दस (10:30)", "en": "10:30" }, "correct": true },
+            {
+              "id": "b",
+              "text": { "hi": "दस बजे (10:00)", "en": "10:00" },
+              "why_wrong": {
+                "hi": "10:00 को 'ten o'clock' कहते हैं।",
+                "en": "10:00 is 'ten o'clock'."
+              }
+            },
+            {
+              "id": "c",
+              "text": { "hi": "साढ़े नौ (9:30)", "en": "9:30" },
+              "why_wrong": {
+                "hi": "9:30 को 'half past nine' कहते हैं।",
+                "en": "9:30 is 'half past nine'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q4",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "It is seven ___. (सात बजे हैं।)",
+          "answers": ["o'clock", "oclock", "o clock"],
+          "common_wrong": [
+            {
+              "answer": "clock",
+              "why_wrong": {
+                "hi": "पूरे घंटे के लिए 'o'clock' (ओक्लॉक) लिखते हैं, सिर्फ़ 'clock' नहीं।",
+                "en": "For a full hour, write 'o'clock', not just 'clock'."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q5",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["What", "time", "is", "it"],
+          "why_wrong": {
+            "hi": "पूरा सवाल है: What time is it? (कितने बजे हैं?)",
+            "en": "The question is: What time is it?"
+          }
+        },
+        {
+          "id": "q6",
+          "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+          "type": "word_order",
+          "words": ["I", "start", "work", "at", "nine"],
+          "why_wrong": {
+            "hi": "पूरा वाक्य है: I start work at nine. (मेरा काम नौ बजे शुरू होता है।)",
+            "en": "The sentence is: I start work at nine."
+          }
+        },
+        {
+          "id": "q7",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "The meeting is ___ ten o'clock. (मीटिंग दस बजे है।)",
+          "answers": ["at"],
+          "common_wrong": [
+            {
+              "answer": "on",
+              "why_wrong": {
+                "hi": "समय के साथ 'at' लगाते हैं: at ten o'clock।",
+                "en": "Use 'at' with a time: at ten o'clock."
+              }
+            }
+          ]
+        },
+        {
+          "id": "q8",
+          "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+          "type": "fill_blank",
+          "sentence": "It is half ___ ten. (साढ़े दस बजे हैं।)",
+          "answers": ["past"],
+          "common_wrong": [
+            {
+              "answer": "pass",
+              "why_wrong": {
+                "hi": "सही शब्द 'past' (पास्ट) है, आख़िर में 't' के साथ।",
+                "en": "The word is 'past', with a 't' at the end."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "test_out": {
+    "pass_mark": 0.8,
+    "items": [
+      {
+        "id": "t1",
+        "prompt": { "hi": "'Good morning' कब कहते हैं?", "en": "When do you say 'Good morning'?" },
+        "type": "mcq_meaning",
+        "options": [
+          { "id": "a", "text": { "hi": "सुबह", "en": "In the morning" }, "correct": true },
+          {
+            "id": "b",
+            "text": { "hi": "रात को", "en": "At night" },
+            "why_wrong": {
+              "hi": "रात को 'Good night' कहते हैं।",
+              "en": "At night we say 'Good night'."
+            }
+          }
+        ]
+      },
+      {
+        "id": "t2",
+        "prompt": { "hi": "खाली जगह भरें", "en": "Fill in the blank" },
+        "type": "fill_blank",
+        "sentence": "Nice to ___ you.",
+        "answers": ["meet"]
+      },
+      {
+        "id": "t3",
+        "prompt": { "hi": "सही क्रम में लगाएँ", "en": "Put the words in order" },
+        "type": "word_order",
+        "words": ["My", "name", "is", "Rahul"]
+      }
+    ]
+  },
+  "audio": []
+}
