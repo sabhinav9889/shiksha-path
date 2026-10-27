@@ -4,7 +4,7 @@ import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { makeFakeBackend, type FakeBackend } from '../../test/helpers/fake-backend.js';
 import { makeEnv } from '../../test/helpers/installed-runtime.js';
-import { initApp, signOut } from '../app-state.svelte.js';
+import { appState, initApp, signOut } from '../app-state.svelte.js';
 import { navigate, type AdminSection } from '../router.svelte.js';
 import StaffApp from './StaffApp.svelte';
 import { staffState } from './staff-state.svelte.js';
@@ -235,6 +235,17 @@ describe('the admin branding page', () => {
       primary: '#1f6f43',
       accent: '#9a3412',
     });
+  });
+
+  test('after saving, the app itself shows the new name and colours at once', async () => {
+    await openAdmin('branding');
+    await vi.waitFor(() => screen.getByLabelText('दूसरा रंग'));
+    expect(appState.brand.name.hi).not.toBe('नया नाम');
+    await type('नाम (हिंदी)', 'नया नाम');
+    await type('मुख्य रंग', '#164e2f');
+    await fireEvent.click(button('ब्रांडिंग सेव करें'));
+    await vi.waitFor(() => expect(appState.brand.name.hi).toBe('नया नाम'));
+    expect(appState.brand.primary).toBe('#164e2f');
   });
 });
 
