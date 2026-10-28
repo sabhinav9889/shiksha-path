@@ -82,3 +82,47 @@ describe('the staff bar shows where you are', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('लॉग');
   });
 });
+
+describe('the cohort names in the staff bar', () => {
+  test('open that cohort alone, and "all cohorts" brings the others back', async () => {
+    const other = await backend.repos.org.saveCohort({ name: 'शाम', labId: null });
+    const { learnerId } = await backend.issueCode('रवि');
+    await backend.repos.org.setLearnerCohort(learnerId, other);
+    const [morning] = (await backend.repos.org.cohorts('all')).filter((c) => c.name === 'सुबह');
+    await backend.repos.staff.save({
+      email: 'meena@ngo.example',
+      role: 'mentor',
+      name: 'मीना',
+      active: true,
+      cohortIds: [morning?.id ?? '', other],
+    });
+    backend.useStaffAccount('meena@ngo.example');
+    await openAt({ name: 'staff', view: 'cohorts' });
+    await vi.waitFor(() => screen.getByRole('heading', { name: 'सुबह', level: 2 }));
+    expect(screen.getByRole('heading', { name: 'शाम', level: 2 })).toBeTruthy();
+
+    await fireEvent.click(screen.getByRole('link', { name: 'शाम' }));
+    await vi.waitFor(() =>
+      expect(screen.queryByRole('heading', { name: 'सुबह', level: 2 })).toBeNull(),
+    );
+    expect(screen.getByRole('heading', { name: 'शाम', level: 2 })).toBeTruthy();
+    expect(current()).toEqual(['शाम']); // the cohort link is the current page, not "all cohorts"
+
+    await fireEvent.click(screen.getByRole('link', { name: 'सब समूह' }));
+    await vi.waitFor(() => screen.getByRole('heading', { name: 'सुबह', level: 2 }));
+    expect(screen.getByRole('heading', { name: 'शाम', level: 2 })).toBeTruthy();
+  });
+
+  test('an address for a cohort the mentor does not have shows a plain message', async () => {
+    await backend.repos.staff.save({
+      email: 'meena@ngo.example',
+      role: 'mentor',
+      name: 'मीना',
+      active: true,
+      cohortIds: [],
+    });
+    backend.useStaffAccount('meena@ngo.example');
+    await openAt({ name: 'staff', view: 'cohort', id: '9b2e1c4a-7d3f-4a58-8c61-2f0d5e7b1a93' });
+    await vi.waitFor(() => screen.getByText('यह समूह नहीं मिला'));
+  });
+});

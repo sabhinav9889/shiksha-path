@@ -2,6 +2,8 @@
   import type { StaffCohorts } from '@shiksha/api-contract/staff';
   import { onMount } from 'svelte';
   import type { Lang } from '../../i18n/index.js';
+  import { routeHref } from '../../router.svelte.js';
+  import { at } from '../admin-i18n.js';
   import { st } from '../i18n.js';
   import { staffState } from '../staff-state.svelte.js';
   import { whenWords } from '../words.js';
@@ -10,10 +12,11 @@
   import NewStudent from './NewStudent.svelte';
 
   /** The mentor's cohorts; the server puts students needing attention first. */
-  let { lang }: { lang: Lang } = $props();
+  let { lang, only }: { lang: Lang; only?: string } = $props();
   let data = $state<StaffCohorts | null>(null);
   let failed = $state(false);
   let marking = $state<string | null>(null);
+  const shown = $derived((data?.cohorts ?? []).filter((c) => !only || c.id === only));
 
   async function load(): Promise<void> {
     const result = await staffState.auth?.api.cohorts();
@@ -29,7 +32,11 @@
 {:else if !data}
   <p>{st('loading', lang)}</p>
 {:else}
-  {#each data.cohorts as cohort (cohort.id)}
+  {#if only}
+    <a class="all" href={routeHref({ name: 'staff', view: 'cohorts' })}>{at('allCohorts', lang)}</a>
+    {#if shown.length === 0}<p>{st('noSuchCohort', lang)}</p>{/if}
+  {/if}
+  {#each shown as cohort (cohort.id)}
     <section>
       <h2>{cohort.name}</h2>
       {#if cohort.students.length === 0}

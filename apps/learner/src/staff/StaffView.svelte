@@ -32,6 +32,8 @@
   {#if title}<h1>{st(title, lang)}</h1>{/if}
   {#if route.view === 'cohorts'}
     <Cohorts {lang} />
+  {:else if route.view === 'cohort'}
+    {#key route.id}<Cohorts {lang} only={route.id} />{/key}
   {:else if route.view === 'student'}
     {#key route.id}<Student id={route.id} {lang} />{/key}
   {:else if route.view === 'recordings'}
