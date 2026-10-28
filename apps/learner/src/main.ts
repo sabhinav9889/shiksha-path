@@ -21,6 +21,7 @@ import {
 } from './app-state.svelte.js';
 import { navigate } from './router.svelte.js';
 import { startAutoSync } from './runtime/auto-sync.js';
+import { refreshBranding } from './runtime/branding.js';
 import { captureInstallPrompt, install } from './runtime/install-prompt.js';
 import { createRuntime } from './runtime/runtime.js';
 import './styles/tokens.css';
@@ -44,6 +45,10 @@ startAutoSync({
     }
     if (added > 0) await refreshSession({ force: true });
     await reloadSwitches();
+    await reloadBranding();
+  },
+  branding: async () => {
+    await refreshBranding(runtime);
     await reloadBranding();
   },
   target: window,
