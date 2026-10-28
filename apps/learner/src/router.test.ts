@@ -15,6 +15,7 @@ const ROUTES: Route[] = [
   { name: 'auth-callback' },
   { name: 'staff', view: 'cohorts' },
   { name: 'staff', view: 'recordings' },
+  { name: 'staff', view: 'cohort', id: '9b2e1c4a-7d3f-4a58-8c61-2f0d5e7b1a93' },
   { name: 'staff', view: 'student', id: '0f8fad5b-d9cb-469f-a165-70867728950e' },
   { name: 'staff', view: 'admin', section: 'students' },
 ];
@@ -60,7 +61,13 @@ describe('the staff section', () => {
       section: 'audit',
     });
     expect(parseRoute('#/staff?code=x')).toEqual({ name: 'staff', view: 'cohorts' });
-    for (const hash of ['#/staff/student/nope', '#/staff/admin/hack', '#/staff/what']) {
+    for (const hash of [
+      '#/staff/student/nope',
+      '#/staff/cohort/nope',
+      '#/staff/cohort',
+      '#/staff/admin/hack',
+      '#/staff/what',
+    ]) {
       expect(parseRoute(hash)).toEqual({ name: 'staff', view: 'cohorts' });
     }
   });

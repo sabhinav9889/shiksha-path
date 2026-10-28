@@ -39,6 +39,7 @@ const STRINGS = {
   stuck: { hi: 'एक पाठ पर अटके', en: 'Stuck on a lesson' },
   low_scores: { hi: 'कम अंक', en: 'Low scores' },
   deactivatedBadge: { hi: 'बंद', en: 'Paused' },
+  noSuchCohort: { hi: 'यह समूह नहीं मिला', en: 'Cohort not found' },
   noStudents: { hi: 'इस समूह में अभी कोई छात्र नहीं', en: 'No students in this cohort yet' },
   started: { hi: 'पाठ {lesson} शुरू किया', en: 'Started lesson {lesson}' },
   completed: {

@@ -11,6 +11,7 @@ export type Route =
   | { name: 'auth-callback' }
   | { name: 'staff'; view: 'cohorts' | 'recordings' }
   | { name: 'staff'; view: 'student'; id: string }
+  | { name: 'staff'; view: 'cohort'; id: string }
   | { name: 'staff'; view: 'admin'; section: AdminSection };
 
 export const ADMIN_SECTIONS = ['setup', 'students', 'switches', 'branding', 'audit'] as const;
@@ -23,13 +24,14 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 function parseStaff(rest: string[]): Route {
   const [view, arg, ...extra] = rest;
   if (extra.length > 0) return STAFF_HOME;
-  if (view === 'recordings' && arg === undefined) return { name: 'staff', view: 'recordings' };
-  if (view === 'student' && arg !== undefined && UUID.test(arg)) {
-    return { name: 'staff', view: 'student', id: arg };
+  if (view === 'recordings') {
+    return arg === undefined ? { name: 'staff', view: 'recordings' } : STAFF_HOME;
+  }
+  if (view === 'student' || view === 'cohort') {
+    return arg !== undefined && UUID.test(arg) ? { name: 'staff', view, id: arg } : STAFF_HOME;
   }
   const section = ADMIN_SECTIONS.find((s) => s === arg);
-  if (view === 'admin' && section) return { name: 'staff', view: 'admin', section };
-  return STAFF_HOME;
+  return view === 'admin' && section ? { name: 'staff', view: 'admin', section } : STAFF_HOME;
 }
 
 const HOME: Route = { name: 'home' };
@@ -63,6 +65,7 @@ export function parseRoute(hash: string): Route {
 
 function staffHref(route: Extract<Route, { name: 'staff' }>): string {
   if (route.view === 'student') return `#/staff/student/${route.id}`;
+  if (route.view === 'cohort') return `#/staff/cohort/${route.id}`;
   if (route.view === 'admin') return `#/staff/admin/${route.section}`;
   return route.view === 'recordings' ? '#/staff/recordings' : '#/staff';
 }

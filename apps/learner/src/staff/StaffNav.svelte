@@ -9,6 +9,7 @@
   let { me, lang, onsignout }: { me: StaffMe; lang: Lang; onsignout: () => void } = $props();
 
   const here = $derived(pageLabel(router.current, me.role));
+  const openCohort = $derived(router.current.name === 'staff' && router.current.view === 'cohort' ? router.current.id : null);
 
   const links = $derived<{ route: Route; label: StaffKey }[]>([
     { route: { name: 'staff', view: 'cohorts' }, label: 'cohorts' },
@@ -32,15 +33,21 @@
   </div>
   <ul class="cohorts">
     {#each me.cohorts as cohort (cohort.id)}
-      <li>{cohort.name}</li>
+      <li>
+        <a
+          href={routeHref({ name: 'staff', view: 'cohort', id: cohort.id })}
+          aria-current={cohort.id === openCohort ? 'page' : undefined}
+          class:here={cohort.id === openCohort}>{cohort.name}</a
+        >
+      </li>
     {/each}
   </ul>
   <div class="links">
     {#each links as link (link.label)}
       <a
         href={routeHref(link.route)}
-        aria-current={link.label === here ? 'page' : undefined}
-        class:here={link.label === here}>{st(link.label, lang)}</a
+        aria-current={link.label === here && !openCohort ? 'page' : undefined}
+        class:here={link.label === here && !openCohort}>{st(link.label, lang)}</a
       >
     {/each}
   </div>
@@ -90,6 +97,7 @@
   button {
     display: inline-flex;
     align-items: center;
+    min-width: 44px;
     min-height: 44px;
     padding: 0 12px;
     border-radius: 12px;

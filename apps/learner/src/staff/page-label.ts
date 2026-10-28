@@ -16,5 +16,5 @@ const ADMIN_LABELS: Record<AdminSection, StaffKey> = {
 export function pageLabel(route: Route, role: 'mentor' | 'admin' | undefined): StaffKey | null {
   if (route.name !== 'staff') return null;
   if (route.view === 'admin') return role === 'admin' ? ADMIN_LABELS[route.section] : 'cohorts';
-  return route.view === 'recordings' ? 'recordings' : 'cohorts';
+  return route.view === 'recordings' ? 'recordings' : 'cohorts'; // also one cohort or a student
 }
