@@ -104,6 +104,7 @@ describe('startAutoSync', () => {
     const stop = startAutoSync({
       content: { sync: () => Promise.resolve(void syncs++) },
       flush: () => Promise.resolve(void flushes++),
+      branding: () => Promise.resolve(),
       target,
     });
     expect([syncs, flushes]).toEqual([1, 1]);
@@ -114,11 +115,27 @@ describe('startAutoSync', () => {
     expect([syncs, flushes]).toEqual([2, 2]);
   });
 
+  test('checks the branding at start and when back online, with no profile chosen', () => {
+    const target = new EventTarget();
+    let checks = 0;
+    const stop = startAutoSync({
+      content: { sync: () => Promise.resolve() },
+      flush: () => Promise.resolve(),
+      branding: () => Promise.resolve(void checks++),
+      target,
+    });
+    expect(checks).toBe(1);
+    target.dispatchEvent(new Event('online'));
+    expect(checks).toBe(2);
+    stop();
+  });
+
   test('a failing sync or flush never throws out of the listener', () => {
     const target = new EventTarget();
     const stop = startAutoSync({
       content: { sync: () => Promise.reject(new Error('x')) },
       flush: () => Promise.reject(new Error('y')),
+      branding: () => Promise.reject(new Error('z')),
       target,
     });
     expect(() => target.dispatchEvent(new Event('online'))).not.toThrow();
