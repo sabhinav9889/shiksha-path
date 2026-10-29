@@ -81,4 +81,10 @@ export class PgStaffRepo implements StaffRepo {
       group by s.id order by s.name`;
     return rows.map(toRow);
   }
+
+  /** Cohort links go with the row; audit and review references are set to null. */
+  async delete(staffId: string): Promise<boolean> {
+    const gone = await this.sql`delete from staff where id = ${staffId} returning id`;
+    return gone.length > 0;
+  }
 }

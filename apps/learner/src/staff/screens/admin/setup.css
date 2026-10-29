@@ -1,0 +1,172 @@
+/* The admin setup screen: one card per area, a lab with its cohorts inside, staff as rows. */
+.setup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setup .panel {
+  padding: 16px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-m);
+  background: var(--color-card);
+}
+
+.setup h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.setup ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.setup .group {
+  margin-bottom: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-s);
+  overflow: hidden;
+}
+
+.setup .group > header,
+.setup .item,
+.setup .person {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+
+.setup .group > header {
+  background: var(--color-primary-soft);
+}
+
+.setup .item,
+.setup .person {
+  border-top: 1px solid var(--color-line);
+}
+
+.setup .person:first-child {
+  border-top: none;
+}
+
+.setup .who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.setup .who > span {
+  overflow-wrap: anywhere;
+}
+
+.setup .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.setup .muted {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.setup .badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.setup .forms {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.setup form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+  padding: 12px;
+  border-radius: var(--radius-s);
+  background: var(--color-bg);
+}
+
+.setup label {
+  display: flex;
+  flex: 1 1 160px;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.setup label.check {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  min-height: var(--tap-min);
+}
+
+.setup input:not([type='checkbox']),
+.setup select {
+  min-height: var(--tap-min);
+  padding: 0 10px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-s);
+  background: var(--color-card);
+  font: inherit;
+}
+
+.setup button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-s);
+  background: var(--color-primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+}
+
+.setup button.quiet {
+  background: var(--color-card);
+  color: var(--color-primary-dark);
+}
+
+.setup button.danger {
+  border-color: var(--color-wrong);
+  background: var(--color-wrong);
+}
+
+.setup .sure {
+  color: var(--color-wrong);
+  font-size: 14px;
+}
+
+.setup .alert {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-s);
+  background: var(--color-wrong-bg);
+  color: var(--color-wrong);
+  font-size: 14px;
+}
+
+.setup .row {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  padding-top: 8px;
+}

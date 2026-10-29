@@ -29,6 +29,7 @@ export function memoryStaff(): StaffRepo {
       return Promise.resolve(id);
     },
     list: () => Promise.resolve([...rows.values()].map((r) => structuredClone(r))),
+    delete: (id) => Promise.resolve(rows.delete(id)),
   };
 }
 

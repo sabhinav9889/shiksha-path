@@ -163,6 +163,8 @@ export interface StaffRepo {
   claim(staffId: string, authUserId: string): Promise<boolean>;
   save(row: Omit<StaffRow, 'id' | 'authUserId'> & { id?: string }): Promise<string>;
   list(): Promise<StaffRow[]>;
+  /** Remove a staff member and their cohort links; false when there is no such row. */
+  delete(staffId: string): Promise<boolean>;
 }
 
 export type AuditDetails = Record<string, string | number | boolean | null>;

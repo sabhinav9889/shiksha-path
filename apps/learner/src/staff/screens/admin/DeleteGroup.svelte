@@ -4,7 +4,10 @@
   import { st } from '../../i18n.js';
   import { staffState } from '../../staff-state.svelte.js';
 
-  /** Delete an empty cohort or lab: one question first. A busy one is refused, and we say why. */
+  /**
+   * Delete an empty cohort or lab, or a staff member: one question first. A busy cohort or lab is
+   * refused, and we say why.
+   */
   let {
     kind,
     id,
@@ -12,7 +15,7 @@
     lang,
     ondeleted,
   }: {
-    kind: 'cohort' | 'lab';
+    kind: 'cohort' | 'lab' | 'staff';
     id: string;
     name: string;
     lang: Lang;
@@ -20,46 +23,72 @@
   } = $props();
   let asking = $state(false);
   let busy = $state(false);
-  let error = $state<'busy' | 'failed' | null>(null);
+  let error = $state<Why | null>(null);
 
-  const refusedAsBusy = (result: { ok: boolean; error?: string } | undefined): boolean =>
-    result?.error === 'NOT_EMPTY';
+  const SURE = {
+    lab: 'deleteLabSure',
+    cohort: 'deleteCohortSure',
+    staff: 'deleteStaffSure',
+  } as const;
+  type Why = 'busy' | 'refused' | 'failed';
+  /** NOT_EMPTY: has students or cohorts. INVALID_REQUEST on staff: yourself, or already gone. */
+  function whyNot(result: { ok: boolean; error?: string } | undefined): Why {
+    if (result?.error === 'NOT_EMPTY') return 'busy';
+    return kind === 'staff' && result?.error === 'INVALID_REQUEST' ? 'refused' : 'failed';
+  }
+
+  function send(): Promise<{ ok: boolean; error?: string }> | undefined {
+    const api = staffState.auth?.api;
+    if (kind === 'lab') return api?.deleteLab({ id });
+    return kind === 'cohort' ? api?.deleteCohort({ id }) : api?.deleteStaff({ id });
+  }
 
   async function confirm(): Promise<void> {
     busy = true; // a second tap must not send a second delete
-    const api = staffState.auth?.api;
-    const result = await (kind === 'lab' ? api?.deleteLab({ id }) : api?.deleteCohort({ id }));
+    const result = await send();
     asking = false;
     busy = false;
     if (result?.ok) return ondeleted();
-    error = refusedAsBusy(result) ? 'busy' : 'failed';
+    error = whyNot(result);
   }
 </script>
 
-{#if asking}
-  <span>{at(kind === 'lab' ? 'deleteLabSure' : 'deleteCohortSure', lang)}</span>
-  <button type="button" disabled={busy} aria-label={`${name}: ${at('yes', lang)}`} onclick={confirm}>
-    {at('yes', lang)}
-  </button>
-  <button
-    type="button"
-    disabled={busy}
-    aria-label={`${name}: ${st('cancel', lang)}`}
-    onclick={() => (asking = false)}
-  >
-    {st('cancel', lang)}
-  </button>
-{:else}
-  <button
-    type="button"
-    aria-label={`${name}: ${at('remove', lang)}`}
-    onclick={() => ((asking = true), (error = null))}
-  >
-    {at('remove', lang)}
-  </button>
-{/if}
+<span class="delete">
+  {#if asking}
+    <span class="sure">{at(SURE[kind], lang)}</span>
+    <button
+      type="button"
+      class="danger"
+      disabled={busy}
+      aria-label={`${name}: ${at('yes', lang)}`}
+      onclick={confirm}
+    >
+      {at('yes', lang)}
+    </button>
+    <button
+      type="button"
+      class="quiet"
+      disabled={busy}
+      aria-label={`${name}: ${st('cancel', lang)}`}
+      onclick={() => (asking = false)}
+    >
+      {st('cancel', lang)}
+    </button>
+  {:else}
+    <button
+      type="button"
+      class="quiet"
+      aria-label={`${name}: ${at('remove', lang)}`}
+      onclick={() => ((asking = true), (error = null))}
+    >
+      {at('remove', lang)}
+    </button>
+  {/if}
+</span>
 {#if error === 'busy'}
-  <p role="alert">{at(kind === 'lab' ? 'labNotEmpty' : 'cohortNotEmpty', lang)}</p>
+  <p role="alert" class="alert">{at(kind === 'lab' ? 'labNotEmpty' : 'cohortNotEmpty', lang)}</p>
+{:else if error === 'refused'}
+  <p role="alert" class="alert">{at('staffNotDeleted', lang)}</p>
 {:else if error}
-  <p role="alert">{st('failed', lang)}</p>
+  <p role="alert" class="alert">{st('failed', lang)}</p>
 {/if}
