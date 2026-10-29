@@ -272,3 +272,22 @@ describe('the admin audit page', () => {
     }
   });
 });
+
+describe('two students with the same name', () => {
+  test('each row has its own short id, and the delete question shows it too', async () => {
+    const first = await student('सीमा', cohortA);
+    const second = await student('सीमा', cohortA);
+    await openAdmin('students');
+    await vi.waitFor(() => expect(rows().length).toBe(3));
+    const ids = rows().flatMap((row) => row.textContent?.match(/#[0-9a-f]{4}/) ?? []);
+    expect(ids).toHaveLength(3);
+    expect(new Set(ids).size).toBe(3);
+    const mine = `#${second.replaceAll('-', '').slice(0, 4)}`;
+    expect(first.slice(0, 4)).not.toBe('');
+    const row = rows().find((r) => r.textContent?.includes(mine)) as HTMLElement;
+    await fireEvent.click(within(row).getByRole('button', { name: 'सीमा' }));
+    const panel = await vi.waitFor(() => screen.getByTestId('student-actions'));
+    await fireEvent.click(within(panel).getByRole('button', { name: 'हटाएँ' }));
+    expect(within(panel).getByText(new RegExp(`सीमा.*${mine}`))).toBeTruthy();
+  });
+});

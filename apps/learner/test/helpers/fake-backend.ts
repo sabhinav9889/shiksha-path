@@ -3,6 +3,7 @@ import {
   completeRecording,
   getBranding,
   getFeed,
+  getProfile,
   getMe,
   linkLearner,
   pullEvents,
@@ -109,6 +110,8 @@ export function makeFakeBackend(): FakeBackend {
       pull: ({ after }) => as((auth) => pullEvents(repos, auth, { after, limit: 500 })),
       me: () => as((auth) => getMe(repos, auth)),
       feed: () => as((auth) => getFeed(repos, auth)),
+      profile: () =>
+        as((auth) => getProfile(repos, { authUserId: auth, provider: 'google', email: auth })),
       startRecording: (body) => as((auth) => startRecording(repos, auth, body)),
       completeRecording: (body) => as((auth) => completeRecording(repos, auth, body)),
       codeSignIn: (body) => run(() => signInWithCode(codeDeps, body.code, 'phone-network')),

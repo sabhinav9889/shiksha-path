@@ -3,6 +3,7 @@ import {
   errorBody,
   linkResponse,
   meResponse,
+  profileResponse,
   pullResponse,
   pushResponse,
   recordingCompleteResponse,
@@ -16,6 +17,7 @@ import {
   type LinkRequest,
   type LinkResponse,
   type MeResponse,
+  type ProfileResponse,
   type PullResponse,
   type PushRequest,
   type PushResponse,
@@ -32,6 +34,8 @@ export interface ApiClient {
   push(body: PushRequest): Promise<ApiResult<PushResponse>>;
   pull(query: { after: number }): Promise<ApiResult<PullResponse>>;
   me(): Promise<ApiResult<MeResponse>>;
+  /** The student's own email, cohort and mentors. */
+  profile(): Promise<ApiResult<ProfileResponse>>;
   /** The community posts this learner may read (spec §10.2). */
   feed(): Promise<ApiResult<FeedResponse>>;
   startRecording(body: RecordingStart): Promise<ApiResult<RecordingStartResponse>>;
@@ -146,6 +150,7 @@ export function createApiClient(deps: ClientDeps): ApiClient {
     push: (body) => call('/v1/sync/push', pushResponse, body),
     pull: ({ after }) => call(`/v1/sync/pull?after=${after}`, pullResponse),
     me: () => call('/v1/me', meResponse),
+    profile: () => call('/v1/me/profile', profileResponse),
     feed: () => call('/v1/community/feed', feedResponse),
     startRecording: (body) => call('/v1/recordings/start', recordingStartResponse, body),
     completeRecording: (body) => call('/v1/recordings/complete', recordingCompleteResponse, body),

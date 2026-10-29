@@ -6,6 +6,7 @@ import {
   linkRequest,
   linkResponse,
   meResponse,
+  profileResponse,
   pullQuery,
   pullResponse,
   pushRequest,
@@ -66,6 +67,7 @@ import { signInWithCode } from '../services/codes.js';
 import { checkDeleted } from '../services/learner-data.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
+import { getProfile } from '../services/profile.js';
 import { completeRecording, startRecording } from '../services/recordings.js';
 import {
   issueStudentCode,
@@ -214,6 +216,8 @@ const ROUTES: Record<string, Route> = {
     const body = parseWith(attendanceRequest, await jsonBody(request));
     return attendanceResponse.parse(await markAttendance(deps, staff, body));
   },
+  'GET /v1/me/profile': async (request, _url, deps) =>
+    profileResponse.parse(await getProfile(deps, await caller(request, deps.auth))),
   'GET /v1/me': async (request, _url, deps) =>
     meResponse.parse(await getMe(deps, (await caller(request, deps.auth)).authUserId)),
 };
