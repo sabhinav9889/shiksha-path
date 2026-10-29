@@ -23,6 +23,7 @@ export { enforce, LIMITS, type LimitKind } from './services/limits.js';
 export { clientKey } from './http/client-key.js';
 export { effectiveSwitches, getMe } from './services/me.js';
 export { getFeed } from './services/community.js';
+export { getProfile } from './services/profile.js';
 export { completeRecording, recordingPath, startRecording } from './services/recordings.js';
 export { pullEvents, pushEvents } from './services/sync.js';
 export { handle, type HandlerDeps } from './http/router.js';

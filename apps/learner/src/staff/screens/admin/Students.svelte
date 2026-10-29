@@ -5,6 +5,7 @@
   import { at } from '../../admin-i18n.js';
   import { st } from '../../i18n.js';
   import { staffState } from '../../staff-state.svelte.js';
+  import { shortId } from '../../short-id.js';
   import { whenWords } from '../../words.js';
   import AttentionBadge from '../AttentionBadge.svelte';
   import StudentActions from './StudentActions.svelte';
@@ -80,6 +81,7 @@
             <button type="button" onclick={() => (selected = selected === s.id ? null : s.id)}>
               {s.name}
             </button>
+            <span class="muted">{shortId(s.id)}</span>
             <span class="muted">{cohortName(s.cohortId)}</span>
             {#if s.deactivated}<span class="muted">· {st('deactivatedBadge', lang)}</span>{/if}
             <AttentionBadge flags={s.attention} {lang} />

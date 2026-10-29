@@ -6,6 +6,7 @@
   import { at, FEATURE_NAMES } from '../../admin-i18n.js';
   import { st } from '../../i18n.js';
   import type { StaffApi } from '../../staff-api.js';
+  import { shortId } from '../../short-id.js';
   import { staffState } from '../../staff-state.svelte.js';
 
   type Choice = '' | 'on' | 'off';
@@ -107,10 +108,11 @@
     {#if deleteStep === 0}
       <button type="button" onclick={() => (deleteStep = 1)}>{at('remove', lang)}</button>
     {:else if deleteStep === 1}
-      <p>{at('removeForever', lang)}</p>
+      <p>{at('removeForever', lang)} <strong>{student.name} {shortId(student.id)}</strong></p>
       <button type="button" onclick={() => (deleteStep = 2)}>{at('yes', lang)}</button>
       <button type="button" onclick={() => (deleteStep = 0)}>{st('cancel', lang)}</button>
     {:else}
+      <p class="muted">{student.name} {shortId(student.id)}</p>
       <label>{at('typeName', lang)} <input bind:value={typed} /></label>
       <button
         type="button"

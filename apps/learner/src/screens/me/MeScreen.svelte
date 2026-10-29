@@ -114,7 +114,10 @@
     {/if}
     <SyncCard {lang} sync={data.sync} {busy} {message} onsync={syncNow} />
     <StorageCard {lang} {data} />
-    {#if data.linked}<RecordingsCard {lang} />{/if}
+    {#if data.linked}
+      {#await import('./ProfileCard.svelte') then profile}<profile.default />{/await}
+      <RecordingsCard {lang} />
+    {/if}
   {/if}
 
   <MeActions {lang} linked={data?.linked ?? null} />
