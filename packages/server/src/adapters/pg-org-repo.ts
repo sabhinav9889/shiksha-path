@@ -1,4 +1,4 @@
-import type { OrgRepo, StudentRow } from '../ports.js';
+import type { DeleteResult, OrgRepo, StudentRow } from '../ports.js';
 
 interface Row {
   id: string;
@@ -38,6 +38,26 @@ export class PgOrgRepo implements OrgRepo {
       on conflict (id) do update set name = excluded.name, lab_id = excluded.lab_id
       returning id`;
     return row?.id ?? '';
+  }
+
+  async deleteLab(id: string): Promise<DeleteResult> {
+    const gone = await this.sql`
+      delete from labs l where l.id = ${id}
+        and not exists (select 1 from cohorts c where c.lab_id = l.id)
+      returning l.id`;
+    if (gone.length > 0) return 'deleted';
+    const [there] = await this.sql`select 1 as x from labs where id = ${id}`;
+    return there ? 'not_empty' : 'missing';
+  }
+
+  async deleteCohort(id: string): Promise<DeleteResult> {
+    const gone = await this.sql`
+      delete from cohorts c where c.id = ${id}
+        and not exists (select 1 from learners l where l.cohort_id = c.id)
+      returning c.id`;
+    if (gone.length > 0) return 'deleted';
+    const [there] = await this.sql`select 1 as x from cohorts where id = ${id}`;
+    return there ? 'not_empty' : 'missing';
   }
 
   async setLearnerCohort(learnerId: string, cohortId: string | null): Promise<void> {

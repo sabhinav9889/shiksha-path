@@ -18,6 +18,8 @@ export type AuditAction =
   | 'branding_changed'
   | 'cohort_saved'
   | 'lab_saved'
+  | 'cohort_deleted'
+  | 'lab_deleted'
   | 'staff_invited'
   | 'staff_changed';
 

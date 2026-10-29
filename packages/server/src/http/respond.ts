@@ -13,6 +13,7 @@ const STATUS: Record<ApiError, number> = {
   BAD_CODE: 401,
   NOT_STAFF: 403,
   DEACTIVATED: 403,
+  NOT_EMPTY: 409,
 };
 
 const HTTP_OK = 200;

@@ -14,6 +14,7 @@ export const API_ERRORS = [
   'BAD_CODE',
   'NOT_STAFF',
   'DEACTIVATED',
+  'NOT_EMPTY',
 ] as const;
 export type ApiError = (typeof API_ERRORS)[number];
 

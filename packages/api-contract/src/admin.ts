@@ -15,6 +15,7 @@ export const cohortRequest = z.strictObject({
   name,
   labId: z.uuid().nullable(),
 });
+export const deleteGroupRequest = z.strictObject({ id: z.uuid() });
 export const staffRequest = z.strictObject({
   id: z.uuid().optional(),
   email: z.email().max(MAX_EMAIL),

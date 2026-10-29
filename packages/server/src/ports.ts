@@ -209,9 +209,15 @@ export interface AttendanceRepo {
 }
 
 /** Labs, cohorts and which cohort a learner is in. */
+export type DeleteResult = 'deleted' | 'not_empty' | 'missing';
+
 export interface OrgRepo {
   saveLab(lab: { id?: string; name: string }): Promise<string>;
   saveCohort(cohort: { id?: string; name: string; labId: string | null }): Promise<string>;
+  /** Only a lab with no cohorts is deleted; the check and the delete are one statement. */
+  deleteLab(id: string): Promise<DeleteResult>;
+  /** Only a cohort with no learners (paused ones count) is deleted. Mentor links go with it. */
+  deleteCohort(id: string): Promise<DeleteResult>;
   setLearnerCohort(learnerId: string, cohortId: string | null): Promise<void>;
   cohortOfLearner(learnerId: string): Promise<string | null | undefined>;
   cohorts(ids: string[] | 'all'): Promise<{ id: string; name: string; labId: string | null }[]>;
