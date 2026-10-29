@@ -48,6 +48,19 @@ const STRINGS = {
     en: 'Type the student’s name to confirm',
   },
   removeNow: { hi: 'हमेशा के लिए हटाएँ', en: 'Delete for ever' },
+  deleteCohortSure: {
+    hi: 'यह समूह हटाएँ? इसके मेंटर इसे देख नहीं पाएँगे।',
+    en: 'Delete this cohort? Its mentors will no longer see it.',
+  },
+  deleteLabSure: { hi: 'यह लैब हटाएँ?', en: 'Delete this lab?' },
+  cohortNotEmpty: {
+    hi: 'इस समूह में छात्र हैं। पहले उन्हें दूसरे समूह में भेजें।',
+    en: 'This cohort still has students. Move them to another cohort first.',
+  },
+  labNotEmpty: {
+    hi: 'इस लैब में समूह हैं। पहले वे समूह हटाएँ।',
+    en: 'This lab still has cohorts. Delete those cohorts first.',
+  },
   sameAsAll: { hi: 'सबके जैसा', en: 'Same as everyone' },
   on: { hi: 'चालू', en: 'On' },
   off: { hi: 'बंद', en: 'Off' },
@@ -107,6 +120,8 @@ const ACTIONS: Record<string, Words> = {
   branding_changed: { hi: 'ब्रांडिंग बदली', en: 'Changed branding' },
   cohort_saved: { hi: 'समूह सेव किया', en: 'Saved a cohort' },
   lab_saved: { hi: 'लैब सेव की', en: 'Saved a lab' },
+  cohort_deleted: { hi: 'समूह हटाया', en: 'Deleted a cohort' },
+  lab_deleted: { hi: 'लैब हटाई', en: 'Deleted a lab' },
   staff_invited: { hi: 'स्टाफ़ बुलाया', en: 'Invited staff' },
   staff_changed: { hi: 'स्टाफ़ बदला', en: 'Changed staff' },
 };

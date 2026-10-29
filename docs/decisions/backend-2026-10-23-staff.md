@@ -33,6 +33,12 @@ confirmed the builder's-call values in the plan on 2026-10-22.
   test. Progress stays append-only.
 - **Deactivating a student** stops their syncing (`DEACTIVATED`); the phone says so and keeps
   working offline. Turning them back on uploads what was done meanwhile.
+- **A cohort or lab is deleted only when empty.** A cohort with any student (paused ones count)
+  or a lab with any cohort answers `NOT_EMPTY` (409), so no student is left outside every
+  mentor's view. The check and the delete are one SQL statement. The audit entry keeps the
+  name, since the id means nothing afterwards. The row is locked first, so a student being moved in
+  at the same moment is not silently detached. Known limit, shared by every audited action: the
+  audit entry is written just after the change, not in the same transaction. Deleting a cohort removes its mentors' links to it.
 - **Every staff change is in the audit log** (reads such as playing a recording are not logged): who, what, which student, and ids, keys and
   old → new values only. A code, a token or a comment's text is refused by the audit writer.
   Deleting a student keeps their audit entries but removes their id and marks them

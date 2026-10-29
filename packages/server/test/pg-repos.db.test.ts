@@ -152,6 +152,57 @@ describe('Postgres specifics', () => {
     await f.cleanup();
   });
 
+  test('deleting a cohort drops its mentor links but never the mentor or a student', async () => {
+    const f = await makePgFixture();
+    const lab = await f.org.saveLab({ name: 'Lab' });
+    const full = await f.org.saveCohort({ name: 'Full', labId: lab });
+    const empty = await f.org.saveCohort({ name: 'Empty', labId: lab });
+    const mentor = await f.staff.save({
+      email: `${randomUUID()}@ngo.example`,
+      role: 'mentor',
+      name: 'M',
+      active: true,
+      cohortIds: [full, empty],
+    });
+    const learner = randomUUID();
+    await f.learners.createLinked({ id: learner, name: 'A', authUserId: await f.newAuthUser() });
+    await f.org.setLearnerCohort(learner, full);
+    expect(await f.org.deleteCohort(full)).toBe('not_empty');
+    expect(await f.org.deleteCohort(empty)).toBe('deleted');
+    expect(await f.org.deleteLab(lab)).toBe('not_empty'); // 'Full' is still in it
+    expect((await f.staff.byId(mentor))?.cohortIds).toEqual([full]);
+    expect(await f.org.cohortOfLearner(learner)).toBe(full);
+    await sql`delete from staff where id = ${mentor}`;
+    await sql`delete from learners where id = ${learner}`;
+    expect(await f.org.deleteCohort(full)).toBe('deleted');
+    expect(await f.org.deleteLab(lab)).toBe('deleted');
+    await f.cleanup();
+  });
+
+  test('a student moved into a cohort while it is being deleted keeps the cohort', async () => {
+    const f = await makePgFixture();
+    const cohort = await f.org.saveCohort({ name: 'Racing', labId: null });
+    const learner = randomUUID();
+    await f.learners.createLinked({ id: learner, name: 'A', authUserId: await f.newAuthUser() });
+    let release = (): void => undefined;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const move = sql.begin(async (tx) => {
+      await tx`update learners set cohort_id = ${cohort} where id = ${learner}`;
+      await held; // the move is open and not yet committed
+    });
+    const pause = (ms: number): Promise<void> => new Promise((done) => setTimeout(done, ms));
+    await pause(100);
+    const deleting = f.org.deleteCohort(cohort);
+    await pause(200);
+    release();
+    await move;
+    expect(await deleting).toBe('not_empty');
+    expect(await f.org.cohortOfLearner(learner)).toBe(cohort);
+    await sql`delete from learners where id = ${learner}`;
+    await f.org.deleteCohort(cohort);
+    await f.cleanup();
+  });
+
   test('a failed link leaves no learner behind', async () => {
     const f = await makePgFixture();
     const id = randomUUID();

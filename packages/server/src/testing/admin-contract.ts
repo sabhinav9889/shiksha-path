@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, test } from 'vitest';
 import * as admin from '../services/admin.js';
+import { listAudit } from '../services/audit.js';
 import { getMe } from '../services/me.js';
 import { inScope } from '../services/staff.js';
 import { studentDetail } from '../services/staff-read.js';
@@ -28,6 +29,8 @@ export function describeAdminContract(name: string, make: () => Promise<ServiceF
         const calls = [
           admin.saveLab(f, mentor, { name: 'L' }),
           admin.saveCohort(f, mentor, { name: 'C', labId: null }),
+          admin.deleteLab(f, mentor, { id: randomUUID() }),
+          admin.deleteCohort(f, mentor, { id: cohortA }),
           admin.searchStudents(f, mentor, {}),
           admin.editStudent(f, mentor, { learnerId: learnerA, name: 'X' }),
           admin.setActive(f, mentor, { learnerId: learnerA, active: false }),
@@ -185,6 +188,55 @@ export function describeAdminContract(name: string, make: () => Promise<ServiceF
         const demote = admin.saveStaff(f, boss, { ...me, role: 'mentor', active: true });
         expect(await codeOf(demote)).toBe('INVALID_REQUEST');
         expect((await f.staff.byId(boss.staffId))?.role).toBe('admin');
+      });
+
+      test('a cohort with students is never deleted, even if they are paused', async () => {
+        const boss = await staffMember('admin', []);
+        const id = await f.org.saveCohort({ name: 'Full', labId: null });
+        const student = await w.learnerIn(id);
+        expect(await codeOf(admin.deleteCohort(f, boss, { id }))).toBe('NOT_EMPTY');
+        await admin.setActive(f, boss, { learnerId: student, active: false });
+        expect(await codeOf(admin.deleteCohort(f, boss, { id }))).toBe('NOT_EMPTY');
+        expect((await f.org.cohorts([id])).map((c) => c.id)).toEqual([id]);
+        const log = await listAudit(f, boss, null, 100);
+        expect(log.entries.some((e) => e.details['id'] === id)).toBe(false);
+      });
+
+      test('an empty cohort is deleted and audited; its lab stays', async () => {
+        const boss = await staffMember('admin', []);
+        const lab = await f.org.saveLab({ name: 'Keep' });
+        const id = await f.org.saveCohort({ name: 'Empty', labId: lab });
+        await w.learnerIn(cohortA); // students elsewhere never block this one
+        await admin.deleteCohort(f, boss, { id });
+        expect(await f.org.cohorts([id])).toEqual([]);
+        expect((await f.org.labs()).map((l) => l.id)).toContain(lab);
+        const entry = (await listAudit(f, boss, null, 100)).entries.find(
+          (e) => e.action === 'cohort_deleted' && e.details['id'] === id,
+        );
+        expect(entry?.details).toEqual({ id, name: 'Empty' });
+      });
+
+      test('a lab with a cohort is refused; an empty lab is deleted and audited', async () => {
+        const boss = await staffMember('admin', []);
+        const lab = await f.org.saveLab({ name: 'Busy' });
+        const cohort = await f.org.saveCohort({ name: 'In lab', labId: lab });
+        expect(await codeOf(admin.deleteLab(f, boss, { id: lab }))).toBe('NOT_EMPTY');
+        await admin.deleteCohort(f, boss, { id: cohort });
+        await admin.deleteLab(f, boss, { id: lab });
+        expect((await f.org.labs()).map((l) => l.id)).not.toContain(lab);
+        const entry = (await listAudit(f, boss, null, 100)).entries.find(
+          (e) => e.action === 'lab_deleted' && e.details['id'] === lab,
+        );
+        expect(entry?.details).toEqual({ id: lab, name: 'Busy' });
+      });
+
+      test('deleting something that is not there is refused and not audited', async () => {
+        const boss = await staffMember('admin', []);
+        const nothing = randomUUID();
+        expect(await codeOf(admin.deleteCohort(f, boss, { id: nothing }))).toBe('INVALID_REQUEST');
+        expect(await codeOf(admin.deleteLab(f, boss, { id: nothing }))).toBe('INVALID_REQUEST');
+        const log = await listAudit(f, boss, null, 100);
+        expect(log.entries.some((e) => e.details['id'] === nothing)).toBe(false);
       });
 
       test('inviting an email already used is refused; staff can be given cohorts', async () => {

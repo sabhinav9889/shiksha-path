@@ -3,6 +3,7 @@ import {
   brandingVersion,
   cohortRequest,
   deactivateRequest,
+  deleteGroupRequest,
   deleteRequest,
   idResponse,
   labRequest,
@@ -38,6 +39,16 @@ export const ADMIN_ROUTES: Record<string, Route> = {
     const staff = await who(request, deps);
     const body = parseWith(cohortRequest, await jsonBody(request));
     return idResponse.parse({ id: await admin.saveCohort(deps, staff, body) });
+  },
+  'POST /v1/staff/admin/lab/delete': async (request, _url, deps) => {
+    const staff = await who(request, deps);
+    await admin.deleteLab(deps, staff, parseWith(deleteGroupRequest, await jsonBody(request)));
+    return okResponse.parse(OK);
+  },
+  'POST /v1/staff/admin/cohort/delete': async (request, _url, deps) => {
+    const staff = await who(request, deps);
+    await admin.deleteCohort(deps, staff, parseWith(deleteGroupRequest, await jsonBody(request)));
+    return okResponse.parse(OK);
   },
   'POST /v1/staff/admin/staff': async (request, _url, deps) => {
     const staff = await who(request, deps);

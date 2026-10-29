@@ -6,6 +6,7 @@
   import { st } from '../../i18n.js';
   import type { StaffApi } from '../../staff-api.js';
   import { staffState } from '../../staff-state.svelte.js';
+  import DeleteGroup from './DeleteGroup.svelte';
   import StaffEdit from './StaffEdit.svelte';
 
   /** Labs, cohorts and staff invites (spec §8.1 setup). */
@@ -66,7 +67,12 @@
   {:else}
     <h2>{at('labs', lang)}</h2>
     <ul>
-      {#each setup.labs as lab (lab.id)}<li>{lab.name}</li>{/each}
+      {#each setup.labs as lab (lab.id)}
+        <li>
+          {lab.name}
+          <DeleteGroup kind="lab" id={lab.id} name={lab.name} {lang} ondeleted={load} />
+        </li>
+      {/each}
     </ul>
     <form onsubmit={addLab}>
       <label>{at('newLab', lang)} <input required maxlength="80" bind:value={labName} /></label>
@@ -76,7 +82,10 @@
     <h2>{at('cohorts', lang)}</h2>
     <ul>
       {#each setup.cohorts as c (c.id)}
-        <li>{c.name} <span class="muted">· {labOf(c.labId)}</span></li>
+        <li>
+          {c.name} <span class="muted">· {labOf(c.labId)}</span>
+          <DeleteGroup kind="cohort" id={c.id} name={c.name} {lang} ondeleted={load} />
+        </li>
       {/each}
     </ul>
     <form onsubmit={addCohort}>

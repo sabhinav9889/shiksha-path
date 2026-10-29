@@ -51,6 +51,8 @@ function staffMethods(call: Call) {
     saveLab: (body: { id?: string; name: string }) => call('/v1/staff/admin/lab', idResponse, body),
     saveCohort: (body: { id?: string; name: string; labId: string | null }) =>
       call('/v1/staff/admin/cohort', idResponse, body),
+    deleteLab: (body: { id: string }) => call('/v1/staff/admin/lab/delete', okResponse, body),
+    deleteCohort: (body: { id: string }) => call('/v1/staff/admin/cohort/delete', okResponse, body),
     saveStaff: (body: {
       id?: string;
       email: string;

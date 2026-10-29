@@ -57,6 +57,42 @@ export async function saveCohort(
   return withAudit(deps, record, () => deps.org.saveCohort(id ? { id, ...rest } : rest));
 }
 
+/** Delete an empty lab or cohort. The name goes in the log: the id alone means nothing after. */
+async function deleteGroup(
+  deps: AdminDeps,
+  staff: StaffCaller,
+  kind: 'lab' | 'cohort',
+  id: string,
+): Promise<void> {
+  requireAdmin(staff);
+  const found = kind === 'lab' ? await deps.org.labs() : await deps.org.cohorts('all');
+  const name = found.find((row) => row.id === id)?.name;
+  if (name === undefined) throw new ApiFailure('INVALID_REQUEST');
+  const record = {
+    staff,
+    action: `${kind}_deleted` as const,
+    learnerId: null,
+    details: { id, name },
+  };
+  await withAudit(deps, record, async () => {
+    const result = await (kind === 'lab' ? deps.org.deleteLab(id) : deps.org.deleteCohort(id));
+    if (result === 'not_empty') throw new ApiFailure('NOT_EMPTY');
+    if (result === 'missing') throw new ApiFailure('INVALID_REQUEST');
+  });
+}
+
+export const deleteLab = (
+  deps: AdminDeps,
+  staff: StaffCaller,
+  input: { id: string },
+): Promise<void> => deleteGroup(deps, staff, 'lab', input.id);
+
+export const deleteCohort = (
+  deps: AdminDeps,
+  staff: StaffCaller,
+  input: { id: string },
+): Promise<void> => deleteGroup(deps, staff, 'cohort', input.id);
+
 /** Invite or change a staff member. An email already used by someone else is refused. */
 export async function saveStaff(
   deps: AdminDeps,

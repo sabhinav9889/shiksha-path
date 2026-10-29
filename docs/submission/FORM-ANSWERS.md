@@ -24,7 +24,7 @@ no network: a placement test, practice with immediate feedback, speaking recordi
 progress backed up when they are online. Profiles are protected by a PIN because phones are shared,
 and a student without a Google account joins with a backup code. Mentors see their own cohorts and
 who needs attention, listen to recordings, create backup codes, change levels and mark attendance.
-Admins set up labs, cohorts and mentors, manage and pause students, switch features on or off,
+Admins set up labs, cohorts and mentors (and delete empty ones), manage and pause students, switch features on or off,
 change the branding (blocked if the text would be hard to read), delete a student's data on
 request, and read an audit log. The app has 22 lessons (14 English, 8 aptitude). It is built to
 protect minors: students see only their own data, mentors only their cohorts, and nothing personal

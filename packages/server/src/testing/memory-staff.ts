@@ -58,6 +58,18 @@ export function memoryOrg(
       cohorts.set(id, { id, name, labId });
       return Promise.resolve(id);
     },
+    deleteLab(id) {
+      if (!labs.has(id)) return Promise.resolve('missing');
+      if ([...cohorts.values()].some((c) => c.labId === id)) return Promise.resolve('not_empty');
+      labs.delete(id);
+      return Promise.resolve('deleted');
+    },
+    deleteCohort(id) {
+      if (!cohorts.has(id)) return Promise.resolve('missing');
+      if ([...cohortOf.values()].some((c) => c === id)) return Promise.resolve('not_empty');
+      cohorts.delete(id);
+      return Promise.resolve('deleted');
+    },
     setLearnerCohort(learnerId, cohortId) {
       cohortOf.set(learnerId, cohortId);
       return Promise.resolve();
