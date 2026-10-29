@@ -37,3 +37,27 @@ export function safeLink(link: string | null): string | null {
     return null;
   }
 }
+
+const MINUTES_PER_DAY = 1440;
+const MINUTES_PER_HOUR = 60;
+
+const WORDS = {
+  days: { hi: '{n} दिन बाद', en: 'in {n} day{s}' },
+  hours: { hi: '{h} घंटे {m} मिनट में', en: 'in {h} h {m} min' },
+  live: { hi: 'अभी चल रहा है', en: 'On now' },
+  over: { hi: 'हो चुका', en: 'Over' },
+} satisfies Record<string, Record<Lang, string>>;
+
+/** How long until a session, from the phone's clock when shown; never stored. */
+export function countdown(startsAt: string, minutes: number, now: Date, lang: Lang): string {
+  const state = sessionState(startsAt, minutes, now);
+  if (state !== 'upcoming') return WORDS[state === 'live' ? 'live' : 'over'][lang];
+  const left = Math.ceil((new Date(startsAt).getTime() - now.getTime()) / MS_PER_MINUTE);
+  if (left >= MINUTES_PER_DAY) {
+    const n = Math.floor(left / MINUTES_PER_DAY);
+    return WORDS.days[lang].replace('{n}', String(n)).replace('{s}', n === 1 ? '' : 's');
+  }
+  return WORDS.hours[lang]
+    .replace('{h}', String(Math.floor(left / MINUTES_PER_HOUR)))
+    .replace('{m}', String(left % MINUTES_PER_HOUR));
+}

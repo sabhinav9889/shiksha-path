@@ -18,6 +18,7 @@ const STRINGS = {
   live: { hi: 'अभी चल रहा है', en: 'On now' },
   over: { hi: 'हो चुका', en: 'Over' },
   upcoming: { hi: 'आने वाला', en: 'Coming up' },
+  addToCalendar: { hi: 'कैलेंडर में जोड़ें', en: 'Add to calendar' },
   join: { hi: 'जुड़ें', en: 'Join' },
 } satisfies Record<string, Record<Lang, string>>;
 

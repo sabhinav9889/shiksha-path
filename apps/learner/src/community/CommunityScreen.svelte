@@ -5,7 +5,8 @@
   import { appState } from '../app-state.svelte.js';
   import { cs } from './community-i18n.js';
   import { loadFeedCache, refreshFeed, type FeedStatus } from './feed-cache.js';
-  import { postDate, safeLink, sessionState, sessionWhen } from './session-time.js';
+  import { calendarLink } from './calendar-link.js';
+  import { countdown, postDate, safeLink, sessionState, sessionWhen } from './session-time.js';
 
   /** The posts mentors wrote for this student, from the phone's copy first, then refreshed. */
   let posts = $state<FeedPost[] | null>(null);
@@ -58,9 +59,24 @@
                 minutes: session.minutes,
               })}
             </span>
-            <span class="state {state}">{cs(state, lang)}</span>
+            <span class="state {state}">
+              {countdown(session.startsAt, session.minutes, now(), lang)}
+            </span>
             {#if link && state !== 'over'}
               <a href={link} target="_blank" rel="noopener noreferrer">{cs('join', lang)}</a>
+            {/if}
+            {#if state !== 'over'}
+              <a
+                class="quiet"
+                href={calendarLink({
+                  title: post.title,
+                  startsAt: session.startsAt,
+                  minutes: session.minutes,
+                  joinLink: link,
+                })}
+                target="_blank"
+                rel="noopener noreferrer">{cs('addToCalendar', lang)}</a
+              >
             {/if}
           </div>
         {/if}
@@ -150,6 +166,12 @@
 
   .state.over {
     color: var(--color-muted);
+  }
+
+  a.quiet {
+    border: 1px solid var(--color-primary);
+    background: var(--color-card);
+    color: var(--color-primary-dark);
   }
 
   a {
