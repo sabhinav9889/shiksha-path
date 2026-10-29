@@ -7,6 +7,7 @@ import { afterAll, describe, expect, test } from 'vitest';
 import { PgBrandingRepo } from '../src/adapters/pg-branding-repo.js';
 import { PgAuditRepo } from '../src/adapters/pg-audit-repo.js';
 import { PgAttendanceRepo } from '../src/adapters/pg-attendance-repo.js';
+import { PgPostRepo } from '../src/adapters/pg-post-repo.js';
 import { PgCodeRepo } from '../src/adapters/pg-code-repo.js';
 import { createSupabaseAuth } from '../src/adapters/supabase-auth.js';
 import { localStack } from '../../../supabase/tests/stack.js';
@@ -23,6 +24,7 @@ import { PgSwitchRepo } from '../src/adapters/pg-switch-repo.js';
 import { createSql } from '../src/adapters/pg.js';
 import { describeServiceContract, type ServiceFixture } from '../src/testing/service-contract.js';
 import { describeAdminContract } from '../src/testing/admin-contract.js';
+import { describePostRepoContract } from '../src/testing/post-repo-contract.js';
 import { describeStaffContract } from '../src/testing/staff-contract.js';
 
 const DB_URL =
@@ -52,6 +54,7 @@ async function makePgFixture(): Promise<ServiceFixture> {
     summaries: new PgSummaryRepo(sql),
     codes: new PgCodeRepo(sql),
     attendance: new PgAttendanceRepo(sql),
+    posts: new PgPostRepo(sql),
     pepper: 'pg-fixture-pepper-0123456789abcdef01',
     auth: {
       ...realAuth,
@@ -115,6 +118,7 @@ async function makePgFixture(): Promise<ServiceFixture> {
 describeServiceContract('Postgres repositories', makePgFixture);
 describeStaffContract('Postgres repositories', makePgFixture);
 describeAdminContract('Postgres repositories', makePgFixture);
+describePostRepoContract('Postgres repositories', makePgFixture);
 
 describe('Postgres specifics', () => {
   test('100 events go in with one call', async () => {

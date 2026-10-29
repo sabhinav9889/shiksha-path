@@ -14,6 +14,7 @@ import { memoryAuth, memoryCodeRepo } from './memory-auth.js';
 import { memoryAudit } from './memory-audit.js';
 import { memorySummaries } from './memory-summaries.js';
 import { memoryBranding } from './memory-branding.js';
+import { memoryPosts } from './memory-posts.js';
 import { memoryOrg, memoryStaff } from './memory-staff.js';
 import { memoryLearnerData } from './memory-learner-data.js';
 import { memoryRateLimiter } from './memory-rate-limiter.js';
@@ -45,6 +46,7 @@ export function makeMemoryRepos(): MemoryRepos {
   const allStudents = new Map(SEED_KEYS.map((key) => [key, true]));
   const overrides = new Map<string, Map<string, boolean>>();
   let seq = 0;
+  const staff = memoryStaff();
 
   const learnerRepo: LearnerRepo = {
     findByAuthUser: (authUserId) => {
@@ -113,7 +115,8 @@ export function makeMemoryRepos(): MemoryRepos {
     limiter: memoryRateLimiter(),
     recordings: memoryRecordingRepo(),
     branding: memoryBranding(),
-    staff: memoryStaff(),
+    staff,
+    posts: memoryPosts(staff),
     audit: memoryAudit(),
     summaries: memorySummaries(eventRepo),
     org: memoryOrg(learners, lastReceived),
