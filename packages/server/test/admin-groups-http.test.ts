@@ -68,4 +68,29 @@ describe('POST /v1/staff/admin/cohort/delete and /lab/delete', () => {
     expect((await post('/v1/staff/admin/lab/delete', { id: lab })).status).toBe(200);
     expect((await post('/v1/staff/admin/lab/delete', { id: 'not-a-uuid' })).status).toBe(400);
   });
+
+  test('POST /v1/staff/admin/staff/delete: a mentor gets 403, an admin 200, then 400 for self', async () => {
+    const other = await deps.staff.save({
+      email: 'other@ngo.example',
+      role: 'mentor',
+      name: 'O',
+      active: true,
+      cohortIds: [],
+    });
+    await deps.staff.save({
+      email: 'auth-c@ngo.example',
+      role: 'mentor',
+      name: 'M',
+      active: true,
+      cohortIds: [],
+    });
+    await post('/v1/staff/claim', {});
+    expect((await post('/v1/staff/admin/staff/delete', { id: other })).status).toBe(403);
+    const [self] = (await deps.staff.list()).filter((s) => s.email === 'auth-c@ngo.example');
+    await deps.staff.save({ ...self!, role: 'admin', cohortIds: [] });
+    expect((await post('/v1/staff/admin/staff/delete', { id: self!.id })).status).toBe(400);
+    expect((await post('/v1/staff/admin/staff/delete', { id: other })).status).toBe(200);
+    expect(await deps.staff.byId(other)).toBeNull();
+    expect((await post('/v1/staff/admin/staff/delete', { id: 'nope' })).status).toBe(400);
+  });
 });

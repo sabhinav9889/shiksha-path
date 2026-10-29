@@ -57,12 +57,13 @@
       </label>
     {/each}
     <button type="button" onclick={save}>{at('save', lang)}</button>
-    <button type="button" onclick={() => (open = false)}>{st('cancel', lang)}</button>
+    <button type="button" class="quiet" onclick={() => (open = false)}>{st('cancel', lang)}</button>
     {#if failed}<p role="alert">{st('failed', lang)}</p>{/if}
   </div>
 {:else}
   <button
     type="button"
+    class="quiet"
     aria-label={at('editLabel', lang, { name: member.name })}
     onclick={start}>{at('edit', lang)}</button
   >

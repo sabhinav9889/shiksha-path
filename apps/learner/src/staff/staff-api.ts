@@ -26,6 +26,16 @@ const query = (params: Record<string, string | boolean | undefined>): string => 
     : `?${new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString()}`;
 };
 
+/** Admin deletes: an empty lab or cohort, or a staff member. */
+function deleteMethods(call: Call) {
+  const remove = (path: string) => (body: { id: string }) => call(path, okResponse, body);
+  return {
+    deleteLab: remove('/v1/staff/admin/lab/delete'),
+    deleteCohort: remove('/v1/staff/admin/cohort/delete'),
+    deleteStaff: remove('/v1/staff/admin/staff/delete'),
+  };
+}
+
 function staffMethods(call: Call) {
   return {
     claim: () => call('/v1/staff/claim', staffMe, {}),
@@ -51,8 +61,7 @@ function staffMethods(call: Call) {
     saveLab: (body: { id?: string; name: string }) => call('/v1/staff/admin/lab', idResponse, body),
     saveCohort: (body: { id?: string; name: string; labId: string | null }) =>
       call('/v1/staff/admin/cohort', idResponse, body),
-    deleteLab: (body: { id: string }) => call('/v1/staff/admin/lab/delete', okResponse, body),
-    deleteCohort: (body: { id: string }) => call('/v1/staff/admin/cohort/delete', okResponse, body),
+    ...deleteMethods(call),
     saveStaff: (body: {
       id?: string;
       email: string;

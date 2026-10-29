@@ -29,6 +29,14 @@ export function memoryStaff(): StaffRepo {
       return Promise.resolve(id);
     },
     list: () => Promise.resolve([...rows.values()].map((r) => structuredClone(r))),
+    delete(id) {
+      const row = rows.get(id);
+      const others = [...rows.values()].filter(
+        (r) => r.role === 'admin' && r.active && r.id !== id,
+      );
+      if (row?.role === 'admin' && others.length === 0) return Promise.resolve(false);
+      return Promise.resolve(rows.delete(id));
+    },
   };
 }
 

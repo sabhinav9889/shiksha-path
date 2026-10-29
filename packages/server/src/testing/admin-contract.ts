@@ -239,6 +239,33 @@ export function describeAdminContract(name: string, make: () => Promise<ServiceF
         expect(log.entries.some((e) => e.details['id'] === nothing)).toBe(false);
       });
 
+      test('an admin deletes a mentor; the cohort stays and the audit keeps id and role', async () => {
+        const boss = await staffMember('admin', []);
+        const mentor = await staffMember('mentor', [cohortA]);
+        await admin.deleteStaff(f, boss, { id: mentor.staffId });
+        expect(await f.staff.byId(mentor.staffId)).toBeNull();
+        expect((await f.org.cohorts([cohortA])).map((c) => c.id)).toEqual([cohortA]);
+        const entry = (await listAudit(f, boss, null, 100)).entries.find(
+          (e) => e.action === 'staff_deleted' && e.details['id'] === mentor.staffId,
+        );
+        expect(entry?.details).toEqual({ id: mentor.staffId, role: 'mentor' });
+      });
+
+      test('a mentor cannot delete staff, and nobody can delete themselves', async () => {
+        const boss = await staffMember('admin', []);
+        const mentor = await staffMember('mentor', [cohortA]);
+        const other = await staffMember('mentor', [cohortB]);
+        expect(await codeOf(admin.deleteStaff(f, mentor, { id: other.staffId }))).toBe('FORBIDDEN');
+        expect(await codeOf(admin.deleteStaff(f, boss, { id: boss.staffId }))).toBe(
+          'INVALID_REQUEST',
+        );
+        expect(await codeOf(admin.deleteStaff(f, boss, { id: randomUUID() }))).toBe(
+          'INVALID_REQUEST',
+        );
+        expect(await f.staff.byId(other.staffId)).not.toBeNull();
+        expect(await f.staff.byId(boss.staffId)).not.toBeNull();
+      });
+
       test('inviting an email already used is refused; staff can be given cohorts', async () => {
         const boss = await staffMember('admin', []);
         const email = `${randomUUID()}@ngo.example`;

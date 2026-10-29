@@ -119,6 +119,26 @@ export async function saveStaff(
   return withAudit(deps, { staff, action, learnerId: null, details }, () => deps.staff.save(row));
 }
 
+/** Remove a mentor or admin. Never yourself, so an admin always remains. */
+export async function deleteStaff(
+  deps: AdminDeps,
+  staff: StaffCaller,
+  input: { id: string },
+): Promise<void> {
+  requireAdmin(staff);
+  const member = input.id === staff.staffId ? null : await deps.staff.byId(input.id);
+  if (!member) throw new ApiFailure('INVALID_REQUEST');
+  const record = {
+    staff,
+    action: 'staff_deleted' as const,
+    learnerId: null,
+    details: { id: member.id, role: member.role },
+  };
+  await withAudit(deps, record, async () => {
+    if (!(await deps.staff.delete(member.id))) throw new ApiFailure('INVALID_REQUEST');
+  });
+}
+
 export interface StudentFilter {
   q?: string | undefined;
   cohortId?: string | undefined;

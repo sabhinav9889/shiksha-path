@@ -179,6 +179,51 @@ describe('Postgres specifics', () => {
     await f.cleanup();
   });
 
+  test('deleting staff removes their cohort links; the cohort and the audit entries stay', async () => {
+    const f = await makePgFixture();
+    const cohort = await f.org.saveCohort({ name: 'Kept', labId: null });
+    const mentor = await f.staff.save({
+      email: `${randomUUID()}@ngo.example`,
+      role: 'mentor',
+      name: 'M',
+      active: true,
+      cohortIds: [cohort],
+    });
+    await f.audit.add({ staffId: mentor, action: 'staff_changed', learnerId: null, details: {} });
+    expect(await f.staff.delete(mentor)).toBe(true);
+    expect(await f.staff.delete(mentor)).toBe(false);
+    expect(await f.staff.byId(mentor)).toBeNull();
+    expect((await f.org.cohorts([cohort])).map((c) => c.id)).toEqual([cohort]);
+    const [row] = await sql`
+      select count(*)::int as links from staff_cohorts where staff_id = ${mentor}`;
+    expect(row).toEqual({ links: 0 });
+    const [entry] = await sql`
+      select count(*)::int as kept from audit_log
+      where action = 'staff_changed' and staff_id is null and created_at > now() - interval '1 minute'`;
+    expect(entry?.['kept']).toBeGreaterThan(0); // the entry stays, with no actor left
+    await f.org.deleteCohort(cohort);
+    await f.cleanup();
+  });
+
+  test('two admins deleting each other at once leave exactly one admin', async () => {
+    const f = await makePgFixture();
+    const admin = (name: string): Promise<string> =>
+      f.staff.save({
+        email: `${randomUUID()}@ngo.example`,
+        role: 'admin',
+        name,
+        active: true,
+        cohortIds: [],
+      });
+    const [a, b] = [await admin('A'), await admin('B')];
+    const results = await Promise.all([f.staff.delete(a), f.staff.delete(b)]);
+    expect(results.filter(Boolean)).toHaveLength(1);
+    const left = (await f.staff.list()).filter((s) => [a, b].includes(s.id));
+    expect(left).toHaveLength(1);
+    await sql`delete from staff where id in (${a}, ${b})`;
+    await f.cleanup();
+  });
+
   test('a student moved into a cohort while it is being deleted keeps the cohort', async () => {
     const f = await makePgFixture();
     const cohort = await f.org.saveCohort({ name: 'Racing', labId: null });
