@@ -9,6 +9,7 @@
   import { st } from './i18n.js';
   import { pageLabel } from './page-label.js';
   import Cohorts from './screens/Cohorts.svelte';
+  import Posts from './screens/Posts.svelte';
   import Recordings from './screens/Recordings.svelte';
   import Student from './screens/Student.svelte';
   import { staffState } from './staff-state.svelte.js';
@@ -38,6 +39,8 @@
     {#key route.id}<Student id={route.id} {lang} />{/key}
   {:else if route.view === 'recordings'}
     <Recordings {lang} />
+  {:else if route.view === 'posts'}
+    <Posts {lang} />
   {:else if route.view === 'admin' && staffState.me?.role === 'admin'}
     {#key route.section}
       {@const Section = admin[route.section]}

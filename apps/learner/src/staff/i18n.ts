@@ -20,6 +20,7 @@ const STRINGS = {
   admin: { hi: 'एडमिन', en: 'Admin' },
   cohorts: { hi: 'समूह', en: 'Cohorts' },
   recordings: { hi: 'रिकॉर्डिंग', en: 'Recordings' },
+  posts: { hi: 'पोस्ट', en: 'Posts' },
   adminSetup: { hi: 'सेटअप', en: 'Setup' },
   adminStudents: { hi: 'छात्र', en: 'Students' },
   adminSwitches: { hi: 'फ़ीचर', en: 'Features' },

@@ -12,11 +12,13 @@ import {
   recordingUrlResponse,
   reviewResponse,
   staffCohorts,
+  staffPostsResponse,
   staffMe,
   studentDetail,
   studentsPage,
   unreviewedRecordings,
 } from '@shiksha/api-contract/staff';
+import type { PostRequest } from '@shiksha/api-contract/staff';
 import { makeCaller, type Call, type ClientDeps } from '../api/api-client.js';
 
 const query = (params: Record<string, string | boolean | undefined>): string => {
@@ -33,6 +35,15 @@ function deleteMethods(call: Call) {
     deleteLab: remove('/v1/staff/admin/lab/delete'),
     deleteCohort: remove('/v1/staff/admin/cohort/delete'),
     deleteStaff: remove('/v1/staff/admin/staff/delete'),
+    deletePost: remove('/v1/staff/community/delete'),
+  };
+}
+
+/** Community posts: list, write or change, and delete (spec §10.2). */
+function postMethods(call: Call) {
+  return {
+    posts: () => call('/v1/staff/community/posts', staffPostsResponse),
+    savePost: (body: PostRequest) => call('/v1/staff/community/post', idResponse, body),
   };
 }
 
@@ -41,6 +52,7 @@ function staffMethods(call: Call) {
     claim: () => call('/v1/staff/claim', staffMe, {}),
     me: () => call('/v1/staff/me', staffMe),
     cohorts: () => call('/v1/staff/cohorts', staffCohorts),
+    ...postMethods(call),
     student: (id: string) => call(`/v1/staff/student${query({ id })}`, studentDetail),
     unreviewed: () => call('/v1/staff/recordings?status=unreviewed', unreviewedRecordings),
     recordingUrl: (id: string) =>

@@ -14,6 +14,7 @@
   const links = $derived<{ route: Route; label: StaffKey }[]>([
     { route: { name: 'staff', view: 'cohorts' }, label: 'cohorts' },
     { route: { name: 'staff', view: 'recordings' }, label: 'recordings' },
+    { route: { name: 'staff', view: 'posts' }, label: 'posts' },
     ...(me.role === 'admin'
       ? ([
           { route: { name: 'staff', view: 'admin', section: 'setup' }, label: 'adminSetup' },
