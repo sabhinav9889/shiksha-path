@@ -20,6 +20,11 @@ export const homeStrings = {
     hi: 'बहुत बढ़िया। दोहराने वाले सवाल यहाँ दिखेंगे।',
     en: 'Great work. Review questions will show up here.',
   },
+  'home.community': { hi: 'समुदाय', en: 'Community' },
+  'home.communitySub': {
+    hi: 'मेंटर की पोस्ट और सेशन',
+    en: 'Posts and sessions from your mentors',
+  },
   'home.reviewNothing': {
     hi: 'अभी दोहराने के लिए कुछ नहीं है।',
     en: 'There is nothing to review right now.',

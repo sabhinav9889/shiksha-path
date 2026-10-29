@@ -22,7 +22,10 @@ export type AuditAction =
   | 'lab_deleted'
   | 'staff_invited'
   | 'staff_changed'
-  | 'staff_deleted';
+  | 'staff_deleted'
+  | 'post_created'
+  | 'post_edited'
+  | 'post_deleted';
 
 /** Never in the log: a code, a token, or what a mentor wrote (privacy rule). */
 const FORBIDDEN_KEYS = new Set(['code', 'token', 'comment']);

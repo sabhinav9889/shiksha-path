@@ -8,8 +8,9 @@ export type Route =
   | { name: 'placement' }
   | { name: 'placement-result' }
   | { name: 'me' }
+  | { name: 'community' }
   | { name: 'auth-callback' }
-  | { name: 'staff'; view: 'cohorts' | 'recordings' }
+  | { name: 'staff'; view: 'cohorts' | 'recordings' | 'posts' }
   | { name: 'staff'; view: 'student'; id: string }
   | { name: 'staff'; view: 'cohort'; id: string }
   | { name: 'staff'; view: 'admin'; section: AdminSection };
@@ -17,6 +18,7 @@ export type Route =
 export const ADMIN_SECTIONS = ['setup', 'students', 'switches', 'branding', 'audit'] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
+const STAFF_PLAIN = ['recordings', 'posts'] as const;
 const STAFF_HOME: Route = { name: 'staff', view: 'cohorts' };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -24,9 +26,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 function parseStaff(rest: string[]): Route {
   const [view, arg, ...extra] = rest;
   if (extra.length > 0) return STAFF_HOME;
-  if (view === 'recordings') {
-    return arg === undefined ? { name: 'staff', view: 'recordings' } : STAFF_HOME;
-  }
+  const plain = STAFF_PLAIN.find((name) => name === view);
+  if (plain) return arg === undefined ? { name: 'staff', view: plain } : STAFF_HOME;
   if (view === 'student' || view === 'cohort') {
     return arg !== undefined && UUID.test(arg) ? { name: 'staff', view, id: arg } : STAFF_HOME;
   }
@@ -45,6 +46,7 @@ const SIMPLE_ROUTES = [
   'placement',
   'placement-result',
   'me',
+  'community',
   'auth-callback',
 ] as const;
 
@@ -67,6 +69,7 @@ function staffHref(route: Extract<Route, { name: 'staff' }>): string {
   if (route.view === 'student') return `#/staff/student/${route.id}`;
   if (route.view === 'cohort') return `#/staff/cohort/${route.id}`;
   if (route.view === 'admin') return `#/staff/admin/${route.section}`;
+  if (route.view === 'posts') return '#/staff/posts';
   return route.view === 'recordings' ? '#/staff/recordings' : '#/staff';
 }
 

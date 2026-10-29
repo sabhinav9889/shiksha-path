@@ -51,6 +51,7 @@ import type {
   LearnerDataRepo,
   LearnerRepo,
   OrgRepo,
+  PostRepo,
   RateLimiter,
   RecordingRepo,
   RecordingStorage,
@@ -78,6 +79,7 @@ import { claimStaff, getStaffMe, staffCaller } from '../services/staff.js';
 import { pullEvents, pushEvents } from '../services/sync.js';
 import { clientKey } from './client-key.js';
 import { ADMIN_ROUTES } from './admin-routes.js';
+import { COMMUNITY_ROUTES } from './community-routes.js';
 import { corsHeaders } from './cors.js';
 import { caller, jsonBody, parseWith, routePath } from './request.js';
 import { failure, json } from './respond.js';
@@ -89,6 +91,7 @@ export interface HandlerDeps {
   pepper: string;
   learners: LearnerRepo;
   attendance: AttendanceRepo;
+  posts: PostRepo;
   audit: AuditRepo;
   summaries: SummaryRepo;
   staff: StaffRepo;
@@ -112,6 +115,7 @@ type Route = (request: Request, url: URL, deps: HandlerDeps) => Promise<unknown>
 /** Each route parses its input with the contract, calls one service and checks the response. */
 const ROUTES: Record<string, Route> = {
   ...ADMIN_ROUTES,
+  ...COMMUNITY_ROUTES,
   'POST /v1/learners/link': async (request, _url, deps) => {
     const who = await caller(request, deps.auth);
     const body = parseWith(linkRequest, await jsonBody(request));

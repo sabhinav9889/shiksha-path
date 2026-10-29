@@ -60,6 +60,10 @@ const STRINGS = {
     hi: 'हटाया नहीं जा सका। आप खुद को नहीं हटा सकते।',
     en: 'Could not delete. You cannot delete yourself.',
   },
+  deletePostSure: {
+    hi: 'यह पोस्ट हटाएँ? छात्र इसे नहीं देख पाएँगे।',
+    en: 'Delete this post? Students will no longer see it.',
+  },
   noCohortsYet: { hi: 'अभी कोई समूह नहीं', en: 'No cohorts yet' },
   noCohortsAssigned: { hi: 'कोई समूह नहीं', en: 'No cohorts' },
   deleteLabSure: { hi: 'यह लैब हटाएँ?', en: 'Delete this lab?' },
@@ -135,6 +139,9 @@ const ACTIONS: Record<string, Words> = {
   staff_invited: { hi: 'स्टाफ़ बुलाया', en: 'Invited staff' },
   staff_changed: { hi: 'स्टाफ़ बदला', en: 'Changed staff' },
   staff_deleted: { hi: 'स्टाफ़ हटाया', en: 'Deleted staff' },
+  post_created: { hi: 'पोस्ट बनाई', en: 'Created a post' },
+  post_edited: { hi: 'पोस्ट बदली', en: 'Edited a post' },
+  post_deleted: { hi: 'पोस्ट हटाई', en: 'Deleted a post' },
 };
 
 /** An audit action in words; an unknown one (a newer server) shows as it is. */

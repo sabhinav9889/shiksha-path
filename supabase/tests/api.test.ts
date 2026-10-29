@@ -318,3 +318,50 @@ describe('a mentor reviewing a recording through the function', () => {
     await mentor.cleanup();
   });
 });
+
+describe('community posts through the function', () => {
+  test('a mentor posts to their cohort; its student reads it; others do not; delete removes it', async () => {
+    const mentor = await makeUser();
+    const [user] = await sql<
+      { email: string }[]
+    >`select email from auth.users where id = ${mentor.id}`;
+    const [cohort] = await sql<{ id: string }[]>`
+      insert into cohorts (name) values ('community cohort') returning id`;
+    const cohortId = cohort?.id ?? '';
+    await sql`update learners set cohort_id = ${cohortId} where id = ${a.learner}`;
+    const [staff] = await sql<{ id: string }[]>`
+      insert into staff (email, role, name) values (${user?.email ?? ''}, 'mentor', 'Meena')
+      returning id`;
+    const staffId = staff?.id ?? '';
+    await sql`insert into staff_cohorts (staff_id, cohort_id) values (${staffId}, ${cohortId})`;
+    expect((await api('/v1/staff/claim', mentor.accessToken, {})).status).toBe(200);
+    const post = {
+      title: 'Mock interview',
+      body: 'Bring a pen',
+      audience: { kind: 'cohort', cohortId },
+      session: null,
+    };
+    const made = await api('/v1/staff/community/post', mentor.accessToken, post);
+    expect(made.status).toBe(200);
+    const { id } = (await made.json()) as { id: string };
+    const everyone = { ...post, audience: { kind: 'all' } };
+    expect((await api('/v1/staff/community/post', mentor.accessToken, everyone)).status).toBe(403);
+    const titles = async (token: string): Promise<string[]> =>
+      (
+        (await (await api('/v1/community/feed', token)).json()) as { posts: { title: string }[] }
+      ).posts.map((p) => p.title);
+    expect(await titles(a.accessToken)).toEqual(['Mock interview']);
+    expect(await titles(b.accessToken)).toEqual([]);
+    const deleted = await api('/v1/staff/community/delete', mentor.accessToken, { id });
+    expect(deleted.status).toBe(200);
+    expect(await titles(a.accessToken)).toEqual([]);
+    // Deleting the cohort takes any post for it too: nothing turns into a post to everyone.
+    await api('/v1/staff/community/post', mentor.accessToken, post);
+    await sql`update learners set cohort_id = null where id = ${a.learner}`;
+    await sql`delete from staff where id = ${staffId}`;
+    await sql`delete from cohorts where id = ${cohortId}`;
+    expect(await titles(a.accessToken)).toEqual([]);
+    expect(await sql`select 1 from community_posts where title = 'Mock interview'`).toHaveLength(0);
+    await deleteUser(mentor.id);
+  });
+});

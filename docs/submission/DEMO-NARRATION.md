@@ -4,8 +4,8 @@ About 640 words, spoken at a calm pace, fits the five-minute limit with a few se
 times match [DEMO-SCRIPT.md](DEMO-SCRIPT.md). Read it once aloud with a timer, and trim a sentence
 or two if you run over. Say it in your own words wherever that is easier.
 
-Only say what is true today. The app does not have AI doubts, meetings, a community feed or the
-admin dashboard yet: they are plans.
+Only say what is true today. The app does not have AI doubts, meetings or the org-wide admin
+dashboard yet: they are plans. The community page is built, small: posts and sessions, no files.
 
 ## 0:00 to 0:25: the problem
 
@@ -71,7 +71,8 @@ change. Coverage is about ninety percent."
 
 "What is not done. There are twenty-two lessons, drafted by AI and approved by me, not yet by a
 mentor panel. I have not tested on the cheapest phones or with real students. The AI doubt solver,
-meetings, community feed and admin dashboard are written as plans, not built. After the hackathon,
+meetings and the org-wide dashboard are written as plans, not built; the community page has no
+file attachments yet. After the hackathon,
 the first step is the field test with a few real students. Thank you."
 
 ## Tips

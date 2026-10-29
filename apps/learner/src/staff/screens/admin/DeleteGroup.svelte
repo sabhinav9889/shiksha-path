@@ -15,7 +15,7 @@
     lang,
     ondeleted,
   }: {
-    kind: 'cohort' | 'lab' | 'staff';
+    kind: 'cohort' | 'lab' | 'staff' | 'post';
     id: string;
     name: string;
     lang: Lang;
@@ -29,6 +29,7 @@
     lab: 'deleteLabSure',
     cohort: 'deleteCohortSure',
     staff: 'deleteStaffSure',
+    post: 'deletePostSure',
   } as const;
   type Why = 'busy' | 'refused' | 'failed';
   /** NOT_EMPTY: has students or cohorts. INVALID_REQUEST on staff: yourself, or already gone. */
@@ -40,6 +41,7 @@
   function send(): Promise<{ ok: boolean; error?: string }> | undefined {
     const api = staffState.auth?.api;
     if (kind === 'lab') return api?.deleteLab({ id });
+    if (kind === 'post') return api?.deletePost({ id });
     return kind === 'cohort' ? api?.deleteCohort({ id }) : api?.deleteStaff({ id });
   }
 

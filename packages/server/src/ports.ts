@@ -211,6 +211,44 @@ export interface AttendanceRepo {
   forLearner(learnerId: string, fromDay: string): Promise<{ date: string; present: boolean }[]>;
 }
 
+/** A community post as the repositories return it (spec §10.2, reduced: no attachments). */
+export interface PostRow {
+  id: string;
+  /** Null once the author's staff row is deleted. */
+  authorId: string | null;
+  /** The author's name while they are active staff; otherwise null. */
+  authorName: string | null;
+  /** Null means everyone. */
+  cohortId: string | null;
+  title: string;
+  body: string;
+  session: { startsAt: string; minutes: number; link: string | null } | null;
+  createdAt: string;
+  editedAt: string | null;
+}
+
+export interface PostInput {
+  id?: string;
+  authorId: string;
+  cohortId: string | null;
+  title: string;
+  body: string;
+  session: PostRow['session'];
+}
+
+/** Posts by mentors and admins, newest first, capped: no paging. */
+export interface PostRepo {
+  /** Insert, or update an existing post (setting `editedAt`). Returns the id. */
+  save(post: PostInput, at: Date): Promise<string>;
+  get(id: string): Promise<PostRow | null>;
+  /** What a student in `cohortId` (null: no cohort) reads: posts to everyone and to that cohort. */
+  feed(cohortId: string | null, limit: number): Promise<PostRow[]>;
+  /** What a staff member reads: all for an admin; a mentor's cohorts, everyone and their own. */
+  list(scope: { cohortIds: string[] | 'all'; authorId: string }, limit: number): Promise<PostRow[]>;
+  /** False when there is no such post. */
+  delete(id: string): Promise<boolean>;
+}
+
 /** Labs, cohorts and which cohort a learner is in. */
 export type DeleteResult = 'deleted' | 'not_empty' | 'missing';
 

@@ -27,7 +27,7 @@ const demoStudents = async (deps: DemoDeps) => {
 describe('the demo cohort', () => {
   test('is made of fake students with varied progress and every kind of attention flag', async () => {
     const deps = setup();
-    const out = await seedDemo(deps, { lessonIds: LESSONS, now: new Date('2026-10-27T10:00:00Z') });
+    const out = await seedDemo(deps, { lessonIds: LESSONS, now: new Date() });
     expect(out.students).toBe(DEMO_NAMES.length);
     const students = await demoStudents(deps);
     expect(students.map((s) => s.name).sort()).toEqual([...DEMO_NAMES].sort());
@@ -45,7 +45,7 @@ describe('the demo cohort', () => {
 
   test('seeding twice is refused, so nothing is duplicated', async () => {
     const deps = setup();
-    const opts = { lessonIds: LESSONS, now: new Date('2026-10-27T10:00:00Z') };
+    const opts = { lessonIds: LESSONS, now: new Date() };
     await seedDemo(deps, opts);
     expect(await codeOf(seedDemo(deps, opts))).toBe('INVALID_REQUEST');
     expect(await demoStudents(deps)).toHaveLength(DEMO_NAMES.length);
@@ -53,7 +53,7 @@ describe('the demo cohort', () => {
 
   test('removing deletes only the fake students, even a real one put in the same cohort stays', async () => {
     const deps = setup();
-    await seedDemo(deps, { lessonIds: LESSONS, now: new Date('2026-10-27T10:00:00Z') });
+    await seedDemo(deps, { lessonIds: LESSONS, now: new Date() });
     const cohort = (await deps.org.cohorts('all')).find((c) => c.name === DEMO_COHORT);
     const real = await issueCode(deps.codes, { name: 'असली छात्र' });
     await deps.org.setLearnerCohort(real.learnerId, cohort?.id ?? null);

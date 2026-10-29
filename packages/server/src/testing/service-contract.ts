@@ -20,6 +20,7 @@ import type {
   LearnerDataRepo,
   LearnerRepo,
   OrgRepo,
+  PostRepo,
   RateLimiter,
   RecordingRepo,
   StaffRepo,
@@ -52,6 +53,7 @@ export interface ServiceFixture {
   summaries: SummaryRepo;
   codes: CodeRepo;
   attendance: AttendanceRepo;
+  posts: PostRepo;
   /** Makes, signs in and deletes the auth users behind backup codes. */
   auth: Auth & CodeAuth;
   pepper: string;

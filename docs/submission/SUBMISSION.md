@@ -85,12 +85,12 @@ Each is written up with its reasons in [`docs/decisions/`](../decisions/README.m
 
 ## What is built, and what is not
 
-| Built and tested                                                                                 | Planned, written as plans, **not built**                   |
-| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| Offline lessons, placement, practice, speaking recording, streaks, sync and restore              | AI doubt solver with safeguarding alerts                   |
-| Google and backup-code sign-in, PIN profiles                                                     | Weekly AI summary and the content-drafting tools           |
-| Mentor view, admin panel, audit log, feature switches, branding                                  | Org-wide dashboard, CSV export, logo upload                |
-| Export and deletion on request, retention job, nightly encrypted backup (needs the owner's keys) | 1-to-1 meetings with Calendar and Meet, the community feed |
+| Built and tested                                                                                  | Planned, written as plans, **not built**                 |
+| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Offline lessons, placement, practice, speaking recording, streaks, sync and restore               | AI doubt solver with safeguarding alerts                 |
+| Google and backup-code sign-in, PIN profiles                                                      | Weekly AI summary and the content-drafting tools         |
+| Mentor view, admin panel, audit log, feature switches, branding, community posts (text, sessions) | Org-wide dashboard, CSV export, logo upload              |
+| Export and deletion on request, retention job, nightly encrypted backup (needs the owner's keys)  | 1-to-1 meetings with Calendar and Meet, post attachments |
 
 The planned work is in [`docs/superpowers/plans/`](../superpowers/plans/) so the build can continue
 after this hackathon. It is not part of this submission.
