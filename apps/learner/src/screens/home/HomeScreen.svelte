@@ -8,7 +8,6 @@
   import { startPlacementRun } from '../placement/placement-flow.js';
   import { linkSignedInProfile as link } from '../../account/link-signed-in.js';
   import LinkCard from '../account/LinkCard.svelte';
-  import CommunityLink from './CommunityLink.svelte';
   import DownloadCard from './DownloadCard.svelte';
   import PlacementCard from './PlacementCard.svelte';
   import { loadHome, type HomeData } from './home-data.js';
@@ -139,8 +138,6 @@
     {#if data.placement}
       <PlacementCard {lang} onstart={() => void startPlacementRun()} />
     {/if}
-
-    {#if appState.switches.community_feed}<CommunityLink {lang} />{/if}
 
     {#if data.reviewDue > 0}
       <button type="button" class="card review" onclick={startReview}>
