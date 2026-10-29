@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { handle, type HandlerDeps } from '../src/http/router.js';
 import { memoryLogger } from '../src/logger.js';
@@ -56,6 +57,13 @@ describe('POST /v1/staff/admin/cohort/delete and /lab/delete', () => {
     const busy = await post('/v1/staff/admin/lab/delete', { id: lab });
     expect(busy.status).toBe(409);
     expect(await busy.json()).toEqual({ error: 'NOT_EMPTY' });
+    const student = randomUUID();
+    await deps.learners.createLinked({ id: student, name: 'A', authUserId: 'auth-x' });
+    await deps.org.setLearnerCohort(student, cohort);
+    const full = await post('/v1/staff/admin/cohort/delete', { id: cohort });
+    expect(full.status).toBe(409);
+    expect(await full.json()).toEqual({ error: 'NOT_EMPTY' });
+    await deps.org.setLearnerCohort(student, null);
     expect((await post('/v1/staff/admin/cohort/delete', { id: cohort })).status).toBe(200);
     expect((await post('/v1/staff/admin/lab/delete', { id: lab })).status).toBe(200);
     expect((await post('/v1/staff/admin/lab/delete', { id: 'not-a-uuid' })).status).toBe(400);

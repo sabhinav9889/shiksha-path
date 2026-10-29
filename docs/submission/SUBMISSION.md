@@ -19,7 +19,8 @@ for the NGO's mentors and admins.
 - **Mentors:** see their own cohorts and who needs attention (away for 3 days, stuck on one lesson,
   repeated low scores), listen to recordings and leave a short comment, create and reset backup
   codes, change a student's start lesson, mark lab attendance.
-- **Admins:** set up labs, cohorts and mentors, manage and pause students, delete a student's data
+- **Admins:** set up labs, cohorts and mentors (an empty cohort or lab can be deleted; one with
+  students or cohorts in it is refused), manage and pause students, delete a student's data
   on request, switch features on or off for everyone or one student, change the app's name and
   colours (blocked if the text would be hard to read), and read an audit log of every staff change.
 - **Privacy built in:** students see only their own data, mentors only their cohorts; export (through the

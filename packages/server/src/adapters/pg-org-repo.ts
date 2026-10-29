@@ -40,24 +40,33 @@ export class PgOrgRepo implements OrgRepo {
     return row?.id ?? '';
   }
 
+  /**
+   * The row is locked first, in the same transaction. A learner being moved in holds a share lock
+   * on it, so we wait for that move to commit and the check then sees it. Without the lock the
+   * check would use a snapshot from before the move, and the delete would silently detach them.
+   */
   async deleteLab(id: string): Promise<DeleteResult> {
-    const gone = await this.sql`
-      delete from labs l where l.id = ${id}
-        and not exists (select 1 from cohorts c where c.lab_id = l.id)
-      returning l.id`;
-    if (gone.length > 0) return 'deleted';
-    const [there] = await this.sql`select 1 as x from labs where id = ${id}`;
-    return there ? 'not_empty' : 'missing';
+    return this.sql.begin(async (tx) => {
+      const [lab] = await tx`select id from labs where id = ${id} for update`;
+      if (!lab) return 'missing';
+      const gone = await tx`
+        delete from labs l where l.id = ${id}
+          and not exists (select 1 from cohorts c where c.lab_id = l.id)
+        returning l.id`;
+      return gone.length > 0 ? 'deleted' : 'not_empty';
+    });
   }
 
   async deleteCohort(id: string): Promise<DeleteResult> {
-    const gone = await this.sql`
-      delete from cohorts c where c.id = ${id}
-        and not exists (select 1 from learners l where l.cohort_id = c.id)
-      returning c.id`;
-    if (gone.length > 0) return 'deleted';
-    const [there] = await this.sql`select 1 as x from cohorts where id = ${id}`;
-    return there ? 'not_empty' : 'missing';
+    return this.sql.begin(async (tx) => {
+      const [cohort] = await tx`select id from cohorts where id = ${id} for update`;
+      if (!cohort) return 'missing';
+      const gone = await tx`
+        delete from cohorts c where c.id = ${id}
+          and not exists (select 1 from learners l where l.cohort_id = c.id)
+        returning c.id`;
+      return gone.length > 0 ? 'deleted' : 'not_empty';
+    });
   }
 
   async setLearnerCohort(learnerId: string, cohortId: string | null): Promise<void> {

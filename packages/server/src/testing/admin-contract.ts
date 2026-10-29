@@ -206,6 +206,7 @@ export function describeAdminContract(name: string, make: () => Promise<ServiceF
         const boss = await staffMember('admin', []);
         const lab = await f.org.saveLab({ name: 'Keep' });
         const id = await f.org.saveCohort({ name: 'Empty', labId: lab });
+        await w.learnerIn(cohortA); // students elsewhere never block this one
         await admin.deleteCohort(f, boss, { id });
         expect(await f.org.cohorts([id])).toEqual([]);
         expect((await f.org.labs()).map((l) => l.id)).toContain(lab);

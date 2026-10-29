@@ -179,6 +179,30 @@ describe('Postgres specifics', () => {
     await f.cleanup();
   });
 
+  test('a student moved into a cohort while it is being deleted keeps the cohort', async () => {
+    const f = await makePgFixture();
+    const cohort = await f.org.saveCohort({ name: 'Racing', labId: null });
+    const learner = randomUUID();
+    await f.learners.createLinked({ id: learner, name: 'A', authUserId: await f.newAuthUser() });
+    let release = (): void => undefined;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const move = sql.begin(async (tx) => {
+      await tx`update learners set cohort_id = ${cohort} where id = ${learner}`;
+      await held; // the move is open and not yet committed
+    });
+    const pause = (ms: number): Promise<void> => new Promise((done) => setTimeout(done, ms));
+    await pause(100);
+    const deleting = f.org.deleteCohort(cohort);
+    await pause(200);
+    release();
+    await move;
+    expect(await deleting).toBe('not_empty');
+    expect(await f.org.cohortOfLearner(learner)).toBe(cohort);
+    await sql`delete from learners where id = ${learner}`;
+    await f.org.deleteCohort(cohort);
+    await f.cleanup();
+  });
+
   test('a failed link leaves no learner behind', async () => {
     const f = await makePgFixture();
     const id = randomUUID();
