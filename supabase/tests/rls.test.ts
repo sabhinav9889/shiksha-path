@@ -289,6 +289,58 @@ describe('staff see only what their role allows (2 mentors, 2 cohorts)', () => {
     });
   });
 
+  test('community posts follow the audience: 2 cohorts, 2 students, 2 mentors, an admin', async () => {
+    const post = async (cohortId: string | null, title: string, author?: string): Promise<void> => {
+      await sql`insert into community_posts (cohort_id, title, author_id)
+                values (${cohortId}, ${title}, ${author ?? null})`;
+    };
+    const titles = (rows: { title: string }[]): string[] => rows.map((r) => r.title).sort();
+    await post(null, 'all');
+    await post(a.cohortId, 'only-a');
+    await post(b.cohortId, 'only-b');
+    const mentorA = await mentorOf(a.cohortId);
+    const admin = await mentorOf(a.cohortId, 'admin');
+    const read = (authId: string) =>
+      asUser(sql, authId, async (tx) =>
+        titles(await tx<{ title: string }[]>`select title from community_posts`),
+      );
+    expect(await read(a.authId)).toEqual(['all', 'only-a']);
+    expect(await read(b.authId)).toEqual(['all', 'only-b']);
+    expect(await read(mentorA)).toEqual(['all', 'only-a']);
+    expect(await read(admin)).toEqual(['all', 'only-a', 'only-b']);
+    // A mentor keeps reading their own post even when it is for a cohort they no longer hold.
+    const [me] = await sql<{ id: string }[]>`select id from staff where auth_user_id = ${mentorA}`;
+    await post(b.cohortId, 'own-b', me?.id);
+    expect(await read(mentorA)).toEqual(['all', 'only-a', 'own-b']);
+    await sql`update staff set active = false where auth_user_id = ${mentorA}`;
+    expect(await read(mentorA)).toEqual([]);
+    await expect(asAnon(sql, (tx) => tx`select title from community_posts`)).rejects.toThrow();
+    await sql`delete from community_posts`;
+  });
+
+  test('nobody writes a post through the database API, and a deleted cohort takes its posts', async () => {
+    const [cohort] = await sql<
+      { id: string }[]
+    >`insert into cohorts (name) values ('Gone') returning id`;
+    await sql`insert into community_posts (cohort_id, title) values (${cohort?.id ?? ''}, 'to-gone')`;
+    const admin = await mentorOf(a.cohortId, 'admin');
+    for (const authId of [a.authId, admin]) {
+      await expect(
+        asUser(sql, authId, (tx) => tx`insert into community_posts (title) values ('x')`),
+      ).rejects.toThrow();
+      await expect(
+        asUser(sql, authId, (tx) => tx`update community_posts set title = 'y'`),
+      ).rejects.toThrow();
+      await expect(asUser(sql, authId, (tx) => tx`delete from community_posts`)).rejects.toThrow();
+    }
+    await sql`delete from cohorts where id = ${cohort?.id ?? ''}`;
+    // Not turned into a post to everyone: it is gone, so no student can read it.
+    expect(await sql`select 1 from community_posts where title = 'to-gone'`).toHaveLength(0);
+    await asUser(sql, a.authId, async (tx) => {
+      expect(await tx`select 1 from community_posts where title = 'to-gone'`).toHaveLength(0);
+    });
+  });
+
   test('an inactive mentor reads nothing', async () => {
     const mentorA = await mentorOf(a.cohortId);
     await sql`update staff set active = false where auth_user_id = ${mentorA}`;
