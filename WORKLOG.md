@@ -20,9 +20,6 @@ Not started. Move a line into the table above when someone picks it up.
   freeze (6 November).
 - **The profiles test flake.** `profiles.test.ts > a locked profile stays locked…` can fail in a
   full run and passes alone. Possibly a real race, not just slowness.
-- **The demo-data test depends on the clock.** `demo-data.test.ts > is made of fake students…`
-  fails between 00:00 and 05:30 India time (UTC and India dates differ); it passes later in the day.
-  Make it use one day-clock.
 - **Backups.** The nightly backup needs the owner's keys (runbook §9); until then it fails nightly.
 
 ## Archive
