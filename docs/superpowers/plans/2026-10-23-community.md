@@ -1,5 +1,10 @@
 # Community Feed Implementation Plan (Plan 6b)
 
+> **Status, 2026-10-30:** built in a reduced form (text posts, audience, session details, an offline
+> copy; no attachments, calendar button, countdown or paging). See
+> [the decision](../../decisions/backend-2026-10-30-community-posts.md). The rest of this plan is
+> still the plan for those parts.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Also follow `AGENTS.md`. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Mentors and NGO admins post to a community feed (title, text, optional session details, optional image or PDF attachments, to everyone or one cohort); students read it in the app, see a countdown and an "Add to calendar" button on session posts, and can read the latest posts offline.

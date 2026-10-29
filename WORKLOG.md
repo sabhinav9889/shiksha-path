@@ -5,9 +5,10 @@ Active tasks. Read this at the start of every session. Details live in `.claude/
 
 **Statuses:** `in-progress` · `blocked` · `shipped` · `on-hold`
 
-| Task                                             | Status      | Assignee | Branch                     | Next step                                                  | Detail                                        |
-| ------------------------------------------------ | ----------- | -------- | -------------------------- | ---------------------------------------------------------- | --------------------------------------------- |
-| Hackathon submission (deadline 30 Oct 2026, EOD) | in-progress | Owner    | `docs/submission-accuracy` | Record the demo, tag, build the ZIP and submit (FREEZE.md) | [freeze procedure](docs/submission/FREEZE.md) |
+| Task                                             | Status      | Assignee | Branch                     | Next step                                                                        | Detail                                                           |
+| ------------------------------------------------ | ----------- | -------- | -------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Hackathon submission (deadline 30 Oct 2026, EOD) | in-progress | Owner    | `docs/submission-accuracy` | Record the demo, tag, build the ZIP and submit (FREEZE.md)                       | [freeze procedure](docs/submission/FREEZE.md)                    |
+| Community posts (Plan 6b, reduced)               | in-progress | Owner    | `feat/community-posts`     | Review, merge, apply the migration to the hosted database, redeploy the function | [decision](docs/decisions/backend-2026-10-30-community-posts.md) |
 
 ## Backlog
 
@@ -19,6 +20,9 @@ Not started. Move a line into the table above when someone picks it up.
   freeze (6 November).
 - **The profiles test flake.** `profiles.test.ts > a locked profile stays locked…` can fail in a
   full run and passes alone. Possibly a real race, not just slowness.
+- **The demo-data test depends on the clock.** `demo-data.test.ts > is made of fake students…`
+  fails between 00:00 and 05:30 India time (UTC and India dates differ); it passes later in the day.
+  Make it use one day-clock.
 - **Backups.** The nightly backup needs the owner's keys (runbook §9); until then it fails nightly.
 
 ## Archive
