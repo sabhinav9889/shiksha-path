@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { sessionState, sessionWhen } from './session-time.js';
+import { safeLink, sessionState, sessionWhen } from './session-time.js';
 
 const start = '2026-11-10T10:30:00.000Z'; // 16:00 in India
 
@@ -15,5 +15,12 @@ describe('a session time', () => {
     expect(sessionState(start, 60, at('2026-11-10T10:30:00.000Z'))).toBe('live');
     expect(sessionState(start, 60, at('2026-11-10T11:29:59.000Z'))).toBe('live');
     expect(sessionState(start, 60, at('2026-11-10T11:30:00.000Z'))).toBe('over');
+  });
+
+  test('only an https link is a link', () => {
+    expect(safeLink('https://meet.google.com/abc')).toBe('https://meet.google.com/abc');
+    for (const bad of ['javascript:alert(1)', 'http://x.org', 'data:text/html,x', 'x', '', null]) {
+      expect(safeLink(bad)).toBeNull();
+    }
   });
 });

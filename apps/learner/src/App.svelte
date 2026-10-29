@@ -48,7 +48,7 @@
   onMount(startRouter);
 
   const showNav = $derived(
-    appState.profile !== null && ['home', 'lessons', 'me'].includes(route.name),
+    appState.profile !== null && ['home', 'lessons', 'me', 'community'].includes(route.name),
   );
 </script>
 
@@ -72,6 +72,11 @@
       <PlacementResult />
     {:else if route.name === 'me'}
       <MeScreen />
+    {:else if route.name === 'community'}
+      <!-- A lazy chunk: the first load stays inside its size budget. -->
+      {#await import('./community/CommunityScreen.svelte') then community}
+        <community.default />
+      {/await}
     {:else if route.name === 'auth-callback'}
       <AuthCallback />
     {:else if route.name === 'staff'}

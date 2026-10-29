@@ -9,8 +9,10 @@ import {
   recordingStartResponse,
   session,
   deletedCheckResponse,
+  feedResponse,
   type ApiError,
   type Branding,
+  type FeedResponse,
   type LinkRequest,
   type LinkResponse,
   type MeResponse,
@@ -30,6 +32,8 @@ export interface ApiClient {
   push(body: PushRequest): Promise<ApiResult<PushResponse>>;
   pull(query: { after: number }): Promise<ApiResult<PullResponse>>;
   me(): Promise<ApiResult<MeResponse>>;
+  /** The community posts this learner may read (spec §10.2). */
+  feed(): Promise<ApiResult<FeedResponse>>;
   startRecording(body: RecordingStart): Promise<ApiResult<RecordingStartResponse>>;
   completeRecording(body: { id: string }): Promise<ApiResult<RecordingCompleteResponse>>;
   /** The platform's name and colours. Needs no sign-in. */
@@ -142,6 +146,7 @@ export function createApiClient(deps: ClientDeps): ApiClient {
     push: (body) => call('/v1/sync/push', pushResponse, body),
     pull: ({ after }) => call(`/v1/sync/pull?after=${after}`, pullResponse),
     me: () => call('/v1/me', meResponse),
+    feed: () => call('/v1/community/feed', feedResponse),
     startRecording: (body) => call('/v1/recordings/start', recordingStartResponse, body),
     completeRecording: (body) => call('/v1/recordings/complete', recordingCompleteResponse, body),
     codeSignIn: (body) => call('/v1/auth/code', session, body, false),

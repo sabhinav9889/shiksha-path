@@ -8,6 +8,7 @@ export type Route =
   | { name: 'placement' }
   | { name: 'placement-result' }
   | { name: 'me' }
+  | { name: 'community' }
   | { name: 'auth-callback' }
   | { name: 'staff'; view: 'cohorts' | 'recordings' | 'posts' }
   | { name: 'staff'; view: 'student'; id: string }
@@ -45,6 +46,7 @@ const SIMPLE_ROUTES = [
   'placement',
   'placement-result',
   'me',
+  'community',
   'auth-callback',
 ] as const;
 
