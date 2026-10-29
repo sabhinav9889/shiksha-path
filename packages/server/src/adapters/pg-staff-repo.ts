@@ -82,9 +82,20 @@ export class PgStaffRepo implements StaffRepo {
     return rows.map(toRow);
   }
 
-  /** Cohort links go with the row; audit and review references are set to null. */
+  /**
+   * Cohort links go with the row; audit and review references are set to null. The last active
+   * admin is never removed: the admin rows are locked first, so two admins deleting each other
+   * at the same moment take turns and the second is refused.
+   */
   async delete(staffId: string): Promise<boolean> {
-    const gone = await this.sql`delete from staff where id = ${staffId} returning id`;
-    return gone.length > 0;
+    return this.sql.begin(async (tx) => {
+      await tx`select id from staff where role = 'admin' for update`;
+      const gone = await tx`
+        delete from staff s where s.id = ${staffId}
+          and (s.role <> 'admin' or exists (
+            select 1 from staff o where o.role = 'admin' and o.active and o.id <> s.id))
+        returning s.id`;
+      return gone.length > 0;
+    });
   }
 }

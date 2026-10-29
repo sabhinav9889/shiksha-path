@@ -40,7 +40,9 @@ confirmed the builder's-call values in the plan on 2026-10-22.
   at the same moment is not silently detached. Known limit, shared by every audited action: the
   audit entry is written just after the change, not in the same transaction. Deleting a cohort removes its mentors' links to it.
 - **An admin can delete a mentor or another admin, never themselves**, so one admin always
-  remains. Their cohort links go; their past audit entries stay (the staff id becomes empty). The
+  remains. The last active admin is also refused in the database, with the admin rows locked, so
+  two admins deleting each other at once cannot leave none. (Pausing or demoting another admin is
+  not guarded the same way; the owner can recover through the admin tool.) Their cohort links go; their past audit entries stay (the staff id becomes empty). The
   audit entry keeps the id and role, not the name or email. A Google session already open stops at
   the next request (`NOT_STAFF`).
 - **Every staff change is in the audit log** (reads such as playing a recording are not logged): who, what, which student, and ids, keys and

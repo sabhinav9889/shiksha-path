@@ -163,7 +163,8 @@ export interface StaffRepo {
   claim(staffId: string, authUserId: string): Promise<boolean>;
   save(row: Omit<StaffRow, 'id' | 'authUserId'> & { id?: string }): Promise<string>;
   list(): Promise<StaffRow[]>;
-  /** Remove a staff member and their cohort links; false when there is no such row. */
+  /** Remove a staff member and their cohort links. False when there is no such row, or when it
+   * is the last active admin. */
   delete(staffId: string): Promise<boolean>;
 }
 

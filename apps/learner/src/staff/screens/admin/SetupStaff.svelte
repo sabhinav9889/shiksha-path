@@ -57,7 +57,9 @@
     {/each}
   </ul>
   <form onsubmit={addStaff}>
-    <label>{at('staffName', lang)} <input required maxlength="80" bind:value={invite.name} /></label>
+    <label>
+      {at('staffName', lang)} <input required maxlength="80" bind:value={invite.name} />
+    </label>
     <label>{at('email', lang)} <input required type="email" bind:value={invite.email} /></label>
     <label>
       {at('role', lang)}
