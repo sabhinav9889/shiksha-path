@@ -9,3 +9,4 @@ export * from './recordings.js';
 export * from './codes.js';
 export * from './branding.js';
 export * from './community.js';
+export * from './profile.js';
