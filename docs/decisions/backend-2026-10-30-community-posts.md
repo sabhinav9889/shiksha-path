@@ -50,3 +50,6 @@ small and without those dependencies.
 - Known limit, shared with every audited action: the audit entry is written just after the change,
   not in the same transaction.
 - Posts are not retained or purged by a job: they stay until deleted by their author or an admin.
+- Known gaps, left on purpose: the cohort-delete question does not mention that its posts go too
+  (the audit entry for the cohort is the only record); a link may still point at a dotless host;
+  the staff list is capped at 50 with no way to page; the form takes India time only.

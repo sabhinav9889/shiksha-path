@@ -7,7 +7,9 @@ import { makeEnv, type TestEnv } from '../../test/helpers/installed-runtime.js';
 import { appState, initApp, signIn, signOut } from '../app-state.svelte.js';
 import type { ApiClient, ApiResult } from '../api/api-client.js';
 import CommunityScreen from './CommunityScreen.svelte';
-import { refreshFeed } from './feed-cache.js';
+import { loadFeedCache, refreshFeed } from './feed-cache.js';
+import { setLinked } from '../account/account.js';
+import type { AccountDeps } from '../account/account.js';
 
 const post = (over: Partial<FeedPost>): FeedPost => ({
   id: crypto.randomUUID(),
@@ -111,9 +113,15 @@ describe('the student community screen', () => {
 
   test('a switched-off feed shows nothing and says it is off', async () => {
     await refreshFeed(env.runtime, served([post({ title: 'छिपी' })]), id);
-    await refreshFeed(env.runtime, refused('FEATURE_OFF'), id);
+    // A linked phone whose server now answers FEATURE_OFF.
+    await setLinked(env.runtime, id);
+    env.runtime.account = {
+      loadAuth: () => Promise.resolve({ accessToken: () => Promise.resolve('t') }),
+      makeApi: () => refused('FEATURE_OFF'),
+    } as unknown as AccountDeps;
     render(CommunityScreen);
-    await vi.waitFor(() => screen.getByText('अभी कोई पोस्ट नहीं'));
+    await vi.waitFor(() => screen.getByText('अभी यह सुविधा बंद है।'));
     expect(screen.queryByText('छिपी')).toBeNull();
+    expect(await loadFeedCache(env.runtime, id)).toBeNull();
   });
 });

@@ -11,7 +11,12 @@ const MAX_MINUTES = 480;
 export const STAFF_POSTS_CAP = 50;
 
 /** Only `https:` links: a post is read by minors, so `http:`, `javascript:` and `data:` are out. */
-export const sessionLink = z.url({ protocol: /^https$/ }).max(MAX_LINK);
+export const sessionLink = z
+  .string()
+  .max(MAX_LINK)
+  // The same rule as the database check, and no `user:password@` in a link a student may tap.
+  .refine((link) => link.startsWith('https://') && !/^https:\/\/[^/]*@/.test(link))
+  .pipe(z.url({ protocol: /^https$/ }));
 
 export const postRequest = z.strictObject({
   id: z.uuid().optional(),

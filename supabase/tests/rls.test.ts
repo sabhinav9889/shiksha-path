@@ -314,6 +314,8 @@ describe('staff see only what their role allows (2 mentors, 2 cohorts)', () => {
     expect(await read(mentorA)).toEqual(['all', 'only-a', 'own-b']);
     await sql`update staff set active = false where auth_user_id = ${mentorA}`;
     expect(await read(mentorA)).toEqual([]);
+    await sql`update learners set deactivated_at = now() where id = ${a.id}`;
+    expect(await read(a.authId)).toEqual([]); // a paused student reads nothing, as in the service
     await expect(asAnon(sql, (tx) => tx`select title from community_posts`)).rejects.toThrow();
     await sql`delete from community_posts`;
   });

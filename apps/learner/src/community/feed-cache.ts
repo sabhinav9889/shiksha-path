@@ -48,13 +48,14 @@ export async function refreshFeed(
   learnerId: string,
 ): Promise<FeedCopy & { status: FeedStatus }> {
   const answer = (await client?.feed()) ?? null;
-  if (answer?.ok) {
-    const posts = feedResponse.parse(answer.value).posts;
+  const parsed = answer?.ok ? feedResponse.safeParse(answer.value) : null;
+  if (parsed?.success) {
+    const posts = parsed.data.posts;
     const savedAt = runtime.clock.now().toISOString();
     await runtime.events.setMeta(feedKey(learnerId), JSON.stringify({ savedAt, posts }));
     return { status: 'fresh', savedAt, posts };
   }
-  if (answer && REFUSED.has(answer.error)) {
+  if (answer && !answer.ok && REFUSED.has(answer.error)) {
     await runtime.events.setMeta(feedKey(learnerId), '');
     return { status: 'off', savedAt: '', posts: [] };
   }

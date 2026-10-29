@@ -39,7 +39,8 @@ language sql stable security definer set search_path = public as $$
                    where sc.staff_id = s.id and sc.cohort_id = cohort))
   ) or exists (
     select 1 from public.learners l
-    where l.id = public.current_learner_id() and (cohort is null or l.cohort_id = cohort)
+    where l.id = public.current_learner_id() and l.deactivated_at is null
+      and (cohort is null or l.cohort_id = cohort)
   );
 $$;
 revoke execute on function public.can_read_post(uuid, uuid) from anon;

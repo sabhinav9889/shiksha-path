@@ -8,6 +8,7 @@ const STRINGS = {
     hi: 'इंटरनेट नहीं है। पिछली बार की पोस्ट दिख रही हैं।',
     en: 'No internet. Showing the posts from last time.',
   },
+  off: { hi: 'अभी यह सुविधा बंद है।', en: 'This is switched off right now.' },
   loading: { hi: 'लोड हो रहा है…', en: 'Loading…' },
   forCohort: { hi: 'आपके समूह के लिए', en: 'For your cohort' },
   by: { hi: 'द्वारा', en: 'by' },

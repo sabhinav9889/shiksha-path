@@ -36,7 +36,9 @@
   {#if posts === null}
     <p>{cs('loading', lang)}</p>
   {:else}
-    {#if status === 'offline' && posts.length > 0}
+    {#if status === 'off'}
+      <p class="note" role="status">{cs('off', lang)}</p>
+    {:else if status === 'offline' && posts.length > 0}
       <p class="note" role="status">{cs('offline', lang)}</p>
     {/if}
     {#each posts as post (post.id)}

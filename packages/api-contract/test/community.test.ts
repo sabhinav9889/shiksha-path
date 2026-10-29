@@ -29,6 +29,10 @@ describe('postRequest', () => {
     'data:text/html,x',
     'http://meet.google.com/x',
     `https://example.org/${'a'.repeat(500)}`,
+    'HTTPS://a.com/x',
+    'https:/a.com/x',
+    ' https://a.com/x',
+    'https://user:pw@a.com/x',
   ])('refuses the session link %s', (link) => {
     expect(postRequest.safeParse(session(link)).success).toBe(false);
   });
