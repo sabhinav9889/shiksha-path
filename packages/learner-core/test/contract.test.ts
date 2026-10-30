@@ -51,13 +51,16 @@ async function parseBuild(outDir: string): Promise<{ manifest: Manifest; audio: 
 }
 
 describe('the content builder (producer) and the shared schemas (consumer) agree', () => {
-  test("the repo's sample content (no audio) parses", async () => {
+  test("the repo's real content parses, with the three model recordings stored once each", async () => {
     const outDir = await mkdtemp(join(tmpdir(), 'sample-out-'));
     await buildContent(fileURLToPath(new URL('../../../content', import.meta.url)), outDir);
     const { manifest, audio } = await parseBuild(outDir);
     expect(manifest.modules.length).toBeGreaterThanOrEqual(2);
     expect(manifest.placement).not.toBeNull();
-    expect(audio).toEqual([]);
+    // The "Say it aloud" lesson: each listening and speaking item shares one of three clips.
+    expect(audio).toHaveLength(3);
+    expect(new Set(audio.map((a) => a.path)).size).toBe(3);
+    expect(await readdir(join(outDir, 'audio'))).toHaveLength(3);
   });
 
   test('a fixture with fake audio parses, and shared audio is stored once', async () => {

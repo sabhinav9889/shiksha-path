@@ -13,7 +13,7 @@ family. Most learning apps assume fast internet, an English reader and one user 
 for the NGO's mentors and admins.
 
 - **Students:** short Hindi-first lessons that work with the network off, a placement test to skip
-  ahead, practice with immediate feedback, speaking practice that records a short clip, streaks,
+  ahead, practice with immediate feedback, speaking practice that records a short clip (one lesson, "Say it aloud", uses it, with a mentor's model recordings), streaks,
   and progress backed up to a server. A profile is protected by a 4-digit PIN. A student with no
   Google account joins with a backup code that a mentor creates.
 - **Mentors:** see their own cohorts and who needs attention (away for 3 days, stuck on one lesson,
@@ -97,7 +97,7 @@ after this hackathon. It is not part of this submission.
 
 ## Limitations
 
-- **27 lessons** exist (14 English, 8 aptitude and 5 on computer and internet basics), roughly 45 to 50 minutes for a first-time learner (an estimate). The lesson text was drafted by AI and
+- **28 lessons** exist (15 English, 8 aptitude and 5 on computer and internet basics), roughly 45 to 50 minutes for a first-time learner (an estimate). The lesson text was drafted by AI and
   read and approved by the developer, a Hindi reader, but it has not been through a mentor review,
   which the pilot process requires. The pilot's full scope is larger.
 - Not yet tested on the cheapest target phones or with real students; no guardian consent process

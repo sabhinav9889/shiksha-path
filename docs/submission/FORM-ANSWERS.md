@@ -27,7 +27,7 @@ and a student without a Google account joins with a backup code. Mentors see the
 who needs attention, post to their cohorts, publish one-to-one slots, listen to recordings, create backup codes, change levels and mark attendance.
 Admins set up labs, cohorts and mentors (and delete empty ones, or remove a mentor), manage and pause students, switch features on or off,
 change the branding (blocked if the text would be hard to read), delete a student's data on
-request, and read an audit log. The app has 27 lessons (14 English, 8 aptitude, 5 tech basics). It is built to
+request, and read an audit log. The app has 28 lessons (15 English, 8 aptitude, 5 tech basics). It is built to
 protect minors: students see only their own data, mentors only their cohorts, and nothing personal
 goes in logs or URLs.
 
@@ -73,7 +73,7 @@ Details and the honest limits are in [QA-APPROACH.md](QA-APPROACH.md).
 
 ## Limitations
 
-- 27 lessons, drafted by AI and approved by the developer, not yet by a mentor panel; the pilot
+- 28 lessons, drafted by AI and approved by the developer, not yet by a mentor panel; the pilot
   needs more.
 - Not yet tested on the cheapest target phones or with real students.
 - AI doubt solver and the org-wide admin dashboard are written as plans and not built. The
