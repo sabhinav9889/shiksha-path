@@ -41,6 +41,30 @@ describe('the sign-in and API host', () => {
   });
 });
 
+describe('playing a recording from storage', () => {
+  test('the API host may serve audio, so a mentor can play a signed recording link', () => {
+    const policy = directives(contentSecurityPolicy('/content', ['https://abc.supabase.co']));
+    expect(policy['media-src']).toBe("'self' blob: https://abc.supabase.co");
+  });
+
+  test('a lesson-pack host is not given media access, and without an API host nothing extra is', () => {
+    const packs = directives(contentSecurityPolicy('https://packs.example.org/v1'));
+    expect(packs['media-src']).toBe("'self' blob:");
+    const both = directives(
+      contentSecurityPolicy('https://packs.example.org/v1', ['https://abc.supabase.co']),
+    );
+    expect(both['media-src']).toBe("'self' blob: https://abc.supabase.co");
+  });
+
+  test('nothing else is loosened: scripts, images, objects and forms stay as they were', () => {
+    const policy = directives(contentSecurityPolicy('/content', ['https://abc.supabase.co']));
+    expect(policy['script-src']).toBe("'self'");
+    expect(policy['img-src']).toBe("'self' data: blob:");
+    expect(policy['object-src']).toBe("'none'");
+    expect(policy['default-src']).toBe("'self'");
+  });
+});
+
 describe('cspPlugin', () => {
   test('puts the policy at the top of index.html, at build time only', () => {
     const plugin = cspPlugin('/content');
