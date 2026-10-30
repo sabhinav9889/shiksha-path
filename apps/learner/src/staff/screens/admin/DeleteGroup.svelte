@@ -15,7 +15,7 @@
     lang,
     ondeleted,
   }: {
-    kind: 'cohort' | 'lab' | 'staff' | 'post';
+    kind: 'cohort' | 'lab' | 'staff' | 'post' | 'slot';
     id: string;
     name: string;
     lang: Lang;
@@ -30,6 +30,7 @@
     cohort: 'deleteCohortSure',
     staff: 'deleteStaffSure',
     post: 'deletePostSure',
+    slot: 'deleteSlotSure',
   } as const;
   type Why = 'busy' | 'refused' | 'failed';
   /** NOT_EMPTY: has students or cohorts. INVALID_REQUEST on staff: yourself, or already gone. */
@@ -40,9 +41,14 @@
 
   function send(): Promise<{ ok: boolean; error?: string }> | undefined {
     const api = staffState.auth?.api;
-    if (kind === 'lab') return api?.deleteLab({ id });
-    if (kind === 'post') return api?.deletePost({ id });
-    return kind === 'cohort' ? api?.deleteCohort({ id }) : api?.deleteStaff({ id });
+    const calls = {
+      lab: api?.deleteLab,
+      cohort: api?.deleteCohort,
+      staff: api?.deleteStaff,
+      post: api?.deletePost,
+      slot: api?.deleteSlot,
+    };
+    return calls[kind]?.({ id });
   }
 
   async function confirm(): Promise<void> {

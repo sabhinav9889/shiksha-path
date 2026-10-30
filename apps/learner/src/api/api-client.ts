@@ -10,9 +10,16 @@ import {
   recordingStartResponse,
   session,
   deletedCheckResponse,
+  bookedResponse,
+  cancelledResponse,
+  myBookingsResponse,
+  openSlotsResponse,
   feedResponse,
   type ApiError,
+  type BookRequest,
   type Branding,
+  type MyBookingsResponse,
+  type OpenSlotsResponse,
   type FeedResponse,
   type LinkRequest,
   type LinkResponse,
@@ -36,6 +43,11 @@ export interface ApiClient {
   me(): Promise<ApiResult<MeResponse>>;
   /** The student's own email, cohort and mentors. */
   profile(): Promise<ApiResult<ProfileResponse>>;
+  /** One-to-one slots (spec §10.1): the open ones, book, my bookings, cancel. */
+  openSlots(): Promise<ApiResult<OpenSlotsResponse>>;
+  bookSlot(body: BookRequest): Promise<ApiResult<{ id: string }>>;
+  myBookings(): Promise<ApiResult<MyBookingsResponse>>;
+  cancelBooking(body: { id: string }): Promise<ApiResult<{ ok: true }>>;
   /** The community posts this learner may read (spec §10.2). */
   feed(): Promise<ApiResult<FeedResponse>>;
   startRecording(body: RecordingStart): Promise<ApiResult<RecordingStartResponse>>;
@@ -152,6 +164,10 @@ export function createApiClient(deps: ClientDeps): ApiClient {
     me: () => call('/v1/me', meResponse),
     profile: () => call('/v1/me/profile', profileResponse),
     feed: () => call('/v1/community/feed', feedResponse),
+    openSlots: () => call('/v1/booking/slots', openSlotsResponse),
+    bookSlot: (body) => call('/v1/booking/book', bookedResponse, body),
+    myBookings: () => call('/v1/booking/mine', myBookingsResponse),
+    cancelBooking: (body) => call('/v1/booking/cancel', cancelledResponse, body),
     startRecording: (body) => call('/v1/recordings/start', recordingStartResponse, body),
     completeRecording: (body) => call('/v1/recordings/complete', recordingCompleteResponse, body),
     codeSignIn: (body) => call('/v1/auth/code', session, body, false),

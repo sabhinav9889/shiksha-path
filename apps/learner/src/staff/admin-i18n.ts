@@ -60,6 +60,10 @@ const STRINGS = {
     hi: 'हटाया नहीं जा सका। आप खुद को नहीं हटा सकते।',
     en: 'Could not delete. You cannot delete yourself.',
   },
+  deleteSlotSure: {
+    hi: 'यह स्लॉट हटाएँ? बुक हो चुका हो तो वह भी रद्द हो जाएगा।',
+    en: 'Delete this slot? A booking on it is cancelled too.',
+  },
   deletePostSure: {
     hi: 'यह पोस्ट हटाएँ? छात्र इसे नहीं देख पाएँगे।',
     en: 'Delete this post? Students will no longer see it.',
@@ -139,6 +143,8 @@ const ACTIONS: Record<string, Words> = {
   staff_invited: { hi: 'स्टाफ़ बुलाया', en: 'Invited staff' },
   staff_changed: { hi: 'स्टाफ़ बदला', en: 'Changed staff' },
   staff_deleted: { hi: 'स्टाफ़ हटाया', en: 'Deleted staff' },
+  slot_published: { hi: 'स्लॉट जोड़ा', en: 'Published a slot' },
+  slot_removed: { hi: 'स्लॉट हटाया', en: 'Removed a slot' },
   post_created: { hi: 'पोस्ट बनाई', en: 'Created a post' },
   post_edited: { hi: 'पोस्ट बदली', en: 'Edited a post' },
   post_deleted: { hi: 'पोस्ट हटाई', en: 'Deleted a post' },

@@ -48,7 +48,7 @@
   onMount(startRouter);
 
   const showNav = $derived(
-    appState.profile !== null && ['home', 'lessons', 'me', 'community'].includes(route.name),
+    appState.profile !== null && ['home', 'lessons', 'me', 'community', 'mentors'].includes(route.name),
   );
 </script>
 
@@ -76,6 +76,10 @@
       <!-- A lazy chunk: the first load stays inside its size budget. -->
       {#await import('./community/CommunityScreen.svelte') then community}
         <community.default />
+      {/await}
+    {:else if route.name === 'mentors'}
+      {#await import('./booking/MentorsScreen.svelte') then mentors}
+        <mentors.default />
       {/await}
     {:else if route.name === 'auth-callback'}
       <AuthCallback />

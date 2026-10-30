@@ -33,6 +33,12 @@
 
 <section class="community">
   <h1>{cs('title', lang)}</h1>
+  {#if appState.switches.mentor_booking}
+    <a class="talk" href="#/mentors">
+      <strong>{cs('talk', lang)}</strong>
+      <span>{cs('talkSub', lang)}</span>
+    </a>
+  {/if}
   {#if posts === null}
     <p>{cs('loading', lang)}</p>
   {:else}
@@ -162,5 +168,22 @@
     color: #fff;
     font-weight: 600;
     text-decoration: none;
+  }
+
+  .talk {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    padding: 12px 16px;
+    border: 1px solid var(--color-primary);
+    background: var(--color-primary-soft);
+    color: var(--color-ink);
+  }
+
+  .talk span {
+    color: var(--color-muted);
+    font-size: 13px;
+    font-weight: 400;
   }
 </style>

@@ -17,5 +17,6 @@ export function pageLabel(route: Route, role: 'mentor' | 'admin' | undefined): S
   if (route.name !== 'staff') return null;
   if (route.view === 'admin') return role === 'admin' ? ADMIN_LABELS[route.section] : 'cohorts';
   if (route.view === 'posts') return 'posts';
+  if (route.view === 'slots') return 'slots';
   return route.view === 'recordings' ? 'recordings' : 'cohorts'; // also one cohort or a student
 }

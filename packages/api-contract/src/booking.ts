@@ -27,6 +27,10 @@ export const bookRequest = z.strictObject({
 });
 export type BookRequest = z.input<typeof bookRequest>;
 
+/** What a booking or a cancel answers with. */
+export const bookedResponse = z.object({ id: z.uuid() });
+export const cancelledResponse = z.object({ ok: z.literal(true) });
+
 export const cancelBookingRequest = z.strictObject({ id: z.uuid() });
 
 export const myBooking = z.object({
