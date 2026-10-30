@@ -69,7 +69,7 @@ change. Coverage is about ninety percent."
 
 ## 4:30 to 4:50: honest limits and what next
 
-"What is not done. There are twenty-two lessons, drafted by AI and approved by me, not yet by a
+"What is not done. There are twenty-three lessons, drafted by AI and approved by me, not yet by a
 mentor panel. I have not tested on the cheapest phones or with real students. The AI doubt solver,
 meetings and the org-wide dashboard are written as plans, not built; the community page has no
 file attachments yet. After the hackathon,
