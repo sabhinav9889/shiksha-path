@@ -27,6 +27,17 @@ function generator(seed: string): () => number {
 
 /* eslint-enable no-magic-numbers -- end of the mulberry32 constants */
 
+/** A repeatable shuffle of any list (same seed, same order). The original is not changed. */
+export function shuffleItems<T>(items: readonly T[], seed: string): T[] {
+  const next = generator(seed);
+  const out = [...items];
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(next() * (i + 1));
+    [out[i], out[j]] = [out[j] as T, out[i] as T];
+  }
+  return out;
+}
+
 /**
  * A repeatable shuffle (same seed, same order) that never hands back the original order when at
  * least two words differ, so a word-order exercise is never already solved.

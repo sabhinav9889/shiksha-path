@@ -1,14 +1,17 @@
 <script lang="ts">
+  import { shuffleItems } from '@shiksha/learner-core';
   import AudioButton from '../../learn/AudioButton.svelte';
   import { t } from '../../../i18n/index.js';
   import type { ItemOf, ViewProps } from './types.js';
 
   const LETTERS = 'ABCDEF';
 
-  let { item, lang, storage, locked, onanswer }: ViewProps<
+  let { item, lang, storage, seed, locked, onanswer }: ViewProps<
     ItemOf<'mcq_meaning' | 'listen_choose' | 'aptitude'>
   > = $props();
 
+  /** Authors often list the right answer first, so the order is shuffled for each question. */
+  const options = $derived(shuffleItems(item.options, seed));
   let picked = $state<string | null>(null);
 
   function pick(optionId: string): void {
@@ -24,7 +27,7 @@
     <AudioButton {storage} path={item.audio} label={t('practice.listen', lang)} />
   {/if}
   <div class="options">
-    {#each item.options as option, index (option.id)}
+    {#each options as option, index (option.id)}
       <button
         type="button"
         class:picked={picked === option.id}
