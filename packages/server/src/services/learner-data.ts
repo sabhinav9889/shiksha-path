@@ -1,3 +1,4 @@
+import type { ExportedBooking } from '../ports-booking.js';
 import type { LearnerEvent } from '@shiksha/learner-core';
 import type {
   AttendanceRepo,
@@ -39,6 +40,7 @@ export interface LearnerExport {
   overrides: Record<string, boolean>;
   attendance: { date: string; present: boolean }[];
   recordings: Omit<RecordingRow, 'learnerId'>[];
+  bookings: ExportedBooking[];
 }
 
 export async function exportLearner(
@@ -56,7 +58,7 @@ export async function exportLearner(
     const bytes = await deps.storage.read(recordingPath(learnerId, row.id));
     if (bytes) recordings.push({ id: row.id, mime: row.mime, bytes });
   }
-  const { learner, events, overrides } = rows;
+  const { learner, events, overrides, bookings } = rows;
   const listed = recordingRows.map((row) => {
     const copy: Partial<RecordingRow> = { ...row };
     delete copy.learnerId; // the export is about this learner already
@@ -64,7 +66,7 @@ export async function exportLearner(
   });
   const attendance = await deps.attendance.forLearner(learnerId, EVERY_DAY);
   return {
-    data: { learner, identities, events, overrides, attendance, recordings: listed },
+    data: { learner, identities, events, overrides, attendance, recordings: listed, bookings },
     recordings,
   };
 }

@@ -1,3 +1,4 @@
+import type { ExportedBooking } from './ports-booking.js';
 import type { Branding, BrandingInput, Session } from '@shiksha/api-contract';
 import type { LearnerEvent } from '@shiksha/learner-core';
 import type { Summary } from './services/summary.js';
@@ -108,6 +109,7 @@ export interface LearnerRows {
   authUserIds: string[];
   events: LearnerEvent[];
   overrides: Record<string, boolean>;
+  bookings: ExportedBooking[];
 }
 
 export interface LearnerDataRepo {

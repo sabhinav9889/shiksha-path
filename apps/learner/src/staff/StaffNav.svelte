@@ -15,6 +15,7 @@
     { route: { name: 'staff', view: 'cohorts' }, label: 'cohorts' },
     { route: { name: 'staff', view: 'recordings' }, label: 'recordings' },
     { route: { name: 'staff', view: 'posts' }, label: 'posts' },
+    { route: { name: 'staff', view: 'slots' }, label: 'slots' },
     ...(me.role === 'admin'
       ? ([
           { route: { name: 'staff', view: 'admin', section: 'setup' }, label: 'adminSetup' },

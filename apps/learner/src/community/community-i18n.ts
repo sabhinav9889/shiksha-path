@@ -18,6 +18,8 @@ const STRINGS = {
   live: { hi: 'अभी चल रहा है', en: 'On now' },
   over: { hi: 'हो चुका', en: 'Over' },
   upcoming: { hi: 'आने वाला', en: 'Coming up' },
+  talk: { hi: 'मेंटर से बात करें', en: 'Talk to a mentor' },
+  talkSub: { hi: '1-से-1 समय बुक करें', en: 'Book a one-to-one time' },
   join: { hi: 'जुड़ें', en: 'Join' },
 } satisfies Record<string, Record<Lang, string>>;
 

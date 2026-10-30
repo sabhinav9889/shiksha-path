@@ -13,12 +13,13 @@ import {
   reviewResponse,
   staffCohorts,
   staffPostsResponse,
+  staffSlotsResponse,
   staffMe,
   studentDetail,
   studentsPage,
   unreviewedRecordings,
 } from '@shiksha/api-contract/staff';
-import type { PostRequest } from '@shiksha/api-contract/staff';
+import type { PostRequest, SlotRequest } from '@shiksha/api-contract/staff';
 import { makeCaller, type Call, type ClientDeps } from '../api/api-client.js';
 
 const query = (params: Record<string, string | boolean | undefined>): string => {
@@ -36,14 +37,18 @@ function deleteMethods(call: Call) {
     deleteCohort: remove('/v1/staff/admin/cohort/delete'),
     deleteStaff: remove('/v1/staff/admin/staff/delete'),
     deletePost: remove('/v1/staff/community/delete'),
+    deleteSlot: remove('/v1/staff/booking/slot/remove'),
   };
 }
 
-/** Community posts: list, write or change, and delete (spec §10.2). */
+/** Community posts (spec §10.2) and one-to-one slots (spec §10.1): list and write. */
 function postMethods(call: Call) {
   return {
     posts: () => call('/v1/staff/community/posts', staffPostsResponse),
     savePost: (body: PostRequest) => call('/v1/staff/community/post', idResponse, body),
+    // One-to-one slots: list with who booked, and publish (spec §10.1).
+    slots: () => call('/v1/staff/booking/slots', staffSlotsResponse),
+    publishSlot: (body: SlotRequest) => call('/v1/staff/booking/slot', idResponse, body),
   };
 }
 

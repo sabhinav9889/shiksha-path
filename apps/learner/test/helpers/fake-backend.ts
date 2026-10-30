@@ -2,7 +2,11 @@ import {
   checkDeleted,
   completeRecording,
   getBranding,
+  bookSlot,
+  cancelBooking,
   getFeed,
+  listOpenSlots,
+  myBookings,
   getProfile,
   getMe,
   linkLearner,
@@ -110,6 +114,14 @@ export function makeFakeBackend(): FakeBackend {
       pull: ({ after }) => as((auth) => pullEvents(repos, auth, { after, limit: 500 })),
       me: () => as((auth) => getMe(repos, auth)),
       feed: () => as((auth) => getFeed(repos, auth)),
+      openSlots: () => as((auth) => listOpenSlots(repos, auth)),
+      bookSlot: (body) => as((auth) => bookSlot(repos, auth, body)),
+      myBookings: () => as((auth) => myBookings(repos, auth)),
+      cancelBooking: (body) =>
+        as(async (auth) => {
+          await cancelBooking(repos, auth, body);
+          return { ok: true as const };
+        }),
       profile: () =>
         as((auth) => getProfile(repos, { authUserId: auth, provider: 'google', email: auth })),
       startRecording: (body) => as((auth) => startRecording(repos, auth, body)),

@@ -21,6 +21,7 @@ const STRINGS = {
   cohorts: { hi: 'समूह', en: 'Cohorts' },
   recordings: { hi: 'रिकॉर्डिंग', en: 'Recordings' },
   posts: { hi: 'पोस्ट', en: 'Posts' },
+  slots: { hi: 'मुलाक़ात के समय', en: 'Meeting slots' },
   adminSetup: { hi: 'सेटअप', en: 'Setup' },
   adminStudents: { hi: 'छात्र', en: 'Students' },
   adminSwitches: { hi: 'फ़ीचर', en: 'Features' },

@@ -15,3 +15,4 @@ so and links it; the old file is marked `superseded`.
 | [Backup codes, recordings, deletion and backups](backend-2026-10-22-codes-recordings-backups.md) | decided |
 | [Mentors and admins: roles, scope and the audit log](backend-2026-10-23-staff.md)                | decided |
 | [Community posts: Plan 6b built in a reduced form](backend-2026-10-30-community-posts.md)        | decided |
+| [One-to-one slot booking: Plan 6a built in a reduced form](backend-2026-10-30-slot-booking.md)   | decided |

@@ -343,6 +343,100 @@ describe('staff see only what their role allows (2 mentors, 2 cohorts)', () => {
     });
   });
 
+  test('slots and bookings: 2 mentors, 2 cohorts, 2 students, an admin', async () => {
+    const mentorA = await mentorOf(a.cohortId);
+    const mentorB = await mentorOf(b.cohortId);
+    const admin = await mentorOf(a.cohortId, 'admin');
+    const staffId = async (authId: string): Promise<string> => {
+      const [row] = await sql<
+        { id: string }[]
+      >`select id from staff where auth_user_id = ${authId}`;
+      return row?.id ?? '';
+    };
+    const slot = async (mentor: string, link: string): Promise<string> => {
+      const [row] = await sql<{ id: string }[]>`
+        insert into mentor_slots (mentor_id, starts_at, minutes, link)
+        values (${await staffId(mentor)}, now() + interval '3 days', 30, ${link}) returning id`;
+      return row?.id ?? '';
+    };
+    const slotA = await slot(mentorA, 'https://meet.example/a');
+    const slotB = await slot(mentorB, 'https://meet.example/b');
+    for (const [learner, slotId] of [
+      [a, slotA],
+      [b, slotB],
+    ] as const) {
+      await sql`insert into bookings (slot_id, learner_id, topic, note, link)
+                values (${slotId}, ${learner.id}, 'career', 'my note', 'https://meet.example/x')`;
+    }
+    const links = (authId: string) =>
+      asUser(sql, authId, async (tx) =>
+        (await tx<{ link: string }[]>`select link from mentor_slots`).map((r) => r.link),
+      );
+    expect(await links(mentorA)).toEqual(['https://meet.example/a']);
+    expect(await links(mentorB)).toEqual(['https://meet.example/b']);
+    expect((await links(admin)).sort()).toEqual([
+      'https://meet.example/a',
+      'https://meet.example/b',
+    ]);
+    // A student reads no slot row (it holds the mentor's link), and only their own booking.
+    expect(await links(a.authId)).toEqual([]);
+    await asUser(sql, a.authId, async (tx) => {
+      const mine = await tx<{ learner_id: string }[]>`select learner_id from bookings`;
+      expect(mine.map((r) => r.learner_id)).toEqual([a.id]);
+    });
+    await asUser(sql, mentorA, async (tx) => {
+      const seen = await tx<{ learner_id: string }[]>`select learner_id from bookings`;
+      expect(seen.map((r) => r.learner_id)).toEqual([a.id]);
+    });
+    await asUser(sql, admin, async (tx) => {
+      expect(await tx`select 1 from bookings where learner_id in (${a.id}, ${b.id})`).toHaveLength(
+        2,
+      );
+    });
+    // A second mentor of the same cohort does not read this booking: not their slot.
+    const sibling = await mentorOf(a.cohortId);
+    await asUser(sql, sibling, async (tx) => {
+      expect(await tx`select 1 from bookings`).toHaveLength(0);
+      expect(await tx`select 1 from mentor_slots`).toHaveLength(0);
+    });
+    // The mentor still reads the booking after the student moves to another cohort.
+    await sql`update learners set cohort_id = ${b.cohortId} where id = ${a.id}`;
+    await asUser(sql, mentorA, async (tx) => {
+      expect(await tx`select 1 from bookings where learner_id = ${a.id}`).toHaveLength(1);
+    });
+    await sql`update learners set deactivated_at = now() where id = ${a.id}`;
+    await asUser(sql, a.authId, async (tx) => {
+      expect(await tx`select 1 from bookings`).toHaveLength(0); // a paused student reads nothing
+    });
+    await expect(asAnon(sql, (tx) => tx`select 1 from bookings`)).rejects.toThrow();
+    for (const authId of [a.authId, mentorA, admin]) {
+      await expect(
+        asUser(sql, authId, (tx) => tx`update mentor_slots set minutes = 15`),
+      ).rejects.toThrow();
+      await expect(asUser(sql, authId, (tx) => tx`delete from bookings`)).rejects.toThrow();
+      await expect(
+        asUser(
+          sql,
+          authId,
+          (tx) =>
+            tx`insert into bookings (slot_id, learner_id, topic) values (${slotA}, ${a.id}, 'doubt')`,
+        ),
+      ).rejects.toThrow();
+    }
+    // The database allows one live booking per slot, and a second after a cancel.
+    await expect(
+      sql`insert into bookings (slot_id, learner_id, topic) values (${slotA}, ${b.id}, 'doubt')`,
+    ).rejects.toThrow(/bookings_one_live_per_slot/);
+    await sql`update bookings set status = 'cancelled' where slot_id = ${slotA}`;
+    await sql`insert into bookings (slot_id, learner_id, topic) values (${slotA}, ${b.id}, 'doubt')`;
+    // A removed mentor takes their slots and bookings; a deleted cohort leaves slots alone.
+    await sql`delete from staff where auth_user_id = ${mentorA}`;
+    expect(await sql`select 1 from mentor_slots where id = ${slotA}`).toHaveLength(0);
+    expect(await sql`select 1 from bookings where slot_id = ${slotA}`).toHaveLength(0);
+    await sql`delete from bookings where learner_id = ${b.id}`;
+    await sql`delete from mentor_slots where id = ${slotB}`;
+  });
+
   test('an inactive mentor reads nothing', async () => {
     const mentorA = await mentorOf(a.cohortId);
     await sql`update staff set active = false where auth_user_id = ${mentorA}`;

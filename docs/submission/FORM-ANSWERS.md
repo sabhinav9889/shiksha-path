@@ -24,7 +24,7 @@ no network: a placement test, practice with immediate feedback, speaking recordi
 progress backed up when they are online, and a community page of posts and sessions from their
 mentors, kept on the phone. Profiles are protected by a PIN because phones are shared,
 and a student without a Google account joins with a backup code. Mentors see their own cohorts and
-who needs attention, post to their cohorts, listen to recordings, create backup codes, change levels and mark attendance.
+who needs attention, post to their cohorts, publish one-to-one slots, listen to recordings, create backup codes, change levels and mark attendance.
 Admins set up labs, cohorts and mentors (and delete empty ones, or remove a mentor), manage and pause students, switch features on or off,
 change the branding (blocked if the text would be hard to read), delete a student's data on
 request, and read an audit log. The app has 27 lessons (14 English, 8 aptitude, 5 tech basics). It is built to
@@ -76,9 +76,10 @@ Details and the honest limits are in [QA-APPROACH.md](QA-APPROACH.md).
 - 27 lessons, drafted by AI and approved by the developer, not yet by a mentor panel; the pilot
   needs more.
 - Not yet tested on the cheapest target phones or with real students.
-- AI doubt solver, meetings and the org-wide admin dashboard are written as plans and not built.
-  The community feed is built in a reduced form: text posts and session details, no attachments or
-  calendar button.
+- AI doubt solver and the org-wide admin dashboard are written as plans and not built. The
+  community feed is built in a reduced form: text posts and session details, no attachments or
+  calendar button. One-to-one slot booking is built in a reduced form: mentors publish slots and
+  students book them, with no Google Calendar or Meet link made for them (mentors paste their own).
 - The nightly encrypted backup and the Google Workspace features need the owner's own accounts and
   keys and are not part of the demo.
 

@@ -33,6 +33,9 @@ describe('error bodies', () => {
       'NOT_STAFF',
       'DEACTIVATED',
       'NOT_EMPTY',
+      'SLOT_TAKEN',
+      'BOOKING_LIMIT',
+      'TOO_LATE',
     ]);
     expect(ok(errorBody, { error: 'FORBIDDEN' })).toBe(true);
     expect(ok(errorBody, { error: 'NOPE' })).toBe(false);

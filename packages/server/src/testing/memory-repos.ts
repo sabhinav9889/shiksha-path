@@ -14,6 +14,7 @@ import { memoryAuth, memoryCodeRepo } from './memory-auth.js';
 import { memoryAudit } from './memory-audit.js';
 import { memorySummaries } from './memory-summaries.js';
 import { memoryBranding } from './memory-branding.js';
+import { memoryBooking } from './memory-booking.js';
 import { memoryPosts } from './memory-posts.js';
 import { memoryOrg, memoryStaff } from './memory-staff.js';
 import { memoryLearnerData } from './memory-learner-data.js';
@@ -64,6 +65,7 @@ export function makeMemoryRepos(): MemoryRepos {
     },
   };
 
+  const bookingRepo = memoryBooking(staff, learnerRepo);
   const lastReceived = new Map<string, string>(); // learner -> when the server last got an event
   const eventRepo: EventRepo = {
     insertMany: (learnerId, batch) => {
@@ -108,7 +110,13 @@ export function makeMemoryRepos(): MemoryRepos {
   const repos: MemoryRepos = {
     identities,
     learnerRows: learners,
-    data: memoryLearnerData({ learners, identities, eventRepo, overrides }),
+    data: memoryLearnerData({
+      learners,
+      identities,
+      eventRepo,
+      overrides,
+      bookings: () => bookingRepo,
+    }),
     learners: learnerRepo,
     events: eventRepo,
     switches: switchRepo,
@@ -117,6 +125,7 @@ export function makeMemoryRepos(): MemoryRepos {
     branding: memoryBranding(),
     staff,
     posts: memoryPosts(staff),
+    bookings: bookingRepo,
     audit: memoryAudit(),
     summaries: memorySummaries(eventRepo),
     org: memoryOrg(learners, lastReceived),

@@ -4,7 +4,7 @@ import type { FeedPost } from '@shiksha/api-contract';
 import { render, screen, within } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { makeEnv, type TestEnv } from '../../test/helpers/installed-runtime.js';
-import { appState, initApp, signIn, signOut } from '../app-state.svelte.js';
+import { appState, initApp, reloadSwitches, signIn, signOut } from '../app-state.svelte.js';
 import type { ApiClient, ApiResult } from '../api/api-client.js';
 import CommunityScreen from './CommunityScreen.svelte';
 import { loadFeedCache, refreshFeed } from './feed-cache.js';
@@ -123,5 +123,21 @@ describe('the student community screen', () => {
     await vi.waitFor(() => screen.getByText('अभी यह सुविधा बंद है।'));
     expect(screen.queryByText('छिपी')).toBeNull();
     expect(await loadFeedCache(env.runtime, id)).toBeNull();
+  });
+
+  test('links to Talk to a mentor while booking is on, and not when it is off', async () => {
+    await open([]);
+    const link = await vi.waitFor(() => screen.getByRole('link', { name: /मेंटर से बात करें/ }));
+    expect(link.getAttribute('href')).toBe('#/mentors');
+  });
+
+  test('has no Talk to a mentor link when booking is switched off', async () => {
+    // The switch as the phone keeps it, read the way the app reads it.
+    await env.runtime.events.setMeta(`switches:${id}`, JSON.stringify({ mentor_booking: false }));
+    await reloadSwitches();
+    expect(appState.switches.mentor_booking).toBe(false);
+    await open([]);
+    await vi.waitFor(() => screen.getByText('अभी कोई पोस्ट नहीं'));
+    expect(screen.queryByRole('link', { name: /मेंटर से बात करें/ })).toBeNull();
   });
 });

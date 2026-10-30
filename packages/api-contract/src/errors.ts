@@ -15,6 +15,9 @@ export const API_ERRORS = [
   'NOT_STAFF',
   'DEACTIVATED',
   'NOT_EMPTY',
+  'SLOT_TAKEN',
+  'BOOKING_LIMIT',
+  'TOO_LATE',
 ] as const;
 export type ApiError = (typeof API_ERRORS)[number];
 

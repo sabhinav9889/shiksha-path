@@ -10,6 +10,7 @@
   import { pageLabel } from './page-label.js';
   import Cohorts from './screens/Cohorts.svelte';
   import Posts from './screens/Posts.svelte';
+  import Slots from './screens/Slots.svelte';
   import Recordings from './screens/Recordings.svelte';
   import Student from './screens/Student.svelte';
   import { staffState } from './staff-state.svelte.js';
@@ -41,6 +42,8 @@
     <Recordings {lang} />
   {:else if route.view === 'posts'}
     <Posts {lang} />
+  {:else if route.view === 'slots'}
+    <Slots {lang} />
   {:else if route.view === 'admin' && staffState.me?.role === 'admin'}
     {#key route.section}
       {@const Section = admin[route.section]}

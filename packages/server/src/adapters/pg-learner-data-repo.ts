@@ -1,9 +1,35 @@
+import type { ExportedBooking } from '../ports-booking.js';
 import type { LearnerEvent } from '@shiksha/learner-core';
 import type { LearnerDataRepo, LearnerRows } from '../ports.js';
 import type { Sql } from './pg.js';
 
 export class PgLearnerDataRepo implements LearnerDataRepo {
   constructor(private readonly sql: Sql) {}
+
+  /** Every booking of this learner, the note included, for their data export. */
+  private async bookingsFor(learnerId: string): Promise<ExportedBooking[]> {
+    const rows = await this.sql<
+      {
+        starts_at: Date;
+        minutes: number;
+        mentor_name: string | null;
+        topic: ExportedBooking['topic'];
+        note: string;
+        status: ExportedBooking['status'];
+      }[]
+    >`select s.starts_at, s.minutes, st.name as mentor_name, b.topic, b.note, b.status
+      from bookings b join mentor_slots s on s.id = b.slot_id
+        left join staff st on st.id = s.mentor_id
+      where b.learner_id = ${learnerId} order by s.starts_at, b.id`;
+    return rows.map((b) => ({
+      startsAt: b.starts_at.toISOString(),
+      minutes: b.minutes,
+      mentorName: b.mentor_name,
+      topic: b.topic,
+      note: b.note,
+      status: b.status,
+    }));
+  }
 
   async rows(learnerId: string): Promise<LearnerRows | null> {
     const [learner] = await this.sql<
@@ -25,6 +51,7 @@ export class PgLearnerDataRepo implements LearnerDataRepo {
       where learner_id = ${learnerId} order by seq`;
     const overrides = await this.sql<{ key: string; enabled: boolean }[]>`
       select key, enabled from feature_overrides where learner_id = ${learnerId}`;
+    const bookings = await this.bookingsFor(learnerId);
     return {
       learner: {
         id: learner.id,
@@ -36,6 +63,7 @@ export class PgLearnerDataRepo implements LearnerDataRepo {
       authUserIds: identities.map((r) => r.auth_user_id),
       events: events.map((e) => ({ ...e, at: new Date(e.at).toISOString() })),
       overrides: Object.fromEntries(overrides.map((o) => [o.key, o.enabled])),
+      bookings,
     };
   }
 

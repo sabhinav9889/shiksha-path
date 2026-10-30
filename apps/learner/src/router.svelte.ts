@@ -9,8 +9,9 @@ export type Route =
   | { name: 'placement-result' }
   | { name: 'me' }
   | { name: 'community' }
+  | { name: 'mentors' }
   | { name: 'auth-callback' }
-  | { name: 'staff'; view: 'cohorts' | 'recordings' | 'posts' }
+  | { name: 'staff'; view: 'cohorts' | 'recordings' | 'posts' | 'slots' }
   | { name: 'staff'; view: 'student'; id: string }
   | { name: 'staff'; view: 'cohort'; id: string }
   | { name: 'staff'; view: 'admin'; section: AdminSection };
@@ -18,7 +19,7 @@ export type Route =
 export const ADMIN_SECTIONS = ['setup', 'students', 'switches', 'branding', 'audit'] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
-const STAFF_PLAIN = ['recordings', 'posts'] as const;
+const STAFF_PLAIN = ['recordings', 'posts', 'slots'] as const;
 const STAFF_HOME: Route = { name: 'staff', view: 'cohorts' };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -47,6 +48,7 @@ const SIMPLE_ROUTES = [
   'placement-result',
   'me',
   'community',
+  'mentors',
   'auth-callback',
 ] as const;
 
@@ -70,6 +72,7 @@ function staffHref(route: Extract<Route, { name: 'staff' }>): string {
   if (route.view === 'cohort') return `#/staff/cohort/${route.id}`;
   if (route.view === 'admin') return `#/staff/admin/${route.section}`;
   if (route.view === 'posts') return '#/staff/posts';
+  if (route.view === 'slots') return '#/staff/slots';
   return route.view === 'recordings' ? '#/staff/recordings' : '#/staff';
 }
 
