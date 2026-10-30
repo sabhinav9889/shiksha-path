@@ -31,6 +31,7 @@ import { getBranding, setBranding } from '../services/branding.js';
 import { completeRecording, startRecording } from '../services/recordings.js';
 import { summarise } from '../services/summary.js';
 import type { MemoryRecordingStorage } from './memory-recording-storage.js';
+import type { BookingRepo } from '../ports-booking.js';
 import { ApiFailure } from '../services/failure.js';
 import { linkLearner } from '../services/link.js';
 import { getMe } from '../services/me.js';
@@ -54,6 +55,7 @@ export interface ServiceFixture {
   codes: CodeRepo;
   attendance: AttendanceRepo;
   posts: PostRepo;
+  bookings: BookingRepo;
   /** Makes, signs in and deletes the auth users behind backup codes. */
   auth: Auth & CodeAuth;
   pepper: string;

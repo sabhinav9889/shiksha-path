@@ -14,6 +14,7 @@ import { memoryAuth, memoryCodeRepo } from './memory-auth.js';
 import { memoryAudit } from './memory-audit.js';
 import { memorySummaries } from './memory-summaries.js';
 import { memoryBranding } from './memory-branding.js';
+import { memoryBooking } from './memory-booking.js';
 import { memoryPosts } from './memory-posts.js';
 import { memoryOrg, memoryStaff } from './memory-staff.js';
 import { memoryLearnerData } from './memory-learner-data.js';
@@ -117,6 +118,7 @@ export function makeMemoryRepos(): MemoryRepos {
     branding: memoryBranding(),
     staff,
     posts: memoryPosts(staff),
+    bookings: memoryBooking(staff, learnerRepo),
     audit: memoryAudit(),
     summaries: memorySummaries(eventRepo),
     org: memoryOrg(learners, lastReceived),
