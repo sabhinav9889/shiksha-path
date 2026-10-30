@@ -80,7 +80,9 @@ import { listCohorts, studentDetail } from '../services/staff-read.js';
 import { claimStaff, getStaffMe, staffCaller } from '../services/staff.js';
 import { pullEvents, pushEvents } from '../services/sync.js';
 import { clientKey } from './client-key.js';
+import type { BookingRepo } from '../ports-booking.js';
 import { ADMIN_ROUTES } from './admin-routes.js';
+import { BOOKING_ROUTES } from './booking-routes.js';
 import { COMMUNITY_ROUTES } from './community-routes.js';
 import { corsHeaders } from './cors.js';
 import { caller, jsonBody, parseWith, routePath } from './request.js';
@@ -94,6 +96,7 @@ export interface HandlerDeps {
   learners: LearnerRepo;
   attendance: AttendanceRepo;
   posts: PostRepo;
+  bookings: BookingRepo;
   audit: AuditRepo;
   summaries: SummaryRepo;
   staff: StaffRepo;
@@ -118,6 +121,7 @@ type Route = (request: Request, url: URL, deps: HandlerDeps) => Promise<unknown>
 const ROUTES: Record<string, Route> = {
   ...ADMIN_ROUTES,
   ...COMMUNITY_ROUTES,
+  ...BOOKING_ROUTES,
   'POST /v1/learners/link': async (request, _url, deps) => {
     const who = await caller(request, deps.auth);
     const body = parseWith(linkRequest, await jsonBody(request));

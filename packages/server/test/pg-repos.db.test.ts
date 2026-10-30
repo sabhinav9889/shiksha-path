@@ -26,6 +26,7 @@ import { createSql } from '../src/adapters/pg.js';
 import { describeServiceContract, type ServiceFixture } from '../src/testing/service-contract.js';
 import { describeAdminContract } from '../src/testing/admin-contract.js';
 import { describeCommunityContract } from '../src/testing/community-contract.js';
+import { describeBookingContract } from '../src/testing/booking-contract.js';
 import { describeBookingRepoContract } from '../src/testing/booking-repo-contract.js';
 import { describePostRepoContract } from '../src/testing/post-repo-contract.js';
 import { describeStaffContract } from '../src/testing/staff-contract.js';
@@ -124,6 +125,7 @@ describeStaffContract('Postgres repositories', makePgFixture);
 describeAdminContract('Postgres repositories', makePgFixture);
 describePostRepoContract('Postgres repositories', makePgFixture);
 describeBookingRepoContract('Postgres repositories', makePgFixture);
+describeBookingContract('Postgres repositories', makePgFixture);
 describeCommunityContract('Postgres repositories', makePgFixture);
 
 describe('Postgres specifics', () => {
