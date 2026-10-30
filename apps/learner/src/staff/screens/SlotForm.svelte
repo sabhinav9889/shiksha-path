@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Lang } from '../../i18n/index.js';
   import { bt } from '../booking-i18n.js';
-  import { fromLocalInput } from '../post-time.js';
+  import { fromLocalInput, toLocalInput } from '../post-time.js';
   import { st } from '../i18n.js';
   import { staffState } from '../staff-state.svelte.js';
 
@@ -16,8 +16,11 @@
   let startsAt = $state('');
   let minutes = $state(DEFAULT_MINUTES);
   let link = $state('');
-  let failed = $state(false);
+  let failed = $state<'time' | 'other' | null>(null);
   let busy = $state(false);
+
+  /** The earliest time the picker offers: now, on India time, to the minute. */
+  const earliest = toLocalInput(new Date().toISOString());
 
   async function submit(event: Event): Promise<void> {
     event.preventDefault();
@@ -30,7 +33,7 @@
     };
     const result = await staffState.auth?.api.publishSlot(body);
     busy = false;
-    failed = !result?.ok;
+    failed = result?.ok ? null : result?.error === 'INVALID_REQUEST' ? 'time' : 'other';
     if (failed) return;
     startsAt = '';
     link = '';
@@ -41,7 +44,7 @@
 <form onsubmit={submit}>
   <h2>{bt('newSlot', lang)}</h2>
   <p class="muted">{bt('hint', lang)}</p>
-  <label>{bt('startsAt', lang)} <input required type="datetime-local" bind:value={startsAt} /></label>
+  <label>{bt('startsAt', lang)} <input required type="datetime-local" min={earliest} bind:value={startsAt} /></label>
   <label>
     {bt('minutes', lang)}
     <select bind:value={minutes}>
@@ -55,5 +58,9 @@
   <div class="actions">
     <button type="submit" disabled={busy}>{bt('addSlot', lang)}</button>
   </div>
-  {#if failed}<p role="alert" class="alert">{st('failed', lang)}</p>{/if}
+  {#if failed === 'time'}
+    <p role="alert" class="alert">{bt('pastTime', lang)}</p>
+  {:else if failed}
+    <p role="alert" class="alert">{st('failed', lang)}</p>
+  {/if}
 </form>

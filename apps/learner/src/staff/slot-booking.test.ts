@@ -74,14 +74,24 @@ describe('the staff meeting slots screen', () => {
     await vi.waitFor(() => screen.getByText('खाली'));
   });
 
-  test('a time in the past, or an http link, is refused and nothing is saved', async () => {
+  test('a time that has just passed is refused with a clear message and nothing is saved', async () => {
     await openAs('meena@ngo.example');
     await fireEvent.input(await vi.waitFor(() => field('शुरू होने का समय')), {
-      target: { value: toLocalInput(inHours(-5).toISOString()) },
+      target: { value: toLocalInput(new Date().toISOString()) },
     });
     await fireEvent.click(button('स्लॉट जोड़ें'));
-    await vi.waitFor(() => screen.getByRole('alert'));
+    // It says what is wrong, not "check the internet".
+    await vi.waitFor(() => screen.getByText('आगे का समय चुनें। बीता हुआ समय नहीं चलेगा।'));
     expect(await slots()).toEqual([]);
+  });
+
+  test('the time field will not take a time that has passed', async () => {
+    await openAs('meena@ngo.example');
+    const input = await vi.waitFor(() => field('शुरू होने का समय'));
+    const min = input.getAttribute('min') ?? '';
+    expect(min).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d$/);
+    expect(new Date(`${min}:00+05:30`).getTime()).toBeLessThanOrEqual(Date.now() + 60_000);
+    expect(new Date(`${min}:00+05:30`).getTime()).toBeGreaterThan(Date.now() - 3_600_000);
   });
 
   test('a booked slot shows who booked and their note as plain text; another mentor’s slots are not shown', async () => {
