@@ -50,14 +50,18 @@ language sql stable security definer set search_path = public as $$
 $$;
 revoke execute on function public.can_read_slot(uuid) from anon;
 
--- A booking: its own student while not paused, staff who can see that student, and the mentor
--- who owns the slot (even if the student has since moved cohort).
+-- A booking: its own student while not paused, an active admin, and the mentor who owns the
+-- slot (even if the student has since moved cohort). Another mentor of the same cohort does not:
+-- the note is the student's own words to one mentor.
 create or replace function public.can_read_booking(slot uuid, learner uuid) returns boolean
 language sql stable security definer set search_path = public as $$
   select (
     learner = public.current_learner_id()
     and exists (select 1 from public.learners l where l.id = learner and l.deactivated_at is null)
-  ) or public.staff_can_see(learner) or exists (
+  ) or exists (
+    select 1 from public.staff s
+    where s.auth_user_id = auth.uid() and s.active and s.role = 'admin'
+  ) or exists (
     select 1 from public.staff s join public.mentor_slots ms on ms.mentor_id = s.id
     where s.auth_user_id = auth.uid() and s.active and ms.id = slot
   );

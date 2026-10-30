@@ -393,6 +393,12 @@ describe('staff see only what their role allows (2 mentors, 2 cohorts)', () => {
         2,
       );
     });
+    // A second mentor of the same cohort does not read this booking: not their slot.
+    const sibling = await mentorOf(a.cohortId);
+    await asUser(sql, sibling, async (tx) => {
+      expect(await tx`select 1 from bookings`).toHaveLength(0);
+      expect(await tx`select 1 from mentor_slots`).toHaveLength(0);
+    });
     // The mentor still reads the booking after the student moves to another cohort.
     await sql`update learners set cohort_id = ${b.cohortId} where id = ${a.id}`;
     await asUser(sql, mentorA, async (tx) => {

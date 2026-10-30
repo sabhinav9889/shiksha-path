@@ -63,6 +63,20 @@ export function describeBookingContract(name: string, make: () => Promise<Servic
       expect((await open(other)).map((s) => s.id)).not.toContain(slot);
     });
 
+    test('the window counts both ends: exactly 24 hours and exactly 14 days book; a minute outside does not', async () => {
+      const mentor = await w.staffMember('mentor', [w.cohortA]);
+      const other = await w.learnerIn(w.cohortA);
+      const edge = async (hours: number) => publish(mentor, hours);
+      expect((await book(w.learnerA, await edge(24))).id).toBeTruthy();
+      expect((await book(other, await edge(24 * 14))).id).toBeTruthy();
+      const justUnder = await publish(mentor, 24 - 1 / 60);
+      const justOver = await publish(mentor, 24 * 14 + 1 / 60);
+      expect(await codeOf(book(w.learnerB, justUnder))).toBe('FORBIDDEN'); // not B's cohort
+      const third = await w.learnerIn(w.cohortA);
+      expect(await codeOf(book(third, justUnder))).toBe('INVALID_REQUEST');
+      expect(await codeOf(book(third, justOver))).toBe('INVALID_REQUEST');
+    });
+
     test('no booking across cohorts, with a paused mentor, or for an unknown slot', async () => {
       const mentorA = await w.staffMember('mentor', [w.cohortA]);
       const mentorB = await w.staffMember('mentor', [w.cohortB]);

@@ -31,8 +31,8 @@ booking on the last day of the hackathon, so it is built small and without those
   in the student's data export, and removed when the student is deleted (the foreign key cascades).
   The staff audit entries (`slot_published`, `slot_removed`) hold ids and the length only.
 - **Row-level security:** a student reads only their own bookings, and not while paused; a mentor
-  reads their own slots and the bookings on them, even after the student moves cohort; an admin
-  reads all. Nobody writes through the database API.
+  reads their own slots and the bookings on them, even after the student moves cohort, but not
+  another mentor's, even in the same cohort; an admin reads all. Nobody writes through the database API.
 - **Who is removed when:** deleting a mentor removes their slots and the bookings on them; deleting
   a cohort leaves slots alone (a slot belongs to a mentor); a student who moves cohort no longer
   sees the old cohort's mentors' slots, but keeps a booking already made.

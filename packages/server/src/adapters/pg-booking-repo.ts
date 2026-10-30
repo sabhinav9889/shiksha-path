@@ -143,8 +143,9 @@ export class PgBookingRepo implements BookingRepo {
     return this.sql.begin(async (tx) => {
       // The learner row is the lock: one student's bookings are counted one at a time.
       await tx`select id from learners where id = ${input.learnerId} for update`;
+      // The share lock holds the slot until this commits, so a mentor removing it waits.
       const [slot] = await tx<{ link: string | null }[]>`
-        select link from mentor_slots where id = ${input.slotId}`;
+        select link from mentor_slots where id = ${input.slotId} for share`;
       if (!slot) return { result: 'missing' as const, id: null };
       const [live] = await tx`
         select 1 from bookings where slot_id = ${input.slotId} and status = 'booked'`;

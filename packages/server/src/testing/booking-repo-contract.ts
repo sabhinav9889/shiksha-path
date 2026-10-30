@@ -114,6 +114,17 @@ export function describeBookingRepoContract(
       expect((await book(ids[refused] ?? '', w.learnerA)).result).toBe('booked');
     });
 
+    test('a booking racing the mentor removing the slot ends cleanly, never as an error', async () => {
+      const mentor = await w.staffMember('mentor', [w.cohortA]);
+      for (let n = 0; n < 5; n += 1) {
+        const id = await slot(mentor.staffId, 30 + n);
+        const [result] = await Promise.all([book(id, w.learnerA), w.f.bookings.removeSlot(id)]);
+        expect(['booked', 'missing']).toContain(result.result);
+        expect(await w.f.bookings.getSlot(id)).toBeNull();
+        expect(await w.f.bookings.bookingsOf(w.learnerA, now, 20)).toEqual([]);
+      }
+    });
+
     test('a booking past its start does not count against the limit', async () => {
       const mentor = await w.staffMember('mentor', [w.cohortA]);
       const past = await slot(mentor.staffId, -5);
