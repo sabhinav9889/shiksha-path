@@ -14,6 +14,9 @@ const STATUS: Record<ApiError, number> = {
   NOT_STAFF: 403,
   DEACTIVATED: 403,
   NOT_EMPTY: 409,
+  SLOT_TAKEN: 409,
+  BOOKING_LIMIT: 409,
+  TOO_LATE: 409,
 };
 
 const HTTP_OK = 200;
