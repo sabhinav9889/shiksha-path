@@ -97,7 +97,7 @@ after this hackathon. It is not part of this submission.
 
 ## Limitations
 
-- **23 lessons** exist (14 English, 8 aptitude and 1 on computer and internet basics), roughly 45 to 50 minutes for a first-time learner (an estimate). The lesson text was drafted by AI and
+- **27 lessons** exist (14 English, 8 aptitude and 5 on computer and internet basics), roughly 45 to 50 minutes for a first-time learner (an estimate). The lesson text was drafted by AI and
   read and approved by the developer, a Hindi reader, but it has not been through a mentor review,
   which the pilot process requires. The pilot's full scope is larger.
 - Not yet tested on the cheapest target phones or with real students; no guardian consent process
