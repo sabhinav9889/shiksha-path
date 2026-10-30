@@ -16,13 +16,15 @@ function contentOrigin(contentBaseUrl: string): string | null {
  */
 export function contentSecurityPolicy(contentBaseUrl: string, apiUrls: string[] = []): string {
   const packs = contentOrigin(contentBaseUrl);
-  const hosts = [packs, ...apiUrls.map((url) => contentOrigin(url))].filter(Boolean);
+  const apiHosts = apiUrls.map((url) => contentOrigin(url)).filter(Boolean);
+  const hosts = [packs, ...apiHosts].filter(Boolean);
   return [
     "default-src 'self'",
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline'", // Svelte sets style attributes
     "img-src 'self' data: blob:",
-    "media-src 'self' blob:",
+    // A mentor plays a student's recording from a short-lived signed link on the API host.
+    ['media-src', "'self'", 'blob:', ...new Set(apiHosts)].join(' '),
     "font-src 'self'",
     ['connect-src', "'self'", ...new Set(hosts)].join(' '),
     "object-src 'none'",
