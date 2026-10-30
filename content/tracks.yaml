@@ -4,3 +4,6 @@
 - id: aptitude
   title: { hi: सोचने की ताक़त, en: Aptitude }
   order: 2
+- id: tech
+  title: { hi: टेक की बुनियाद, en: Tech basics }
+  order: 3

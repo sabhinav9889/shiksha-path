@@ -1,0 +1,58 @@
+review: approved
+pass_mark: 0.8
+items:
+  - id: t1
+    type: mcq_meaning
+    prompt: { hi: "कंप्यूटर की स्क्रीन को क्या कहते हैं?", en: "What is a computer's screen called?" }
+    options:
+      - { id: a, text: { hi: "मॉनिटर", en: "Monitor" }, correct: true }
+      - id: b
+        text: { hi: "कीबोर्ड", en: "Keyboard" }
+        why_wrong: { hi: "कीबोर्ड से टाइप करते हैं।", en: "You type with the keyboard." }
+      - id: c
+        text: { hi: "माउस", en: "Mouse" }
+        why_wrong: { hi: "माउस से क्लिक करते हैं।", en: "You click with the mouse." }
+  - id: t2
+    type: mcq_meaning
+    prompt: { hi: "वेबसाइट खोलने के लिए क्या चाहिए?", en: "What do you need to open a website?" }
+    options:
+      - { id: a, text: { hi: "ब्राउज़र और इंटरनेट", en: "A browser and the internet" }, correct: true }
+      - id: b
+        text: { hi: "सिर्फ़ चार्जर", en: "Only a charger" }
+        why_wrong: { hi: "चार्जर सिर्फ़ बैटरी भरता है।", en: "A charger only fills the battery." }
+      - id: c
+        text: { hi: "सिर्फ़ कीबोर्ड", en: "Only a keyboard" }
+        why_wrong: { hi: "कीबोर्ड अकेले वेबसाइट नहीं खोलता।", en: "A keyboard alone does not open a website." }
+  - id: t3
+    type: mcq_meaning
+    prompt: { hi: "OTP किसे बताना चाहिए?", en: "Who should you tell your OTP to?" }
+    options:
+      - { id: a, text: { hi: "किसी को नहीं", en: "Nobody" }, correct: true }
+      - id: b
+        text: { hi: "किसी भी अजनबी को", en: "Any stranger" }
+        why_wrong: { hi: "अजनबी इससे आपका पैसा या खाता ले सकता है।", en: "A stranger could use it to take your money or account." }
+      - id: c
+        text: { hi: "हर दोस्त को", en: "Every friend" }
+        why_wrong: { hi: "दोस्त को भी नहीं। OTP सिर्फ़ आपके लिए है।", en: "Not even a friend. An OTP is only for you." }
+  - id: t4
+    type: mcq_meaning
+    prompt: { hi: "ईमेल पते में कौन-सा चिह्न ज़रूर होता है?", en: "Which sign is always in an email address?" }
+    options:
+      - { id: a, text: { hi: "@", en: "@" }, correct: true }
+      - id: b
+        text: { hi: "#", en: "#" }
+        why_wrong: { hi: "# ईमेल पते में नहीं होता।", en: "An email address does not have #." }
+      - id: c
+        text: { hi: "%", en: "%" }
+        why_wrong: { hi: "% ईमेल पते में नहीं होता।", en: "An email address does not have %." }
+  - id: t5
+    type: mcq_meaning
+    prompt: { hi: "इंटरनेट से जुड़ने का एक तरीक़ा कौन-सा है?", en: "Which is one way to connect to the internet?" }
+    options:
+      - { id: a, text: { hi: "Wi-Fi", en: "Wi-Fi" }, correct: true }
+      - id: b
+        text: { hi: "पंखा", en: "A fan" }
+        why_wrong: { hi: "पंखे से इंटरनेट नहीं मिलता।", en: "A fan does not give you internet." }
+      - id: c
+        text: { hi: "पेन ड्राइव", en: "A pen drive" }
+        why_wrong: { hi: "पेन ड्राइव फ़ाइलें रखती है, इंटरनेट नहीं देती।", en: "A pen drive stores files. It does not give internet." }
