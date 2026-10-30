@@ -10,6 +10,10 @@ const STRINGS = {
   startsAt: { hi: 'शुरू होने का समय', en: 'Starts at' },
   minutes: { hi: 'कितने मिनट', en: 'Minutes' },
   joinLink: { hi: 'जुड़ने का लिंक (https://)', en: 'Link to join (https://)' },
+  pastTime: {
+    hi: 'आगे का समय चुनें। बीता हुआ समय नहीं चलेगा।',
+    en: 'Choose a time in the future. A time that has passed will not work.',
+  },
   addSlot: { hi: 'स्लॉट जोड़ें', en: 'Add slot' },
   noSlots: { hi: 'अभी कोई स्लॉट नहीं', en: 'No slots yet' },
   open: { hi: 'खाली', en: 'Open' },
