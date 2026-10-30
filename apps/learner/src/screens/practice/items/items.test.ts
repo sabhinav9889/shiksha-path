@@ -80,6 +80,41 @@ describe('ChoiceView', () => {
     expect(onanswer).toHaveBeenCalledWith({ kind: 'choice', optionId: 'b' });
   });
 
+  test('shuffles the options per question, so the right answer is not always first', async () => {
+    const four: Of<'mcq_meaning'> = {
+      ...mcq,
+      options: [
+        { id: 'a', text: L('सही', 'Right'), correct: true },
+        { id: 'b', text: L('एक', 'One'), why_wrong: L('गलत', 'Wrong') },
+        { id: 'c', text: L('दो', 'Two'), why_wrong: L('गलत', 'Wrong') },
+        { id: 'd', text: L('तीन', 'Three'), why_wrong: L('गलत', 'Wrong') },
+      ],
+    };
+    const positions = new Set<number>();
+    for (let n = 0; n < 24; n += 1) {
+      const { props: p } = props(four);
+      const { unmount } = render(ChoiceView, { ...p, seed: `q1-${n}` });
+      const texts = buttons().map((b) => b.querySelector('.text')?.textContent);
+      positions.add(texts.indexOf('सही'));
+      expect([...texts].sort()).toEqual(['एक', 'तीन', 'दो', 'सही'].sort());
+      unmount();
+    }
+    expect(positions.size).toBeGreaterThanOrEqual(3);
+  });
+
+  test('the same question looks the same each time, letters follow what is shown, and the answer is the tapped option', async () => {
+    const { props: p, onanswer } = props(mcq);
+    const first = render(ChoiceView, { ...p, seed: 'q1-3' });
+    const order = buttons().map((b) => b.textContent);
+    first.unmount();
+    render(ChoiceView, { ...p, seed: 'q1-3' });
+    expect(buttons().map((b) => b.textContent)).toEqual(order);
+    expect(buttons()[0]?.querySelector('.letter')?.textContent).toBe('A');
+    expect(buttons()[1]?.querySelector('.letter')?.textContent).toBe('B');
+    await fireEvent.click(screen.getByRole('button', { name: /छुट्टी/ }));
+    expect(onanswer).toHaveBeenCalledWith({ kind: 'choice', optionId: 'b' });
+  });
+
   test('a listening item shows a listen button when the audio is stored', async () => {
     const storage = new MemoryBundleStorage();
     await storage.putAudio(listen.audio, Uint8Array.of(1));
