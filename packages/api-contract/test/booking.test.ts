@@ -56,7 +56,14 @@ describe('what a phone and staff read', () => {
     expect(openSlotsResponse.safeParse({ slots: Array(51).fill(open) }).success).toBe(false);
     const mine = { ...open, topic: 'resume', link: null, status: 'booked' };
     expect(myBookingsResponse.safeParse({ bookings: [mine] }).success).toBe(true);
-    const staff = { id, startsAt: open.startsAt, minutes: 30, link: null, booking: null };
+    const staff = {
+      id,
+      mentorName: 'Meena',
+      startsAt: open.startsAt,
+      minutes: 30,
+      link: null,
+      booking: null,
+    };
     expect(staffSlotsResponse.safeParse({ slots: [staff] }).success).toBe(true);
   });
 
