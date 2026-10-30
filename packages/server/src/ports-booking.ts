@@ -37,6 +37,16 @@ export interface BookingRow {
   link: string | null;
 }
 
+/** A booking as a student's data export lists it, with the note and cancelled ones too. */
+export interface ExportedBooking {
+  startsAt: string;
+  minutes: number;
+  mentorName: string | null;
+  topic: BookingTopic;
+  note: string;
+  status: 'booked' | 'cancelled';
+}
+
 export type BookResult = 'booked' | 'taken' | 'limit' | 'missing';
 
 export interface BookingRepo {
@@ -73,6 +83,8 @@ export interface BookingRepo {
   /** A learner's own live bookings that have not ended, soonest first. */
   bookingsOf(learnerId: string, now: Date, limit: number): Promise<BookingRow[]>;
   getBooking(id: string, learnerId: string): Promise<BookingRow | null>;
+  /** Everything held about a learner's bookings, for their data export. */
+  exportFor(learnerId: string): Promise<ExportedBooking[]>;
   /** Cancel a learner's own live booking. False when there is none. */
   cancel(id: string, learnerId: string): Promise<boolean>;
 }

@@ -1,5 +1,6 @@
 import type {
   BookingRepo,
+  ExportedBooking,
   BookingRow,
   BookingTopic,
   OpenSlotRow,
@@ -185,6 +186,30 @@ export class PgBookingRepo implements BookingRepo {
       ${this.bookings()}
       where b.id = ${id} and b.learner_id = ${learnerId} and b.status = 'booked'`;
     return row ? toBooking(row) : null;
+  }
+
+  async exportFor(learnerId: string): Promise<ExportedBooking[]> {
+    const rows = await this.sql<
+      {
+        starts_at: Date;
+        minutes: number;
+        mentor_name: string | null;
+        topic: BookingTopic;
+        note: string;
+        status: 'booked' | 'cancelled';
+      }[]
+    >`select s.starts_at, s.minutes, st.name as mentor_name, b.topic, b.note, b.status
+      from bookings b join mentor_slots s on s.id = b.slot_id
+        left join staff st on st.id = s.mentor_id
+      where b.learner_id = ${learnerId} order by s.starts_at, b.id`;
+    return rows.map((r) => ({
+      startsAt: r.starts_at.toISOString(),
+      minutes: r.minutes,
+      mentorName: r.mentor_name,
+      topic: r.topic,
+      note: r.note,
+      status: r.status,
+    }));
   }
 
   async cancel(id: string, learnerId: string): Promise<boolean> {

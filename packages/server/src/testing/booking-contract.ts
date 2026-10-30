@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterEach, describe, expect, test } from 'vitest';
 import { listAudit } from '../services/audit.js';
+import { deleteLearner, exportLearner } from '../services/learner-data.js';
 import * as booking from '../services/booking.js';
 import type { ServiceFixture } from './service-contract.js';
 import { codeOf, staffWorld } from './staff-world.js';
@@ -129,6 +130,20 @@ export function describeBookingContract(name: string, make: () => Promise<Servic
       const again = await publish(mentorA, 31);
       await booking.removeSlot(w.f, boss, { id: again }); // an admin may remove any
       expect(await w.f.bookings.getSlot(again)).toBeNull();
+    });
+
+    test('a student’s export includes their bookings and notes, and deleting them removes the booking', async () => {
+      const mentor = await w.staffMember('mentor', [w.cohortA]);
+      const slot = await publish(mentor, 30);
+      await book(w.learnerA, slot, 'my private worry');
+      const out = await exportLearner(w.f, w.learnerA);
+      expect(out.data.bookings).toMatchObject([
+        { topic: 'career', note: 'my private worry', mentorName: 'mentor', status: 'booked' },
+      ]);
+      const other = await exportLearner(w.f, w.learnerB);
+      expect(other.data.bookings).toEqual([]);
+      await deleteLearner(w.f, w.learnerA);
+      expect(await w.f.bookings.getSlot(slot)).toMatchObject({ booking: null });
     });
 
     test('a slot cannot be published in the past', async () => {

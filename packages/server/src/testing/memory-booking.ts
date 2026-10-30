@@ -4,6 +4,7 @@ import type {
   BookingRepo,
   BookingRow,
   BookingTopic,
+  ExportedBooking,
   OpenSlotRow,
   SlotRow,
 } from '../ports-booking.js';
@@ -28,7 +29,10 @@ interface Booking {
 const MS_PER_MINUTE = 60_000;
 
 /** In-memory slots and bookings; staff and learners give the names, as the SQL joins do. */
-export function memoryBooking(staff: StaffRepo, learners: LearnerRepo): BookingRepo {
+export function memoryBooking(
+  staff: StaffRepo,
+  learners: LearnerRepo,
+): BookingRepo & { forgetLearner(learnerId: string): void } {
   const slots = new Map<string, Slot>();
   const bookings = new Map<string, Booking>();
   const live = (slotId: string): Booking | undefined =>
@@ -75,6 +79,10 @@ export function memoryBooking(staff: StaffRepo, learners: LearnerRepo): BookingR
     return found && found.learnerId === learnerId && found.status === 'booked' ? found : undefined;
   };
   return {
+    /** What the database does when a learner row goes: their bookings go with it. */
+    forgetLearner(learnerId) {
+      for (const [id, b] of bookings) if (b.learnerId === learnerId) bookings.delete(id);
+    },
     saveSlot({ mentorId, startsAt, minutes, link }) {
       const id = randomUUID();
       slots.set(id, { id, mentorId, startsAt, minutes, link });
@@ -143,6 +151,18 @@ export function memoryBooking(staff: StaffRepo, learners: LearnerRepo): BookingR
     getBooking: async (id, learnerId) => {
       const found = ownLive(id, learnerId);
       return found ? bookingRow(found) : null;
+    },
+    exportFor: async (learnerId) => {
+      const rows: ExportedBooking[] = [];
+      for (const b of bookings.values()) {
+        const slot = slots.get(b.slotId);
+        if (b.learnerId !== learnerId || !slot) continue;
+        const mentor = await staff.byId(slot.mentorId);
+        const { topic, note, status } = b;
+        const when = { startsAt: slot.startsAt.toISOString(), minutes: slot.minutes };
+        rows.push({ ...when, mentorName: mentor?.name ?? null, topic, note, status });
+      }
+      return rows.sort((a, c) => a.startsAt.localeCompare(c.startsAt));
     },
     cancel(id, learnerId) {
       const found = ownLive(id, learnerId);

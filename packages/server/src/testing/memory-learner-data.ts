@@ -1,4 +1,5 @@
 import type { LearnerEvent } from '@shiksha/learner-core';
+import type { BookingRepo } from '../ports-booking.js';
 import type { EventRepo, LearnerDataRepo, LearnerRow } from '../ports.js';
 
 interface State {
@@ -6,6 +7,7 @@ interface State {
   identities: Map<string, string>; // auth user -> learner
   eventRepo: EventRepo;
   overrides: Map<string, Map<string, boolean>>;
+  bookings: () => BookingRepo & { forgetLearner(learnerId: string): void };
 }
 
 const ALL = Number.MAX_SAFE_INTEGER;
@@ -35,9 +37,11 @@ export function memoryLearnerData(state: State): LearnerDataRepo {
           return copy as LearnerEvent;
         }),
         overrides: Object.fromEntries(state.overrides.get(learnerId) ?? []),
+        bookings: await state.bookings().exportFor(learnerId),
       };
     },
     async deleteWithTombstone(learnerId) {
+      state.bookings().forgetLearner(learnerId);
       const { events } = await state.eventRepo.page(learnerId, 0, ALL);
       state.learners.delete(learnerId);
       for (const auth of authOf(learnerId)) state.identities.delete(auth);
