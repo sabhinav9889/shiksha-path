@@ -6,6 +6,7 @@
   import type { StaffApi } from '../../staff-api.js';
   import { staffState } from '../../staff-state.svelte.js';
   import DeleteGroup from './DeleteGroup.svelte';
+  import EditGroup from './EditGroup.svelte';
 
   /** Each lab with its cohorts inside it, then the cohorts that have no lab; two small forms. */
   let {
@@ -17,6 +18,8 @@
   let labName = $state('');
   let cohortName = $state('');
   let cohortLab = $state('');
+  /** The id of the lab or cohort being edited: one editor at a time. */
+  let editing = $state<string | null>(null);
 
   const cohortsIn = (labId: string | null): AdminSetup['cohorts'] =>
     setup.cohorts.filter((c) => c.labId === labId);
@@ -47,6 +50,18 @@
   <li class="item">
     <strong>{c.name}</strong>
     <span class="actions">
+      <EditGroup
+        kind="cohort"
+        id={c.id}
+        name={c.name}
+        labId={c.labId}
+        labs={setup.labs}
+        {lang}
+        open={editing === c.id}
+        onopen={() => (editing = c.id)}
+        onclose={() => (editing = null)}
+        onsaved={reload}
+      />
       <DeleteGroup kind="cohort" id={c.id} name={c.name} {lang} ondeleted={reload} />
     </span>
   </li>
@@ -60,6 +75,17 @@
       <header>
         <strong>{lab.name}</strong>
         <span class="actions">
+          <EditGroup
+            kind="lab"
+            id={lab.id}
+            name={lab.name}
+            labs={setup.labs}
+            {lang}
+            open={editing === lab.id}
+            onopen={() => (editing = lab.id)}
+            onclose={() => (editing = null)}
+            onsaved={reload}
+          />
           <DeleteGroup kind="lab" id={lab.id} name={lab.name} {lang} ondeleted={reload} />
         </span>
       </header>

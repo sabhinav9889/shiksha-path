@@ -10,9 +10,11 @@ import type {
   SummaryRepo,
   SwitchRepo,
 } from '../ports.js';
+export { saveLab, saveCohort, deleteLab, deleteCohort } from './admin-groups.js';
 import { withAudit } from './audit.js';
 import { setBranding } from './branding.js';
 import { ApiFailure } from './failure.js';
+import { requireAdmin } from './require-admin.js';
 import { deleteLearner, type LearnerDataDeps } from './learner-data.js';
 import { inScope, type StaffCaller } from './staff.js';
 import { asOfToday, needsAttention, type Attention, type Summary } from './summary.js';
@@ -27,71 +29,7 @@ export interface AdminDeps extends LearnerDataDeps {
   audit: AuditRepo;
 }
 
-/** Everything in this file is for admins only (spec §8.1). */
-function requireAdmin(staff: StaffCaller): void {
-  if (staff.role !== 'admin') throw new ApiFailure('FORBIDDEN');
-}
-
 const PAGE = 50;
-
-export async function saveLab(
-  deps: AdminDeps,
-  staff: StaffCaller,
-  input: { id?: string | undefined; name: string },
-): Promise<string> {
-  requireAdmin(staff);
-  const record = { staff, action: 'lab_saved' as const, learnerId: null, details: {} };
-  const { id, name } = input;
-  return withAudit(deps, record, () => deps.org.saveLab(id ? { id, name } : { name }));
-}
-
-export async function saveCohort(
-  deps: AdminDeps,
-  staff: StaffCaller,
-  input: { id?: string | undefined; name: string; labId: string | null },
-): Promise<string> {
-  requireAdmin(staff);
-  const details = { labId: input.labId };
-  const record = { staff, action: 'cohort_saved' as const, learnerId: null, details };
-  const { id, ...rest } = input;
-  return withAudit(deps, record, () => deps.org.saveCohort(id ? { id, ...rest } : rest));
-}
-
-/** Delete an empty lab or cohort. The name goes in the log: the id alone means nothing after. */
-async function deleteGroup(
-  deps: AdminDeps,
-  staff: StaffCaller,
-  kind: 'lab' | 'cohort',
-  id: string,
-): Promise<void> {
-  requireAdmin(staff);
-  const found = kind === 'lab' ? await deps.org.labs() : await deps.org.cohorts('all');
-  const name = found.find((row) => row.id === id)?.name;
-  if (name === undefined) throw new ApiFailure('INVALID_REQUEST');
-  const record = {
-    staff,
-    action: `${kind}_deleted` as const,
-    learnerId: null,
-    details: { id, name },
-  };
-  await withAudit(deps, record, async () => {
-    const result = await (kind === 'lab' ? deps.org.deleteLab(id) : deps.org.deleteCohort(id));
-    if (result === 'not_empty') throw new ApiFailure('NOT_EMPTY');
-    if (result === 'missing') throw new ApiFailure('INVALID_REQUEST');
-  });
-}
-
-export const deleteLab = (
-  deps: AdminDeps,
-  staff: StaffCaller,
-  input: { id: string },
-): Promise<void> => deleteGroup(deps, staff, 'lab', input.id);
-
-export const deleteCohort = (
-  deps: AdminDeps,
-  staff: StaffCaller,
-  input: { id: string },
-): Promise<void> => deleteGroup(deps, staff, 'cohort', input.id);
 
 /** Invite or change a staff member. An email already used by someone else is refused. */
 export async function saveStaff(

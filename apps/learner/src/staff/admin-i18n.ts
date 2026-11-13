@@ -7,6 +7,8 @@ type Words = Record<Lang, string>;
 const STRINGS = {
   labs: { hi: 'लैब', en: 'Labs' },
   newLab: { hi: 'नई लैब का नाम', en: 'New lab name' },
+  labName: { hi: 'लैब का नाम', en: 'Lab name' },
+  cohortName: { hi: 'समूह का नाम', en: 'Cohort name' },
   addLab: { hi: 'लैब जोड़ें', en: 'Add lab' },
   lab: { hi: 'लैब', en: 'Lab' },
   noLab: { hi: 'कोई लैब नहीं', en: 'No lab' },

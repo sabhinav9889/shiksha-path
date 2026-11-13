@@ -170,3 +170,17 @@
   align-items: center;
   padding-top: 8px;
 }
+
+.setup .edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: flex-end;
+}
+
+.setup .edit label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}

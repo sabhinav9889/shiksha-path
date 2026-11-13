@@ -11,6 +11,7 @@ Active tasks. Read this at the start of every session. Details live in `.claude/
 | Community posts (Plan 6b, reduced)               | in-progress | Owner    | `feat/community-posts`               | Review, merge, apply the migration to the hosted database, redeploy the function | [decision](docs/decisions/backend-2026-10-30-community-posts.md)            |
 | One-to-one slot booking (Plan 6a, reduced)       | in-progress | Owner    | `feat/slot-booking`                  | Review, merge, apply the hosted migration, redeploy the function                 | [decision](docs/decisions/backend-2026-10-30-slot-booking.md)               |
 | Students see recordings and the mentor's comment | in-progress | Owner    | `feat/next-phase` (local, no remote) | Fresh review, then e2e; nothing is pushed until the new repo exists              | [decision](docs/decisions/app-2026-11-14-student-feedback-on-recordings.md) |
+| Edit labs and cohorts (rename, move)             | in-progress | Owner    | `feat/next-phase` (local, no remote) | Fresh review; nothing is pushed until the new repo exists                        | [decision](docs/decisions/backend-2026-11-14-edit-labs-and-cohorts.md)      |
 
 ## Backlog
 
