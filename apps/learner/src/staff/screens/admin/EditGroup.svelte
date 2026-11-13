@@ -36,7 +36,24 @@
   let draftLab = $state('');
   let busy = $state(false);
   let failed = $state(false);
+  let input = $state<HTMLInputElement>();
+  let editButton = $state<HTMLButtonElement>();
+  let focusButton = false; // set when a form closes, so the keyboard lands back on Edit
   const label = $derived(at('editLabel', lang, { name }));
+
+  /** Keyboard users keep their place: the name field on open, the Edit button after close. */
+  $effect(() => {
+    if (open) input?.focus();
+    else if (focusButton && editButton) {
+      focusButton = false;
+      editButton.focus();
+    }
+  });
+
+  function close(): void {
+    focusButton = true;
+    onclose();
+  }
 
   function start(): void {
     draft = name;
@@ -56,9 +73,8 @@
         : await api.saveCohort({ id, name: draft, labId: draftLab || null });
     busy = false;
     failed = !result.ok;
-    if (!result.ok) return;
-    onclose();
-    await onsaved();
+    if (result.ok) close();
+    await onsaved(); // after a failed save too: the list may be stale (deleted meanwhile)
   }
 </script>
 
@@ -66,7 +82,7 @@
   <form class="edit" aria-label={label} onsubmit={save}>
     <label>
       {at(kind === 'lab' ? 'labName' : 'cohortName', lang)}
-      <input required maxlength="80" bind:value={draft} />
+      <input required maxlength="80" bind:value={draft} bind:this={input} />
     </label>
     {#if kind === 'cohort'}
       <label>
@@ -78,13 +94,19 @@
       </label>
     {/if}
     <button type="submit" disabled={busy}>{at('save', lang)}</button>
-    <button type="button" class="quiet" disabled={busy} onclick={onclose}>
+    <button type="button" class="quiet" disabled={busy} onclick={close}>
       {st('cancel', lang)}
     </button>
     {#if failed}<p role="alert" class="alert">{st('failed', lang)}</p>{/if}
   </form>
 {:else}
-  <button type="button" class="quiet" aria-label={label} onclick={start}>
+  <button
+    type="button"
+    class="quiet"
+    aria-label={label}
+    bind:this={editButton}
+    onclick={start}
+  >
     {at('edit', lang)}
   </button>
 {/if}

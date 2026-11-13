@@ -32,5 +32,7 @@ cohort in a lab that no longer existed failed with a database error (a 500).
 
 - The behaviour is one contract test file (`group-edit-contract.ts`) run on in-memory repositories and
   on Postgres, plus a route test and screen tests.
+- `labs.updated_at` is not bumped on a rename: the table has no `set_updated_at` trigger (it never
+  had one, and the old upsert did not bump it either). A migration for that is left for later.
 - Not built: editing staff or students here (they have their own screens), a rename history, and
   refusing two labs or cohorts with the same name (names are not unique today).

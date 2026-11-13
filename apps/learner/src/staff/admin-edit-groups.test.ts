@@ -114,21 +114,54 @@ describe('editing a lab or a cohort on the setup screen', () => {
     expect((await backend.repos.org.labs()).map((l) => l.name)).not.toContain('कुछ और');
   });
 
-  test('a lab deleted meanwhile is refused with a message, and nothing is created', async () => {
+  test('a lab deleted meanwhile is refused, vanishes from the list, and nothing is created', async () => {
     await fireEvent.click(await vi.waitFor(() => button('खाली लैब: बदलें')));
     await backend.repos.org.deleteLab(emptyLab); // another admin removed it
     await fireEvent.input(field('खाली लैब: बदलें', 'लैब का नाम'), { target: { value: 'भूत' } });
     await fireEvent.click(
       within(screen.getByRole('form')).getByRole('button', { name: 'सेव करें' }),
     );
-    await vi.waitFor(() => screen.getByRole('alert'));
+    await vi.waitFor(() => expect(screen.queryByText('खाली लैब')).toBeNull());
     expect((await backend.repos.org.labs()).map((l) => l.name)).not.toContain('भूत');
   });
 
-  test('only one editor is open at a time, and saving twice is not possible while it runs', async () => {
+  test('only one editor is open at a time', async () => {
     await fireEvent.click(await vi.waitFor(() => button('रामपुर लैब: बदलें')));
     await fireEvent.click(button('शाम: बदलें'));
     expect(screen.queryByRole('form', { name: 'रामपुर लैब: बदलें' })).toBeNull();
     expect(editor('शाम: बदलें')).toBeTruthy();
+  });
+
+  test('a second submit while the first is still saving sends nothing more', async () => {
+    const api = staffState.auth?.api;
+    if (!api) throw new Error('not signed in');
+    let release: (value: { ok: false; error: 'INTERNAL' }) => void = () => {};
+    const slow = new Promise<{ ok: false; error: 'INTERNAL' }>((resolve) => (release = resolve));
+    const save = vi.spyOn(api, 'saveLab').mockReturnValue(slow);
+    await fireEvent.click(await vi.waitFor(() => button('रामपुर लैब: बदलें')));
+    const form = editor('रामपुर लैब: बदलें');
+    await fireEvent.submit(form);
+    await fireEvent.submit(form);
+    expect(save).toHaveBeenCalledTimes(1);
+    release({ ok: false, error: 'INTERNAL' });
+    await vi.waitFor(() => screen.getByRole('alert'));
+  });
+
+  test('keyboard focus goes to the name field on open and back to Edit on cancel', async () => {
+    await fireEvent.click(await vi.waitFor(() => button('रामपुर लैब: बदलें')));
+    await vi.waitFor(() =>
+      expect(document.activeElement).toBe(field('रामपुर लैब: बदलें', 'लैब का नाम')),
+    );
+    await fireEvent.click(
+      within(editor('रामपुर लैब: बदलें')).getByRole('button', { name: 'रद्द करें' }),
+    );
+    await vi.waitFor(() => expect(document.activeElement).toBe(button('रामपुर लैब: बदलें')));
+  });
+
+  test('a failed save reloads the lists, so a row deleted meanwhile disappears', async () => {
+    await fireEvent.click(await vi.waitFor(() => button('खाली लैब: बदलें')));
+    await backend.repos.org.deleteLab(emptyLab);
+    await fireEvent.submit(editor('खाली लैब: बदलें'));
+    await vi.waitFor(() => expect(screen.queryByText('खाली लैब')).toBeNull());
   });
 });

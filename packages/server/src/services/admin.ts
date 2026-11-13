@@ -10,7 +10,6 @@ import type {
   SummaryRepo,
   SwitchRepo,
 } from '../ports.js';
-export { saveLab, saveCohort, deleteLab, deleteCohort } from './admin-groups.js';
 import { withAudit } from './audit.js';
 import { setBranding } from './branding.js';
 import { ApiFailure } from './failure.js';
@@ -19,6 +18,8 @@ import { deleteLearner, type LearnerDataDeps } from './learner-data.js';
 import { inScope, type StaffCaller } from './staff.js';
 import { asOfToday, needsAttention, type Attention, type Summary } from './summary.js';
 import { istDay } from '@shiksha/learner-core';
+
+export { saveLab, saveCohort, deleteLab, deleteCohort } from './admin-groups.js';
 
 export interface AdminDeps extends LearnerDataDeps {
   org: OrgRepo;
