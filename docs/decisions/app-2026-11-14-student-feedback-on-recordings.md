@@ -27,16 +27,16 @@ work after the win.
 - **Offline:** the list is cached on the phone per profile (`feedback:<profileId>`), so it shows
   offline and goes with the profile when it is removed. Playing needs the internet and says so.
 - **The comment is plain text**, rendered as text, never markup.
-- **The card is a lazy chunk on the My details screen**, hidden in the app while speaking practice
+- **The card is mounted inside the lazy My details card**, hidden in the app while speaking practice
   is off. The routes themselves do not check that switch: they only ever return the student's own
   data, so there is nothing to protect, and a student whose switch is turned off can still read old
   feedback if they call the API directly.
   The client gets a generic `call(path, schema)`, so the card brings its own schemas and the first
-  load does not grow by more than 0.2 KB (119.7 of 120 KB).
+  load grows by 0.1 KB only (119.6 of 120 KB). Mounting it from the Me screen itself cost 0.4 KB.
 
 ## Consequences
 
-- The first-load budget has 0.3 KB left. The next student-facing feature must also be lazy or the
+- The first-load budget has 0.4 KB left. The next student-facing feature must also be lazy or the
   budget must be reviewed on purpose.
 - The card says a recording is removed 30 days after review. That number is written in the text;
   if the retention rule changes, change the text (`feedback-i18n.ts`).

@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { linkedApi } from '../../account/account.js';
   import { appState } from '../../app-state.svelte.js';
+  import FeedbackCard from './FeedbackCard.svelte';
   import { pc } from './profile-card-i18n.js';
   import { loadProfileCache, refreshProfile, type ProfileStatus } from './profile-cache.js';
 
@@ -21,6 +22,10 @@
     status = fresh.status;
   });
 </script>
+
+{#if appState.switches.speaking_practice}
+  <FeedbackCard />
+{/if}
 
 {#if card}
   <section class="card">
