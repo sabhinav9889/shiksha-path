@@ -84,6 +84,7 @@ import type { BookingRepo } from '../ports-booking.js';
 import { ADMIN_ROUTES } from './admin-routes.js';
 import { BOOKING_ROUTES } from './booking-routes.js';
 import { COMMUNITY_ROUTES } from './community-routes.js';
+import { MY_RECORDING_ROUTES } from './my-recordings-routes.js';
 import { corsHeaders } from './cors.js';
 import { caller, jsonBody, parseWith, routePath } from './request.js';
 import { failure, json } from './respond.js';
@@ -122,6 +123,7 @@ const ROUTES: Record<string, Route> = {
   ...ADMIN_ROUTES,
   ...COMMUNITY_ROUTES,
   ...BOOKING_ROUTES,
+  ...MY_RECORDING_ROUTES,
   'POST /v1/learners/link': async (request, _url, deps) => {
     const who = await caller(request, deps.auth);
     const body = parseWith(linkRequest, await jsonBody(request));

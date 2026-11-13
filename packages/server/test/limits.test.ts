@@ -4,7 +4,7 @@ import { LIMITS } from '../src/services/limits.js';
 import { memoryRateLimiter } from '../src/testing/memory-rate-limiter.js';
 
 describe('the limits', () => {
-  test('match the plan', () => {
+  test('match the plan (playback: a student replaying their own recordings, decision 2026-11-14)', () => {
     expect(LIMITS).toEqual({
       code: { limit: 10, windowSeconds: 900 },
       codeAll: { limit: 300, windowSeconds: 3600 },
@@ -12,6 +12,7 @@ describe('the limits', () => {
       pull: { limit: 60, windowSeconds: 60 },
       link: { limit: 10, windowSeconds: 3600 },
       recording: { limit: 100, windowSeconds: 86_400 },
+      playback: { limit: 120, windowSeconds: 3600 },
       deletedCheck: { limit: 30, windowSeconds: 3600 },
     });
   });

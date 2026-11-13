@@ -60,6 +60,11 @@ export interface ApiClient {
   codeSignIn(body: { code: string }): Promise<ApiResult<Session>>;
   /** Put the bytes at a signed upload URL (no sign-in token: the URL carries its own). */
   uploadTo(url: string, bytes: Uint8Array, mime: string): Promise<boolean>;
+  /**
+   * Any other signed-in /v1 call, checked against a contract schema the caller brings. Screens that
+   * load lazily use this, so their schemas stay out of the first load (the 120 KB budget).
+   */
+  call: Call;
 }
 
 export interface ClientDeps {
@@ -174,5 +179,6 @@ export function createApiClient(deps: ClientDeps): ApiClient {
     branding: () => call('/v1/branding', branding, undefined, false),
     deletedCheck: (body) => call('/v1/learners/deleted', deletedCheckResponse, body, false),
     uploadTo: (url, bytes, mime) => putBytes({ fetchFn, timeoutMs, url, bytes, mime }),
+    call,
   };
 }

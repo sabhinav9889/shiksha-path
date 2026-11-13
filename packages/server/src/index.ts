@@ -26,6 +26,7 @@ export { getFeed } from './services/community.js';
 export { bookSlot, cancelBooking, listOpenSlots, myBookings } from './services/booking.js';
 export { getProfile } from './services/profile.js';
 export { completeRecording, recordingPath, startRecording } from './services/recordings.js';
+export { myRecordings, myRecordingUrl } from './services/my-recordings.js';
 export { pullEvents, pushEvents } from './services/sync.js';
 export { handle, type HandlerDeps } from './http/router.js';
 export { jsonLogger, memoryLogger, type Logger, type LogEntry } from './logger.js';

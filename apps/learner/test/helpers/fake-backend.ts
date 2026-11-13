@@ -7,6 +7,8 @@ import {
   getFeed,
   listOpenSlots,
   myBookings,
+  myRecordings,
+  myRecordingUrl,
   getProfile,
   getMe,
   linkLearner,
@@ -29,6 +31,26 @@ import { makeMemoryRepos } from '@shiksha/server/testing';
 import type { ApiClient, ApiResult } from '../../src/api/api-client.js';
 import type { GoogleAuth } from '../../src/api/auth.js';
 import type { AccountDeps } from '../../src/account/account.js';
+
+type Repos = ReturnType<typeof makeMemoryRepos>;
+
+/** The generic `call` of the client: the lazy screens' routes, answered by the real services. */
+async function answerCall<T>(
+  repos: Repos,
+  auth: string,
+  path: string,
+  schema: { safeParse(v: unknown): { success: boolean; data?: T } },
+): Promise<T> {
+  const url = new URL(path, 'https://fake.invalid');
+  let raw: unknown;
+  if (url.pathname === '/v1/me/recordings') raw = await myRecordings(repos, auth);
+  else if (url.pathname === '/v1/me/recording-url') {
+    raw = await myRecordingUrl(repos, auth, url.searchParams.get('id') ?? '');
+  } else throw new ApiFailure('INVALID_REQUEST');
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) throw new ApiFailure('INTERNAL');
+  return parsed.data as T;
+}
 
 /**
  * The real /v1 services over in-memory repositories, plus a fake Google: a test chooses which
@@ -132,6 +154,7 @@ export function makeFakeBackend(): FakeBackend {
         checks += 1;
         return run(() => checkDeleted(repos, body.learnerIds, 'phone-network'));
       },
+      call: (path, schema) => as((auth) => answerCall(repos, auth, path, schema)),
       uploadTo: (url, bytes) => {
         if (!online || uploadsFail) return Promise.resolve(false);
         const path = new URL(url).pathname.slice(1); // memory://upload/<learner>/<id>

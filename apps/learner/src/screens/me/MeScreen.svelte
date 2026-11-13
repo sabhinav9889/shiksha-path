@@ -117,6 +117,9 @@
     {#if data.linked}
       {#await import('./ProfileCard.svelte') then profile}<profile.default />{/await}
       <RecordingsCard {lang} />
+      {#if appState.switches.speaking_practice}
+        {#await import('./FeedbackCard.svelte') then feedback}<feedback.default />{/await}
+      {/if}
     {/if}
   {/if}
 

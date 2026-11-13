@@ -10,6 +10,7 @@ export const LIMITS = {
   pull: { limit: 60, windowSeconds: 60 },
   link: { limit: 10, windowSeconds: 60 * 60 },
   recording: { limit: 100, windowSeconds: 24 * 60 * 60 },
+  playback: { limit: 120, windowSeconds: 60 * 60 },
   deletedCheck: { limit: 30, windowSeconds: 60 * 60 },
 } as const;
 /* eslint-enable no-magic-numbers -- end of the limits table */
