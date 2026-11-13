@@ -9,7 +9,7 @@
 
   /** The student's own speaking recordings and what a mentor said: the phone's copy, refreshed. */
   let recordings = $state<MyRecording[]>([]);
-  let status = $state<FeedbackStatus>('offline');
+  let status = $state<FeedbackStatus | null>(null); // null while it loads, so no false "offline"
   let player = $state<{ id: string; url: string } | null>(null);
   let notice = $state<{ id: string; text: 'needsNet' | 'playFailed' } | null>(null);
   const lang = $derived(appState.lang);
@@ -62,7 +62,12 @@
           {/if}
           <button type="button" onclick={() => play(r.id)}>{fb('play', lang)}</button>
           {#if player?.id === r.id}
-            <audio controls autoplay src={player.url}></audio>
+            <audio
+              controls
+              autoplay
+              src={player.url}
+              onerror={() => (notice = { id: r.id, text: 'playFailed' })}
+            ></audio>
           {/if}
           {#if notice?.id === r.id}
             <p class="muted" role="status">{fb(notice.text, lang)}</p>

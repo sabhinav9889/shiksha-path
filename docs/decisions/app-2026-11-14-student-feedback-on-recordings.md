@@ -27,7 +27,10 @@ work after the win.
 - **Offline:** the list is cached on the phone per profile (`feedback:<profileId>`), so it shows
   offline and goes with the profile when it is removed. Playing needs the internet and says so.
 - **The comment is plain text**, rendered as text, never markup.
-- **The card is a lazy chunk on the My details screen**, shown only while speaking practice is on.
+- **The card is a lazy chunk on the My details screen**, hidden in the app while speaking practice
+  is off. The routes themselves do not check that switch: they only ever return the student's own
+  data, so there is nothing to protect, and a student whose switch is turned off can still read old
+  feedback if they call the API directly.
   The client gets a generic `call(path, schema)`, so the card brings its own schemas and the first
   load does not grow by more than 0.2 KB (119.7 of 120 KB).
 
@@ -37,6 +40,12 @@ work after the win.
   budget must be reviewed on purpose.
 - The card says a recording is removed 30 days after review. That number is written in the text;
   if the retention rule changes, change the text (`feedback-i18n.ts`).
+- The offline copy of the list, comment included, stays on the phone until the next online refresh
+  replaces it, so the 30-day text can be out of date for a student who stays offline. Playing
+  such a recording needs the internet and fails with a message.
+- The signed link is made for any row still marked uploaded. During the nightly clean-up, files are
+  removed before rows, so a link requested in that gap points to a missing file; the player then
+  shows "could not play".
 - The comment is cached unencrypted in the phone's IndexedDB, like the rest of a profile. The PIN
   guards the app, not the storage.
 - Not built: notifying the student when a mentor reviews (waits for notifications), deleting a

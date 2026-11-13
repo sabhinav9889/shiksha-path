@@ -18,6 +18,8 @@ const people: Record<string, { authUserId: string; provider: string; email: stri
   'token-a': { authUserId: 'auth-a', provider: 'google', email: 'a@gmail.example' },
   'token-b': { authUserId: 'auth-b', provider: 'google', email: 'b@gmail.example' },
   'token-c': { authUserId: 'auth-c', provider: 'google', email: 'c@gmail.example' },
+  'token-staff': { authUserId: 'auth-staff', provider: 'google', email: 'meena@ngo.example' },
+  'token-nobody': { authUserId: 'auth-nobody', provider: 'google', email: 'n@gmail.example' },
 };
 
 beforeEach(async () => {
@@ -164,6 +166,27 @@ describe('GET /v1/me/recording-url', () => {
     expect((await call('GET', `/v1/me/recording-url?id=${id}`, 'token-a')).status).toBe(400);
     expect((await call('GET', '/v1/me/recording-url?id=nope', 'token-a')).status).toBe(400);
     expect((await call('GET', `/v1/me/recording-url?id=${id}`)).status).toBe(401);
+  });
+
+  test('a signed-in person who is not a linked student gets nothing, and neither does a mentor', async () => {
+    const id = await addRecording(learnerA, 1, 'uploaded');
+    for (const token of ['token-nobody', 'token-staff']) {
+      const list = await call('GET', '/v1/me/recordings', token);
+      const play = await call('GET', `/v1/me/recording-url?id=${id}`, token);
+      expect(list.status).toBeGreaterThanOrEqual(400);
+      expect(play.status).toBeGreaterThanOrEqual(400);
+      expect(await play.text()).not.toContain('memory://');
+    }
+  });
+
+  test('one student using up their plays does not stop another', async () => {
+    const mine = await addRecording(learnerA, 1, 'uploaded');
+    const theirs = await addRecording(learnerB, 1, 'uploaded');
+    for (let i = 0; i <= LIMITS.playback.limit; i += 1) {
+      await call('GET', `/v1/me/recording-url?id=${mine}`, 'token-a');
+    }
+    expect((await call('GET', `/v1/me/recording-url?id=${mine}`, 'token-a')).status).toBe(429);
+    expect((await call('GET', `/v1/me/recording-url?id=${theirs}`, 'token-b')).status).toBe(200);
   });
 
   test('playing again and again is rate limited', async () => {

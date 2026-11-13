@@ -125,11 +125,33 @@ describe('the My speaking practice card', () => {
     expect(document.querySelector('li b, li script')).toBeNull();
   });
 
-  test('shows nothing when there are no recordings', async () => {
-    await open([]);
-    await vi.waitFor(() => expect(env.runtime.account).not.toBeNull());
+  test('shows nothing when there are no recordings, once the list has loaded', async () => {
+    const api = await open([]);
+    await vi.waitFor(() =>
+      expect(api.call).toHaveBeenCalledWith('/v1/me/recordings', expect.anything()),
+    );
     await new Promise((r) => setTimeout(r, 20));
     expect(screen.queryByRole('heading')).toBeNull();
+    expect(screen.queryByRole('listitem')).toBeNull();
+  });
+
+  test('online, the offline line is not shown; offline it is', async () => {
+    await open([rec({})]);
+    await vi.waitFor(() => screen.getAllByRole('listitem'));
+    await vi.waitFor(() => expect(screen.queryByText('पिछली बार की जानकारी')).toBeNull());
+  });
+
+  test('a link that fails to play shows a message, not a silent dead player', async () => {
+    await open([rec({})], { url: { ok: true, value: { url: 'https://x.supabase.co/dead' } } });
+    const item = (await vi.waitFor(() => screen.getAllByRole('listitem')))[0] as HTMLElement;
+    await fireEvent.click(within(item).getByRole('button', { name: /सुनें/ }));
+    const audio = await vi.waitFor(() => {
+      const found = item.querySelector('audio');
+      if (!found) throw new Error('no player yet');
+      return found;
+    });
+    await fireEvent.error(audio);
+    await vi.waitFor(() => screen.getByText(/अभी नहीं चल सका/));
   });
 
   test('Play asks for a link for that recording and shows a player', async () => {
