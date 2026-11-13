@@ -20,6 +20,7 @@ const STRINGS = {
   upcoming: { hi: 'आने वाला', en: 'Coming up' },
   talk: { hi: 'मेंटर से बात करें', en: 'Talk to a mentor' },
   talkSub: { hi: '1-से-1 समय बुक करें', en: 'Book a one-to-one time' },
+  addToCalendar: { hi: 'कैलेंडर में जोड़ें', en: 'Add to calendar' },
   join: { hi: 'जुड़ें', en: 'Join' },
 } satisfies Record<string, Record<Lang, string>>;
 
