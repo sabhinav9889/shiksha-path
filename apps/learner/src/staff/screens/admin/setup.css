@@ -221,3 +221,54 @@
   opacity: 0.85;
   cursor: progress;
 }
+
+/* Posts and meeting slots: a form that is one panel, fields stacked, each as wide as the panel. */
+.admin.setup form.stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 0;
+  background: none;
+}
+
+.admin.setup form.stack h2 {
+  margin: 0;
+}
+
+.admin.setup form.stack label {
+  flex: none;
+}
+
+.admin.setup form.stack .actions {
+  margin-top: 4px;
+}
+
+.admin.setup textarea {
+  min-height: 112px;
+  padding: 10px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-s);
+  background: var(--color-card);
+  font: inherit;
+  resize: vertical;
+}
+
+.admin.setup .warning {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-s);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-size: 14px;
+}
+
+.admin.setup .body {
+  color: var(--color-ink);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.admin.setup .panel > p {
+  margin: 0;
+}

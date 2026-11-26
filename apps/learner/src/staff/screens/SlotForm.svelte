@@ -41,10 +41,13 @@
   }
 </script>
 
-<form onsubmit={submit}>
+<form class="stack" onsubmit={submit}>
   <h2>{bt('newSlot', lang)}</h2>
   <p class="muted">{bt('hint', lang)}</p>
-  <label>{bt('startsAt', lang)} <input required type="datetime-local" min={earliest} bind:value={startsAt} /></label>
+  <label>
+    {bt('startsAt', lang)}
+    <input required type="datetime-local" min={earliest} bind:value={startsAt} />
+  </label>
   <label>
     {bt('minutes', lang)}
     <select bind:value={minutes}>
@@ -56,7 +59,7 @@
     <input type="url" maxlength="500" placeholder="https://" bind:value={link} />
   </label>
   <div class="actions">
-    <button type="submit" disabled={busy}>{bt('addSlot', lang)}</button>
+    <button type="submit" class:loading={busy} disabled={busy}>{bt('addSlot', lang)}</button>
   </div>
   {#if failed === 'time'}
     <p role="alert" class="alert">{bt('pastTime', lang)}</p>

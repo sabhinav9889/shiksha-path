@@ -37,7 +37,7 @@
   onMount(load);
 </script>
 
-<div class="setup">
+<div class="admin setup">
   {#if failed}<p role="alert" class="alert">{st('failed', lang)}</p>{/if}
   <section class="panel">
     {#key editing?.id}
