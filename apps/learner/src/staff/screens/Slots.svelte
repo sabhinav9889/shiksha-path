@@ -25,7 +25,7 @@
   onMount(load);
 </script>
 
-<div class="admin setup">
+<div class="setup">
   {#if failed}<p role="alert" class="alert">{st('failed', lang)}</p>{/if}
   <section class="panel"><SlotForm {lang} onsaved={load} /></section>
   <section class="panel">

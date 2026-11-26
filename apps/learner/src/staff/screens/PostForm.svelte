@@ -39,7 +39,7 @@
   }
 </script>
 
-<form class="stack" onsubmit={submit} data-testid="post-form">
+<form onsubmit={submit} data-testid="post-form">
   <h2>{ct(editing ? 'editPost' : 'newPost', lang)}</h2>
   <p class="warning">{ct('warning', lang)}</p>
   <label>{ct('postTitle', lang)} <input required maxlength="120" bind:value={draft.title} /></label>
@@ -76,14 +76,14 @@
   {/if}
   <div class="actions">
     <button
-      type="submit"
-      class:loading={busy}
-      disabled={busy || draft.audience === ''}
-    >
+        type="submit"
+        class:loading={busy}
+        disabled={busy || draft.audience === ''}
+      >
       {ct(editing ? 'saveChanges' : 'publish', lang)}
     </button>
     {#if editing}
-      <button type="button" class="quiet" disabled={busy} onclick={oncancel}>{st('cancel', lang)}</button>
+      <button type="button" class="quiet" onclick={oncancel}>{st('cancel', lang)}</button>
     {/if}
   </div>
   {#if failed}<p role="alert" class="alert">{st('failed', lang)}</p>{/if}

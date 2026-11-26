@@ -41,13 +41,10 @@
   }
 </script>
 
-<form class="stack" onsubmit={submit}>
+<form onsubmit={submit}>
   <h2>{bt('newSlot', lang)}</h2>
   <p class="muted">{bt('hint', lang)}</p>
-  <label>
-    {bt('startsAt', lang)}
-    <input required type="datetime-local" min={earliest} bind:value={startsAt} />
-  </label>
+  <label>{bt('startsAt', lang)} <input required type="datetime-local" min={earliest} bind:value={startsAt} /></label>
   <label>
     {bt('minutes', lang)}
     <select bind:value={minutes}>
