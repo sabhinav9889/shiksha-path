@@ -44,16 +44,20 @@ function studentLine(row: StudentRow, saved: Summary | undefined, today: string)
 /** The caller's cohorts (every cohort for an admin), students needing attention first. */
 export async function listCohorts(deps: StaffReadDeps, staff: StaffCaller): Promise<StaffCohorts> {
   const scope = staff.role === 'admin' ? 'all' : staff.cohortIds;
-  const [cohorts, students] = await Promise.all([
+  const [cohorts, students, labs] = await Promise.all([
     deps.org.cohorts(scope),
     deps.org.students(scope),
+    deps.org.labs(),
   ]);
+  const labIds = new Set(cohorts.map((c) => c.labId));
   const summaries = await deps.summaries.forLearners(students.map((s) => s.id));
   const today = istDay(new Date());
   return {
+    labs: labs.filter((lab) => labIds.has(lab.id)),
     cohorts: cohorts.map((cohort) => ({
       id: cohort.id,
       name: cohort.name,
+      labId: cohort.labId,
       students: students
         .filter((s) => s.cohortId === cohort.id)
         .map((s) => studentLine(s, summaries.get(s.id), today))

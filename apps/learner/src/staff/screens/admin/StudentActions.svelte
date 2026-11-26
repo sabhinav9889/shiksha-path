@@ -7,6 +7,7 @@
   import { st } from '../../i18n.js';
   import type { StaffApi } from '../../staff-api.js';
   import { shortId } from '../../short-id.js';
+  import { createBusy } from '../../busy.svelte.js';
   import { staffState } from '../../staff-state.svelte.js';
 
   type Choice = '' | 'on' | 'off';
@@ -23,6 +24,7 @@
     lang: Lang;
     onchanged: () => Promise<void>;
   } = $props();
+  const action = createBusy();
   let moveTo = $state('');
   let pausing = $state(false);
   let deleteStep = $state<0 | 1 | 2>(0);
@@ -35,10 +37,12 @@
   );
 
   async function run(work: (api: StaffApi) => Promise<{ ok: boolean }>): Promise<void> {
-    const api = staffState.auth?.api;
-    const ok = api ? (await work(api)).ok : false;
-    failed = !ok;
-    if (ok) await onchanged();
+    await action.run(async () => {
+      const api = staffState.auth?.api;
+      const ok = api ? (await work(api)).ok : false;
+      failed = !ok;
+      if (ok) await onchanged();
+    });
   }
 
   const move = (): Promise<void> =>
@@ -73,18 +77,18 @@
         {#each cohorts as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
       </select>
     </label>
-    <button type="button" onclick={move}>{at('move', lang)}</button>
+    <button type="button" class:loading={action.busy} disabled={action.busy} onclick={move}>{at('move', lang)}</button>
   </div>
 
   <div class="row">
     {#if student.deactivated}
-      <button type="button" onclick={() => setActive(true)}>{at('reactivate', lang)}</button>
+      <button type="button" disabled={action.busy} onclick={() => setActive(true)}>{at('reactivate', lang)}</button>
     {:else if pausing}
       <p>{at('confirmDeactivate', lang)}</p>
-      <button type="button" onclick={() => setActive(false)}>{at('yesDeactivate', lang)}</button>
-      <button type="button" onclick={() => (pausing = false)}>{st('cancel', lang)}</button>
+      <button type="button" disabled={action.busy} onclick={() => setActive(false)}>{at('yesDeactivate', lang)}</button>
+      <button type="button" disabled={action.busy} onclick={() => (pausing = false)}>{st('cancel', lang)}</button>
     {:else}
-      <button type="button" onclick={() => (pausing = true)}>{at('deactivate', lang)}</button>
+      <button type="button" disabled={action.busy} onclick={() => (pausing = true)}>{at('deactivate', lang)}</button>
     {/if}
   </div>
 
@@ -93,6 +97,7 @@
       <label>
         {FEATURE_NAMES[key][lang]}
         <select
+          disabled={action.busy}
           value={overrides[key] ?? ''}
           onchange={(e) => setOverride(key, e.currentTarget.value as Choice)}
         >
@@ -106,27 +111,28 @@
 
   <div class="row">
     {#if deleteStep === 0}
-      <button type="button" onclick={() => (deleteStep = 1)}>{at('remove', lang)}</button>
+      <button type="button" disabled={action.busy} onclick={() => (deleteStep = 1)}>{at('remove', lang)}</button>
     {:else if deleteStep === 1}
       <p>{at('removeForever', lang)} <strong>{student.name} {shortId(student.id)}</strong></p>
-      <button type="button" onclick={() => (deleteStep = 2)}>{at('yes', lang)}</button>
-      <button type="button" onclick={() => (deleteStep = 0)}>{st('cancel', lang)}</button>
+      <button type="button" disabled={action.busy} onclick={() => (deleteStep = 2)}>{at('yes', lang)}</button>
+      <button type="button" disabled={action.busy} onclick={() => (deleteStep = 0)}>{st('cancel', lang)}</button>
     {:else}
       <p class="muted">{student.name} {shortId(student.id)}</p>
       <label>{at('typeName', lang)} <input bind:value={typed} /></label>
       <button
         type="button"
-        disabled={!sameName}
+        disabled={!sameName || action.busy}
+        class:loading={action.busy}
         onclick={() => run((api) => api.deleteStudent({ learnerId: student.id }))}
       >
         {at('removeNow', lang)}
       </button>
-      <button type="button" onclick={() => ((deleteStep = 0), (typed = ''))}>
+      <button type="button" disabled={action.busy} onclick={() => ((deleteStep = 0), (typed = ''))}>
         {st('cancel', lang)}
       </button>
     {/if}
   </div>
-  {#if failed}<p role="alert">{st('failed', lang)}</p>{/if}
+  {#if failed}<p role="alert" class="alert">{st('failed', lang)}</p>{/if}
 </div>
 
 <style>

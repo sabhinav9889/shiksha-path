@@ -56,7 +56,7 @@
     <input type="url" maxlength="500" placeholder="https://" bind:value={link} />
   </label>
   <div class="actions">
-    <button type="submit" disabled={busy}>{bt('addSlot', lang)}</button>
+    <button type="submit" class:loading={busy} disabled={busy}>{bt('addSlot', lang)}</button>
   </div>
   {#if failed === 'time'}
     <p role="alert" class="alert">{bt('pastTime', lang)}</p>

@@ -3,6 +3,7 @@
   import type { Lang } from '../../../i18n/index.js';
   import { at } from '../../admin-i18n.js';
   import { st } from '../../i18n.js';
+  import { createBusy } from '../../busy.svelte.js';
   import { staffState } from '../../staff-state.svelte.js';
 
   type Member = AdminSetup['staff'][number];
@@ -21,6 +22,7 @@
   } = $props();
   let open = $state(false);
   const draft = $state({ active: true, role: 'mentor' as Member['role'], cohortIds: [] as string[] });
+  const saving = createBusy();
   let failed = $state(false);
 
   function start(): void {
@@ -31,12 +33,14 @@
   }
 
   async function save(): Promise<void> {
-    const body = { id: member.id, email: member.email, name: member.name, ...draft };
-    const result = await staffState.auth?.api.saveStaff(body);
-    failed = !result?.ok;
-    if (failed) return;
-    open = false;
-    await onsaved();
+    await saving.run(async () => {
+      const body = { id: member.id, email: member.email, name: member.name, ...draft };
+      const result = await staffState.auth?.api.saveStaff(body);
+      failed = !result?.ok;
+      if (failed) return;
+      open = false;
+      await onsaved();
+    });
   }
 </script>
 
@@ -56,9 +60,13 @@
         {c.name}
       </label>
     {/each}
-    <button type="button" onclick={save}>{at('save', lang)}</button>
-    <button type="button" class="quiet" onclick={() => (open = false)}>{st('cancel', lang)}</button>
-    {#if failed}<p role="alert">{st('failed', lang)}</p>{/if}
+    <button type="button" class:loading={saving.busy} disabled={saving.busy} onclick={save}>
+      {at('save', lang)}
+    </button>
+    <button type="button" class="quiet" disabled={saving.busy} onclick={() => (open = false)}>
+      {st('cancel', lang)}
+    </button>
+    {#if failed}<p role="alert" class="alert">{st('failed', lang)}</p>{/if}
   </div>
 {:else}
   <button

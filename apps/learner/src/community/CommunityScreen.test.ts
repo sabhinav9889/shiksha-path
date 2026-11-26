@@ -80,8 +80,15 @@ describe('the student community screen', () => {
     expect(link.getAttribute('target')).toBe('_blank');
     for (const title of ['खतरनाक', 'सादा']) {
       const card = screen.getByText(title).closest('article') as HTMLElement;
-      expect(within(card).queryByRole('link')).toBeNull();
+      expect(within(card).queryByRole('link', { name: 'जुड़ें' })).toBeNull();
+      // Only the calendar link remains, and it never carries the unsafe address.
+      const calendar = within(card).getByRole('link', { name: 'कैलेंडर में जोड़ें' });
+      expect(calendar.getAttribute('href')).toMatch(/^https:\/\/calendar\.google\.com\//);
+      expect(calendar.getAttribute('href')).not.toMatch(/javascript|x\.org/);
     }
+    const added = within(safe).getByRole('link', { name: 'कैलेंडर में जोड़ें' });
+    expect(added.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(within(safe).getByText('1 दिन बाद')).toBeTruthy();
     expect(within(safe).getByText(/मिनट|min/)).toBeTruthy();
   });
 

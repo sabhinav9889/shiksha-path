@@ -3,6 +3,7 @@
   import type { Lang } from '../../../i18n/index.js';
   import { at } from '../../admin-i18n.js';
   import { st } from '../../i18n.js';
+  import { createBusy } from '../../busy.svelte.js';
   import { staffState } from '../../staff-state.svelte.js';
   import DeleteGroup from './DeleteGroup.svelte';
   import StaffEdit from './StaffEdit.svelte';
@@ -13,6 +14,7 @@
     lang,
     reload,
   }: { setup: AdminSetup; lang: Lang; reload: () => Promise<void> } = $props();
+  const inviting = createBusy();
   let failed = $state(false);
   let invite = $state({ name: '', email: '', role: 'mentor' as 'mentor' | 'admin' });
   let inviteCohorts = $state<string[]>([]);
@@ -25,13 +27,15 @@
 
   async function addStaff(event: Event): Promise<void> {
     event.preventDefault();
-    const body = { ...invite, active: true, cohortIds: inviteCohorts };
-    const result = await staffState.auth?.api.saveStaff(body);
-    failed = !result?.ok;
-    if (failed) return;
-    invite = { name: '', email: '', role: 'mentor' };
-    inviteCohorts = [];
-    await reload();
+    await inviting.run(async () => {
+      const body = { ...invite, active: true, cohortIds: inviteCohorts };
+      const result = await staffState.auth?.api.saveStaff(body);
+      failed = !result?.ok;
+      if (failed) return;
+      invite = { name: '', email: '', role: 'mentor' };
+      inviteCohorts = [];
+      await reload();
+    });
   }
 </script>
 
@@ -74,6 +78,8 @@
         {c.name}
       </label>
     {/each}
-    <button type="submit">{at('invite', lang)}</button>
+    <button type="submit" class:loading={inviting.busy} disabled={inviting.busy}>
+      {at('invite', lang)}
+    </button>
   </form>
 </section>

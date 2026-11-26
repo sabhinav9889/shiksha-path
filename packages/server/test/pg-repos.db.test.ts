@@ -25,6 +25,7 @@ import { PgSwitchRepo } from '../src/adapters/pg-switch-repo.js';
 import { createSql } from '../src/adapters/pg.js';
 import { describeServiceContract, type ServiceFixture } from '../src/testing/service-contract.js';
 import { describeAdminContract } from '../src/testing/admin-contract.js';
+import { describeGroupEditContract } from '../src/testing/group-edit-contract.js';
 import { describeCommunityContract } from '../src/testing/community-contract.js';
 import { describeBookingContract } from '../src/testing/booking-contract.js';
 import { describeBookingRepoContract } from '../src/testing/booking-repo-contract.js';
@@ -123,6 +124,7 @@ async function makePgFixture(): Promise<ServiceFixture> {
 describeServiceContract('Postgres repositories', makePgFixture);
 describeStaffContract('Postgres repositories', makePgFixture);
 describeAdminContract('Postgres repositories', makePgFixture);
+describeGroupEditContract('Postgres repositories', makePgFixture);
 describePostRepoContract('Postgres repositories', makePgFixture);
 describeBookingRepoContract('Postgres repositories', makePgFixture);
 describeBookingContract('Postgres repositories', makePgFixture);

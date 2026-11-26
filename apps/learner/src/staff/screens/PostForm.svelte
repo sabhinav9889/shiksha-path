@@ -75,7 +75,11 @@
     </label>
   {/if}
   <div class="actions">
-    <button type="submit" disabled={busy || draft.audience === ''}>
+    <button
+        type="submit"
+        class:loading={busy}
+        disabled={busy || draft.audience === ''}
+      >
       {ct(editing ? 'saveChanges' : 'publish', lang)}
     </button>
     {#if editing}

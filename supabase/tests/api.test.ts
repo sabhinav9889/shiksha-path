@@ -317,6 +317,25 @@ describe('a mentor reviewing a recording through the function', () => {
     expect((await api(`/v1/staff/recording-url?id=${id}`, b.accessToken)).status).toBe(403);
     await mentor.cleanup();
   });
+
+  test('the student sees the recording and the comment, plays it, and no one else can', async () => {
+    const mentor = await mentorOfA();
+    const id = await uploadedByA(Uint8Array.of(9, 8, 7));
+    await api('/v1/staff/recordings/review', mentor.token, { id, comment: 'Well done, Priya' });
+    type Mine = { recordings: { id: string; comment: string | null; reviewedAt: string | null }[] };
+    const mine = (await (await api('/v1/me/recordings', a.accessToken)).json()) as Mine;
+    expect(mine.recordings.find((r) => r.id === id)).toMatchObject({ comment: 'Well done, Priya' });
+    expect(JSON.stringify(mine)).not.toMatch(/staff|reviewed_by|mentor@/i);
+    const link = await api(`/v1/me/recording-url?id=${id}`, a.accessToken);
+    expect(link.status).toBe(200);
+    const { url } = (await link.json()) as { url: string };
+    expect([...new Uint8Array(await (await fetch(url)).arrayBuffer())]).toEqual([9, 8, 7]);
+    expect((await api(`/v1/me/recording-url?id=${id}`, b.accessToken)).status).toBe(403);
+    const theirs = await (await api('/v1/me/recordings', b.accessToken)).text();
+    expect(theirs).not.toContain('Well done');
+    expect((await api('/v1/me/recordings', 'not-a-token')).status).toBe(401);
+    await mentor.cleanup();
+  });
 });
 
 describe('community posts through the function', () => {

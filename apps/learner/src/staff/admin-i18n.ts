@@ -7,6 +7,8 @@ type Words = Record<Lang, string>;
 const STRINGS = {
   labs: { hi: 'लैब', en: 'Labs' },
   newLab: { hi: 'नई लैब का नाम', en: 'New lab name' },
+  labName: { hi: 'लैब का नाम', en: 'Lab name' },
+  cohortName: { hi: 'समूह का नाम', en: 'Cohort name' },
   addLab: { hi: 'लैब जोड़ें', en: 'Add lab' },
   lab: { hi: 'लैब', en: 'Lab' },
   noLab: { hi: 'कोई लैब नहीं', en: 'No lab' },
@@ -28,6 +30,7 @@ const STRINGS = {
   find: { hi: 'खोजें', en: 'Search' },
   cohort: { hi: 'समूह', en: 'Cohort' },
   allCohorts: { hi: 'सब समूह', en: 'All cohorts' },
+  allLabs: { hi: 'सब लैब', en: 'All labs' },
   needsAttention: { hi: 'सिर्फ़ जिन्हें ध्यान चाहिए', en: 'Only those needing attention' },
   more: { hi: 'और दिखाएँ', en: 'Show more' },
   none: { hi: 'कोई छात्र नहीं मिला', en: 'No students found' },

@@ -4,8 +4,10 @@
   import { at } from '../../admin-i18n.js';
   import { st } from '../../i18n.js';
   import type { StaffApi } from '../../staff-api.js';
+  import { createBusy } from '../../busy.svelte.js';
   import { staffState } from '../../staff-state.svelte.js';
   import DeleteGroup from './DeleteGroup.svelte';
+  import EditGroup from './EditGroup.svelte';
 
   /** Each lab with its cohorts inside it, then the cohorts that have no lab; two small forms. */
   let {
@@ -13,10 +15,14 @@
     lang,
     reload,
   }: { setup: AdminSetup; lang: Lang; reload: () => Promise<void> } = $props();
+  const lab$ = createBusy();
+  const cohort$ = createBusy();
   let failed = $state(false);
   let labName = $state('');
   let cohortName = $state('');
   let cohortLab = $state('');
+  /** The id of the lab or cohort being edited: one editor at a time. */
+  let editing = $state<string | null>(null);
 
   const cohortsIn = (labId: string | null): AdminSetup['cohorts'] =>
     setup.cohorts.filter((c) => c.labId === labId);
@@ -33,13 +39,17 @@
 
   async function addLab(event: Event): Promise<void> {
     event.preventDefault();
-    if (await run((api) => api.saveLab({ name: labName }))) labName = '';
+    await lab$.run(async () => {
+      if (await run((api) => api.saveLab({ name: labName }))) labName = '';
+    });
   }
 
   async function addCohort(event: Event): Promise<void> {
     event.preventDefault();
     const body = { name: cohortName, labId: cohortLab || null };
-    if (await run((api) => api.saveCohort(body))) cohortName = '';
+    await cohort$.run(async () => {
+      if (await run((api) => api.saveCohort(body))) cohortName = '';
+    });
   }
 </script>
 
@@ -47,6 +57,18 @@
   <li class="item">
     <strong>{c.name}</strong>
     <span class="actions">
+      <EditGroup
+        kind="cohort"
+        id={c.id}
+        name={c.name}
+        labId={c.labId}
+        labs={setup.labs}
+        {lang}
+        open={editing === c.id}
+        onopen={() => (editing = c.id)}
+        onclose={() => (editing = null)}
+        onsaved={reload}
+      />
       <DeleteGroup kind="cohort" id={c.id} name={c.name} {lang} ondeleted={reload} />
     </span>
   </li>
@@ -60,6 +82,17 @@
       <header>
         <strong>{lab.name}</strong>
         <span class="actions">
+          <EditGroup
+            kind="lab"
+            id={lab.id}
+            name={lab.name}
+            labs={setup.labs}
+            {lang}
+            open={editing === lab.id}
+            onopen={() => (editing = lab.id)}
+            onclose={() => (editing = null)}
+            onsaved={reload}
+          />
           <DeleteGroup kind="lab" id={lab.id} name={lab.name} {lang} ondeleted={reload} />
         </span>
       </header>
@@ -81,7 +114,9 @@
   <div class="forms">
     <form onsubmit={addLab}>
       <label>{at('newLab', lang)} <input required maxlength="80" bind:value={labName} /></label>
-      <button type="submit">{at('addLab', lang)}</button>
+      <button type="submit" class:loading={lab$.busy} disabled={lab$.busy}>
+        {at('addLab', lang)}
+      </button>
     </form>
     <form onsubmit={addCohort}>
       <label>
@@ -94,7 +129,9 @@
           {#each setup.labs as lab (lab.id)}<option value={lab.id}>{lab.name}</option>{/each}
         </select>
       </label>
-      <button type="submit">{at('addCohort', lang)}</button>
+      <button type="submit" class:loading={cohort$.busy} disabled={cohort$.busy}>
+        {at('addCohort', lang)}
+      </button>
     </form>
   </div>
 </section>

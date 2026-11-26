@@ -255,8 +255,13 @@ export interface PostRepo {
 export type DeleteResult = 'deleted' | 'not_empty' | 'missing';
 
 export interface OrgRepo {
-  saveLab(lab: { id?: string; name: string }): Promise<string>;
-  saveCohort(cohort: { id?: string; name: string; labId: string | null }): Promise<string>;
+  /** Create a lab; its id is ours. Renaming is `updateLab`: an unknown id never creates one. */
+  saveLab(lab: { name: string }): Promise<string>;
+  saveCohort(cohort: { name: string; labId: string | null }): Promise<string>;
+  /** Rename. False when there is no such lab. */
+  updateLab(id: string, name: string): Promise<boolean>;
+  /** Rename and/or move to another lab (null: none). False when there is no such cohort. */
+  updateCohort(id: string, change: { name: string; labId: string | null }): Promise<boolean>;
   /** Only a lab with no cohorts is deleted; the check and the delete are one statement. */
   deleteLab(id: string): Promise<DeleteResult>;
   /** Only a cohort with no learners (paused ones count) is deleted. Mentor links go with it. */

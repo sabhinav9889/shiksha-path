@@ -58,13 +58,25 @@ export function memoryOrg(
     lastSyncedAt: lastReceived.get(l.id) ?? null,
   });
   return {
-    saveLab({ id = randomUUID(), name }) {
+    saveLab({ name }) {
+      const id = randomUUID();
       labs.set(id, name);
       return Promise.resolve(id);
     },
-    saveCohort({ id = randomUUID(), name, labId }) {
+    saveCohort({ name, labId }) {
+      const id = randomUUID();
       cohorts.set(id, { id, name, labId });
       return Promise.resolve(id);
+    },
+    updateLab(id, name) {
+      if (!labs.has(id)) return Promise.resolve(false);
+      labs.set(id, name);
+      return Promise.resolve(true);
+    },
+    updateCohort(id, { name, labId }) {
+      if (!cohorts.has(id)) return Promise.resolve(false);
+      cohorts.set(id, { id, name, labId });
+      return Promise.resolve(true);
     },
     deleteLab(id) {
       if (!labs.has(id)) return Promise.resolve('missing');

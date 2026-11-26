@@ -1,26 +1,30 @@
 <script lang="ts">
   import type { Lang } from '../../i18n/index.js';
   import { st } from '../i18n.js';
+  import { createBusy } from '../busy.svelte.js';
   import { staffState } from '../staff-state.svelte.js';
   import CodeCard from './CodeCard.svelte';
 
   /** A student without Google joins this cohort: a name in, a backup code out (once). */
   let { cohortId, lang, onadded }: { cohortId: string; lang: Lang; onadded: () => void } =
     $props();
+  const adding = createBusy();
   let name = $state('');
   let code = $state<string | null>(null);
   let failed = $state(false);
 
   async function add(event: Event): Promise<void> {
     event.preventDefault();
-    failed = false;
-    const result = await staffState.auth?.api.issueCode({ name: name.trim(), cohortId });
-    if (!result?.ok) {
-      failed = true;
-      return;
-    }
-    name = '';
-    code = result.value.code;
+    await adding.run(async () => {
+      failed = false;
+      const result = await staffState.auth?.api.issueCode({ name: name.trim(), cohortId });
+      if (!result?.ok) {
+        failed = true;
+        return;
+      }
+      name = '';
+      code = result.value.code;
+    });
   }
 
   function done(): void {
@@ -37,7 +41,9 @@
       {st('newStudentName', lang)}
       <input required maxlength="40" bind:value={name} />
     </label>
-    <button type="submit">{st('addStudent', lang)}</button>
+    <button type="submit" class:loading={adding.busy} disabled={adding.busy}>
+      {st('addStudent', lang)}
+    </button>
   </form>
 {/if}
 {#if failed}<p role="alert">{st('failed', lang)}</p>{/if}
@@ -71,5 +77,9 @@
     background: var(--color-primary);
     color: #fff;
     font-weight: 600;
+  }
+
+  button:disabled {
+    opacity: 0.7;
   }
 </style>

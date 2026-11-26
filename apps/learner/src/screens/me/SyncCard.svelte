@@ -32,7 +32,9 @@
     </span>
   </div>
   <p>{when ? t('me.lastSynced', lang, { time: when }) : t('me.never', lang)}</p>
-  <button type="button" disabled={busy} onclick={onsync}>{t('me.syncNow', lang)}</button>
+  <button type="button" class:loading={busy} disabled={busy} onclick={onsync}>
+    {t('me.syncNow', lang)}
+  </button>
   {#if message}
     <p class="result" role="status">{message}</p>
   {/if}

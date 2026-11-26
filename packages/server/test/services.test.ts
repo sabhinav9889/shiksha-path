@@ -1,5 +1,6 @@
 import { describeServiceContract } from '../src/testing/service-contract.js';
 import { describeAdminContract } from '../src/testing/admin-contract.js';
+import { describeGroupEditContract } from '../src/testing/group-edit-contract.js';
 import { describeCommunityContract } from '../src/testing/community-contract.js';
 import { describeBookingContract } from '../src/testing/booking-contract.js';
 import { describeBookingRepoContract } from '../src/testing/booking-repo-contract.js';
@@ -10,6 +11,7 @@ import { makeMemoryFixture } from '../src/testing/memory-repos.js';
 describeServiceContract('in-memory repositories', makeMemoryFixture);
 describeStaffContract('in-memory repositories', makeMemoryFixture);
 describeAdminContract('in-memory repositories', makeMemoryFixture);
+describeGroupEditContract('in-memory repositories', makeMemoryFixture);
 describePostRepoContract('in-memory repositories', makeMemoryFixture);
 describeBookingRepoContract('in-memory repositories', makeMemoryFixture);
 describeBookingContract('in-memory repositories', makeMemoryFixture);

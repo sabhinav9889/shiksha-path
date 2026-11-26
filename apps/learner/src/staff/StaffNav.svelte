@@ -9,7 +9,11 @@
   let { me, lang, onsignout }: { me: StaffMe; lang: Lang; onsignout: () => void } = $props();
 
   const here = $derived(pageLabel(router.current, me.role));
-  const openCohort = $derived(router.current.name === 'staff' && router.current.view === 'cohort' ? router.current.id : null);
+  const openCohort = $derived(
+    router.current.name === 'staff' && router.current.view === 'cohort' ? router.current.id : null,
+  );
+  const openName = $derived(me.cohorts.find((c) => c.id === openCohort)?.name);
+  let menuOpen = $state(false);
 
   const links = $derived<{ route: Route; label: StaffKey }[]>([
     { route: { name: 'staff', view: 'cohorts' }, label: 'cohorts' },
@@ -28,49 +32,89 @@
   ]);
 </script>
 
+<svelte:window
+  onclick={(e) => {
+    if (!(e.target as Element).closest('.cohort-menu')) menuOpen = false;
+  }}
+  onkeydown={(e) => e.key === 'Escape' && (menuOpen = false)}
+/>
+
 <nav class="staff-nav" aria-label={st('cohorts', lang)}>
-  <div class="who">
-    <strong>{me.name}</strong>
-    <span>{st(me.role, lang)}</span>
+  <div class="top">
+    <div class="who">
+      <strong>{me.name}</strong>
+      <span>{st(me.role, lang)}</span>
+    </div>
+    <StaffLangToggle />
+    <button type="button" onclick={onsignout}>{st('signOut', lang)}</button>
   </div>
-  <ul class="cohorts">
-    {#each me.cohorts as cohort (cohort.id)}
-      <li>
+  <div class="menu">
+    <div class="links">
+      {#each links as link (link.label)}
         <a
-          href={routeHref({ name: 'staff', view: 'cohort', id: cohort.id })}
-          aria-current={cohort.id === openCohort ? 'page' : undefined}
-          class:here={cohort.id === openCohort}>{cohort.name}</a
+          href={routeHref(link.route)}
+          aria-current={link.label === here && !openCohort ? 'page' : undefined}
+          class:here={link.label === here && !openCohort}>{st(link.label, lang)}</a
         >
-      </li>
-    {/each}
-  </ul>
-  <div class="links">
-    {#each links as link (link.label)}
-      <a
-        href={routeHref(link.route)}
-        aria-current={link.label === here && !openCohort ? 'page' : undefined}
-        class:here={link.label === here && !openCohort}>{st(link.label, lang)}</a
-      >
-    {/each}
+      {/each}
+    </div>
+    {#if me.cohorts.length > 0}
+      <div class="cohort-menu">
+        <button
+          type="button"
+          class="trigger"
+          class:here={openCohort !== null}
+          aria-current={openCohort ? 'page' : undefined}
+          aria-expanded={menuOpen}
+          aria-controls="cohort-list"
+          onclick={() => (menuOpen = !menuOpen)}
+        >
+          {openName ?? st('myCohorts', lang)}
+          <span class="count">{me.cohorts.length}</span>
+          <span aria-hidden="true">{menuOpen ? '▴' : '▾'}</span>
+        </button>
+        <ul id="cohort-list" class="cohorts" hidden={!menuOpen}>
+          {#each me.cohorts as cohort (cohort.id)}
+            <li>
+              <a
+                href={routeHref({ name: 'staff', view: 'cohort', id: cohort.id })}
+                aria-current={cohort.id === openCohort ? 'page' : undefined}
+                class:here={cohort.id === openCohort}
+                onclick={() => (menuOpen = false)}>{cohort.name}</a
+              >
+            </li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
   </div>
-  <StaffLangToggle />
-  <button type="button" onclick={onsignout}>{st('signOut', lang)}</button>
 </nav>
 
 <style>
   .staff-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 16px;
-    align-items: center;
-    padding: 12px 16px;
     border-bottom: 1px solid var(--color-line);
     background: var(--color-card);
   }
 
+  .top {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px 8px;
+  }
+
   .who {
     display: flex;
+    flex: 1;
     flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  .who strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .who span {
@@ -78,26 +122,32 @@
     font-size: 13px;
   }
 
-  .cohorts {
+  .menu {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    color: var(--color-muted);
-    font-size: 13px;
+    gap: 8px;
+    align-items: center;
+    padding: 0 16px 10px;
   }
 
+  /* One row that scrolls sideways on a narrow screen, so the bar never grows taller. */
   .links {
     display: flex;
-    flex-wrap: wrap;
+    flex: 1;
     gap: 4px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .links::-webkit-scrollbar {
+    display: none;
   }
 
   a,
   button {
     display: inline-flex;
+    flex-shrink: 0;
+    gap: 6px;
     align-items: center;
     min-width: 44px;
     min-height: 44px;
@@ -106,6 +156,7 @@
     color: var(--color-primary);
     font-weight: 600;
     text-decoration: none;
+    white-space: nowrap;
   }
 
   a.here {
@@ -115,8 +166,56 @@
   }
 
   button {
-    margin-left: auto;
     border: 1.5px solid var(--color-line);
     background: none;
+  }
+
+  .cohort-menu {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .trigger.here {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+  }
+
+  .count {
+    min-width: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .cohorts {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 220px;
+    max-width: min(320px, 90vw);
+    max-height: 60vh;
+    margin: 0;
+    padding: 6px;
+    overflow-y: auto;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-s);
+    background: var(--color-card);
+    box-shadow: 0 8px 24px rgb(27 31 59 / 15%);
+    list-style: none;
+  }
+
+  .cohorts[hidden] {
+    display: none;
+  }
+
+  .cohorts a {
+    display: flex;
+    width: 100%;
+    white-space: normal;
   }
 </style>

@@ -5,6 +5,7 @@
   import { at, type AdminKey } from '../../admin-i18n.js';
   import { refreshBranding } from '../../../runtime/branding.js';
   import { st } from '../../i18n.js';
+  import { createBusy } from '../../busy.svelte.js';
   import { staffState } from '../../staff-state.svelte.js';
 
   /** The organisation's name and two colours; refused unless readable on white and the page. */
@@ -33,8 +34,14 @@
     });
   }
 
+  const saving = createBusy();
+
   async function save(event: Event): Promise<void> {
     event.preventDefault();
+    await saving.run(doSave);
+  }
+
+  async function doSave(): Promise<void> {
     saved = false;
     const body = {
       name: { hi: form.hi.trim(), en: form.en.trim() },
@@ -69,7 +76,7 @@
       {#if !okColour(form[c.key])}<strong role="status">{at('hardToRead', lang)}</strong>{/if}
     </div>
   {/each}
-  <button type="submit" disabled={!canSave}>{at('saveBranding', lang)}</button>
+  <button type="submit" class:loading={saving.busy} disabled={!canSave || saving.busy}>{at('saveBranding', lang)}</button>
   {#if saved}<p>{at('brandingSaved', lang)}</p>{/if}
   {#if failed}<p role="alert">{st('failed', lang)}</p>{/if}
 </form>

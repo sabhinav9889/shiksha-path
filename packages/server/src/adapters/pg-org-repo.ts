@@ -22,22 +22,27 @@ import type { Sql } from './pg.js';
 export class PgOrgRepo implements OrgRepo {
   constructor(private readonly sql: Sql) {}
 
-  async saveLab(lab: { id?: string; name: string }): Promise<string> {
+  async saveLab(lab: { name: string }): Promise<string> {
     const [row] = await this.sql<{ id: string }[]>`
-      insert into labs (id, name) values (coalesce(${lab.id ?? null}::uuid, gen_random_uuid()),
-                                          ${lab.name})
-      on conflict (id) do update set name = excluded.name
-      returning id`;
+      insert into labs (name) values (${lab.name}) returning id`;
     return row?.id ?? '';
   }
 
-  async saveCohort(c: { id?: string; name: string; labId: string | null }): Promise<string> {
+  async saveCohort(c: { name: string; labId: string | null }): Promise<string> {
     const [row] = await this.sql<{ id: string }[]>`
-      insert into cohorts (id, name, lab_id)
-      values (coalesce(${c.id ?? null}::uuid, gen_random_uuid()), ${c.name}, ${c.labId})
-      on conflict (id) do update set name = excluded.name, lab_id = excluded.lab_id
-      returning id`;
+      insert into cohorts (name, lab_id) values (${c.name}, ${c.labId}) returning id`;
     return row?.id ?? '';
+  }
+
+  async updateLab(id: string, name: string): Promise<boolean> {
+    const rows = await this.sql`update labs set name = ${name} where id = ${id} returning id`;
+    return rows.length > 0;
+  }
+
+  async updateCohort(id: string, c: { name: string; labId: string | null }): Promise<boolean> {
+    const rows = await this.sql`
+      update cohorts set name = ${c.name}, lab_id = ${c.labId} where id = ${id} returning id`;
+    return rows.length > 0;
   }
 
   /**

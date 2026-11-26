@@ -94,3 +94,45 @@ describe('POST /v1/staff/admin/cohort/delete and /lab/delete', () => {
     expect((await post('/v1/staff/admin/staff/delete', { id: 'nope' })).status).toBe(400);
   });
 });
+
+describe('POST /v1/staff/admin/lab and /cohort with an id (rename and move)', () => {
+  async function asAdmin(role: 'mentor' | 'admin', cohortIds: string[]): Promise<void> {
+    await deps.staff.save({
+      email: 'auth-c@ngo.example',
+      role,
+      name: 'M',
+      active: true,
+      cohortIds,
+    });
+    await post('/v1/staff/claim', {});
+  }
+
+  test('a mentor is refused; an admin renames and moves; an unknown id or lab is a 400', async () => {
+    const lab = await deps.org.saveLab({ name: 'Lab' });
+    const other = await deps.org.saveLab({ name: 'Other' });
+    const cohort = await deps.org.saveCohort({ name: 'C1', labId: lab });
+    await asAdmin('mentor', [cohort]);
+    const rename = { id: cohort, name: 'Evening', labId: other };
+    expect((await post('/v1/staff/admin/cohort', rename)).status).toBe(403);
+    const [mentor] = await deps.staff.list();
+    await deps.staff.save({ ...mentor!, role: 'admin', cohortIds: [] });
+    const done = await post('/v1/staff/admin/cohort', rename);
+    expect(done.status).toBe(200);
+    expect(await done.json()).toEqual({ id: cohort });
+    expect(await deps.org.cohorts([cohort])).toEqual([
+      { id: cohort, name: 'Evening', labId: other },
+    ]);
+    expect((await post('/v1/staff/admin/lab', { id: lab, name: 'Renamed' })).status).toBe(200);
+    expect((await deps.org.labs()).find((l) => l.id === lab)?.name).toBe('Renamed');
+    const ghost = randomUUID();
+    expect((await post('/v1/staff/admin/lab', { id: ghost, name: 'x' })).status).toBe(400);
+    expect(
+      (await post('/v1/staff/admin/cohort', { id: ghost, name: 'x', labId: null })).status,
+    ).toBe(400);
+    expect(
+      (await post('/v1/staff/admin/cohort', { id: cohort, name: 'x', labId: ghost })).status,
+    ).toBe(400);
+    expect((await post('/v1/staff/admin/lab', { id: lab, name: '   ' })).status).toBe(400);
+    expect((await deps.org.labs()).map((l) => l.id)).not.toContain(ghost);
+  });
+});

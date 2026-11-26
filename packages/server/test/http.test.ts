@@ -375,6 +375,14 @@ describe("the mentor's read routes", () => {
     const list = await call('GET', '/v1/staff/cohorts', { token: 'token-c' });
     expect(list.status).toBe(200);
     expect(await json(list)).toMatchObject({ cohorts: [{ id: cohort, students: [{ id: a }] }] });
+    // each cohort names its lab, and the lab list holds only labs the mentor's cohorts belong to
+    await deps.org.saveLab({ name: 'Other lab' });
+    const withLabs = await json(await call('GET', '/v1/staff/cohorts', { token: 'token-c' }));
+    expect(withLabs).toMatchObject({
+      cohorts: [{ id: cohort, labId: lab }],
+      labs: [{ id: lab, name: 'Lab' }],
+    });
+    expect((withLabs as { labs: unknown[] }).labs).toHaveLength(1);
     expect((await call('GET', '/v1/staff/student?id=nope', { token: 'token-c' })).status).toBe(400);
     expect((await call('GET', `/v1/staff/student?id=${b}`, { token: 'token-c' })).status).toBe(403);
     const one = await call('GET', `/v1/staff/student?id=${a}`, { token: 'token-c' });
