@@ -19,6 +19,7 @@ const STRINGS = {
   mentor: { hi: 'मेंटर', en: 'Mentor' },
   admin: { hi: 'एडमिन', en: 'Admin' },
   cohorts: { hi: 'समूह', en: 'Cohorts' },
+  myCohorts: { hi: 'मेरे समूह', en: 'My cohorts' },
   recordings: { hi: 'रिकॉर्डिंग', en: 'Recordings' },
   posts: { hi: 'पोस्ट', en: 'Posts' },
   slots: { hi: 'मुलाक़ात के समय', en: 'Meeting slots' },

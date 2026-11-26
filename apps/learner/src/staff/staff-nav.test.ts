@@ -101,12 +101,16 @@ describe('the cohort names in the staff bar', () => {
     await vi.waitFor(() => screen.getByRole('heading', { name: 'सुबह', level: 2 }));
     expect(screen.getByRole('heading', { name: 'शाम', level: 2 })).toBeTruthy();
 
+    await fireEvent.click(screen.getByRole('button', { name: /मेरे समूह/ })); // the cohort menu
     await fireEvent.click(screen.getByRole('link', { name: 'शाम' }));
     await vi.waitFor(() =>
       expect(screen.queryByRole('heading', { name: 'सुबह', level: 2 })).toBeNull(),
     );
     expect(screen.getByRole('heading', { name: 'शाम', level: 2 })).toBeTruthy();
-    expect(current()).toEqual(['शाम']); // the cohort link is the current page, not "all cohorts"
+    // the menu closes and its button names the open cohort; "all cohorts" is no longer current
+    expect(screen.queryByRole('link', { name: 'शाम' })).toBeNull();
+    expect(screen.getByRole('button', { name: /शाम/ }).getAttribute('aria-current')).toBe('page');
+    expect(current()).toEqual([]);
 
     await fireEvent.click(screen.getByRole('link', { name: 'सब समूह' }));
     await vi.waitFor(() => screen.getByRole('heading', { name: 'सुबह', level: 2 }));
