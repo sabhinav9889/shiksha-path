@@ -113,3 +113,13 @@ describe('responses from a newer server', () => {
     expect(ok(linkResponse, { learnerId: id, name: 'A', created: true, added: 1 })).toBe(true);
   });
 });
+
+describe('the staff cohorts response from an older backend', () => {
+  test('still parses without labs or a lab per cohort, so a new app works with it', async () => {
+    const { staffCohorts } = await import('../src/staff-read.js');
+    const id = '11111111-1111-4111-8111-111111111111';
+    const parsed = staffCohorts.parse({ cohorts: [{ id, name: 'C1', students: [] }] });
+    expect(parsed.labs).toEqual([]);
+    expect(parsed.cohorts[0]?.labId).toBeNull();
+  });
+});
