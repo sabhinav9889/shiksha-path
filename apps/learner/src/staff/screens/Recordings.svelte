@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import type { Lang } from '../../i18n/index.js';
   import { st } from '../i18n.js';
+  import { createBusy } from '../busy.svelte.js';
   import { staffState } from '../staff-state.svelte.js';
   import { whenWords } from '../words.js';
 
@@ -10,6 +11,7 @@
 
   /** Recordings waiting for review. The audio URL is fetched only when the mentor taps play. */
   let { lang }: { lang: Lang } = $props();
+  const working = createBusy();
   let items = $state<Item[] | null>(null);
   let failed = $state(false);
   const urls = $state<Record<string, string>>({});
@@ -21,7 +23,10 @@
     else failed = true;
   }
 
-  async function listen(item: Item): Promise<void> {
+  const listen = (item: Item): Promise<void | undefined> => working.run(() => doListen(item));
+  const review = (item: Item): Promise<void | undefined> => working.run(() => doReview(item));
+
+  async function doListen(item: Item): Promise<void> {
     const result = await staffState.auth?.api.recordingUrl(item.id);
     if (!result?.ok) {
       failed = true;
@@ -30,7 +35,7 @@
     urls[item.id] = result.value.url;
   }
 
-  async function review(item: Item): Promise<void> {
+  async function doReview(item: Item): Promise<void> {
     const comment = comments[item.id]?.trim();
     const body = comment ? { id: item.id, comment } : { id: item.id };
     const result = await staffState.auth?.api.review(body);
@@ -59,7 +64,7 @@
         {#if urls[item.id]}
           <audio controls autoplay src={urls[item.id]}></audio>
         {:else}
-          <button type="button" onclick={() => listen(item)}>
+          <button type="button" disabled={working.busy} onclick={() => listen(item)}>
             {st('listen', lang, { lesson: item.lessonId })}
           </button>
         {/if}
@@ -67,7 +72,9 @@
           {st('comment', lang)}
           <input maxlength="280" bind:value={comments[item.id]} />
         </label>
-        <button type="button" onclick={() => review(item)}>{st('markReviewed', lang)}</button>
+        <button type="button" disabled={working.busy} onclick={() => review(item)}>
+          {st('markReviewed', lang)}
+        </button>
       </li>
     {/each}
   </ul>
@@ -100,5 +107,9 @@
     background: var(--color-primary);
     color: #fff;
     font-weight: 600;
+  }
+
+  button:disabled {
+    opacity: 0.7;
   }
 </style>

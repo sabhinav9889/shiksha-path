@@ -2,6 +2,7 @@
   import { istDay } from '@shiksha/learner-core';
   import type { Lang } from '../../i18n/index.js';
   import { st } from '../i18n.js';
+  import { createBusy } from '../busy.svelte.js';
   import { staffState } from '../staff-state.svelte.js';
 
   /** Today's attendance (India time) for one cohort: tick who came, everyone else is absent. */
@@ -12,10 +13,13 @@
   }: { cohortId: string; students: { id: string; name: string }[]; lang: Lang } = $props();
   const today = istDay(new Date());
   const present = $state<Record<string, boolean>>({});
+  const saving = createBusy();
   let saved = $state(false);
   let failed = $state(false);
 
-  async function save(): Promise<void> {
+  const save = (): Promise<void | undefined> => saving.run(doSave);
+
+  async function doSave(): Promise<void> {
     saved = false;
     failed = false;
     const ids = students.filter((s) => present[s.id]).map((s) => s.id);
@@ -30,7 +34,9 @@
   {#each students as s (s.id)}
     <label><input type="checkbox" bind:checked={present[s.id]} /> {s.name}</label>
   {/each}
-  <button type="button" onclick={save}>{st('saveAttendance', lang)}</button>
+  <button type="button" class:loading={saving.busy} disabled={saving.busy} onclick={save}>
+    {st('saveAttendance', lang)}
+  </button>
   {#if saved}<p>{st('saved', lang)}</p>{/if}
   {#if failed}<p role="alert">{st('failed', lang)}</p>{/if}
 </div>
@@ -59,6 +65,10 @@
     background: var(--color-primary);
     color: #fff;
     font-weight: 600;
+  }
+
+  button:disabled {
+    opacity: 0.7;
   }
 
   .muted {

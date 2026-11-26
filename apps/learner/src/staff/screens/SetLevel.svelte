@@ -4,10 +4,12 @@
   import { appState } from '../../app-state.svelte.js';
   import type { Lang } from '../../i18n/index.js';
   import { st } from '../i18n.js';
+  import { createBusy } from '../busy.svelte.js';
   import { staffState } from '../staff-state.svelte.js';
 
   /** Move a student's start point, choosing from the lesson packs on this device. */
   let { learnerId, lang }: { learnerId: string; lang: Lang } = $props();
+  const changing = createBusy();
   let manifest = $state<Manifest | null>(null);
   let track = $state('');
   let lesson = $state('');
@@ -39,7 +41,9 @@
     return appState.runtime?.content.subscribe(() => void loadManifest());
   });
 
-  async function save(): Promise<void> {
+  const save = (): Promise<void | undefined> => changing.run(doSave);
+
+  async function doSave(): Promise<void> {
     failed = false;
     const result = await staffState.auth?.api.setLevel({ learnerId, track, startLesson: lesson });
     if (!result?.ok) {
@@ -69,8 +73,15 @@
   </label>
   {#if confirming}
     <p>{st('confirmLevel', lang, { track, lesson })}</p>
-    <button type="button" onclick={save}>{st('yesChange', lang)}</button>
-    <button type="button" class="quiet" onclick={() => (confirming = false)}>
+    <button type="button" class:loading={changing.busy} disabled={changing.busy} onclick={save}>
+      {st('yesChange', lang)}
+    </button>
+    <button
+      type="button"
+      class="quiet"
+      disabled={changing.busy}
+      onclick={() => (confirming = false)}
+    >
       {st('cancel', lang)}
     </button>
   {:else}
@@ -101,6 +112,10 @@
     background: var(--color-primary);
     color: #fff;
     font-weight: 600;
+  }
+
+  button:disabled {
+    opacity: 0.7;
   }
 
   .quiet {
