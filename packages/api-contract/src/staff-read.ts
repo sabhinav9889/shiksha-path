@@ -16,10 +16,13 @@ const attention = z.array(z.enum(['inactive', 'stuck', 'low_scores']));
 
 /** The caller's cohorts and their students, those needing attention first (spec §8). */
 export const staffCohorts = z.object({
+  /** The labs the cohorts below belong to (a mentor sees only those), for the lab picker. */
+  labs: z.array(z.object({ id: z.uuid(), name: z.string() })),
   cohorts: z.array(
     z.object({
       id: z.uuid(),
       name: z.string(),
+      labId: z.uuid().nullable(),
       students: z.array(
         z.object({
           id: z.uuid(),
