@@ -52,6 +52,7 @@
   }
 
   async function confirm(): Promise<void> {
+    if (busy) return;
     busy = true; // a second tap must not send a second delete
     const result = await send();
     asking = false;
@@ -67,6 +68,7 @@
     <button
       type="button"
       class="danger"
+      class:loading={busy}
       disabled={busy}
       aria-label={`${name}: ${at('yes', lang)}`}
       onclick={confirm}

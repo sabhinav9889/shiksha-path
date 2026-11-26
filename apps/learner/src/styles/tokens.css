@@ -111,3 +111,37 @@ a[href]:active {
     transform: none;
   }
 }
+
+/* A button that is working: it is disabled and shows a spinner, so one tap sends one request. */
+button.loading {
+  cursor: progress;
+}
+
+button.loading::after {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-inline-start: 8px;
+  border: 2px solid currentcolor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  vertical-align: -2px;
+  animation: button-spin 0.7s linear infinite;
+}
+
+button.loading:disabled {
+  opacity: 0.85;
+}
+
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.loading::after {
+    animation-duration: 2s;
+  }
+}

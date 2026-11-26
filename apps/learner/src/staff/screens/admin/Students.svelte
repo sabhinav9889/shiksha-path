@@ -4,6 +4,7 @@
   import type { Lang } from '../../../i18n/index.js';
   import { at } from '../../admin-i18n.js';
   import { st } from '../../i18n.js';
+  import { createBusy } from '../../busy.svelte.js';
   import { staffState } from '../../staff-state.svelte.js';
   import { shortId } from '../../short-id.js';
   import { whenWords } from '../../words.js';
@@ -23,6 +24,9 @@
 
   const cohortName = (id: string | null): string => cohorts.find((c) => c.id === id)?.name ?? '';
 
+  const finding = createBusy();
+  const paging = createBusy();
+
   async function load(after?: string): Promise<void> {
     failed = false;
     const result = await staffState.auth?.api.students({
@@ -41,7 +45,7 @@
 
   async function search(event: Event): Promise<void> {
     event.preventDefault();
-    await load();
+    await finding.run(() => load());
   }
 
   onMount(async () => {
@@ -65,7 +69,9 @@
       <input type="checkbox" bind:checked={filter.attention} />
       {at('needsAttention', lang)}
     </label>
-    <button type="submit">{at('find', lang)}</button>
+    <button type="submit" class:loading={finding.busy} disabled={finding.busy}>
+      {at('find', lang)}
+    </button>
   </form>
 
   {#if failed}<p role="alert">{st('failed', lang)}</p>{/if}
@@ -94,7 +100,14 @@
       {/each}
     </ul>
     {#if next}
-      <button type="button" onclick={() => load(next ?? undefined)}>{at('more', lang)}</button>
+      <button
+        type="button"
+        class:loading={paging.busy}
+        disabled={paging.busy}
+        onclick={() => paging.run(() => load(next ?? undefined))}
+      >
+        {at('more', lang)}
+      </button>
     {/if}
   {/if}
 </div>

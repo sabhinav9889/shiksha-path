@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ProfileResponse } from '@shiksha/api-contract';
-  import { onMount } from 'svelte';
+  import { untrack } from 'svelte';
   import { linkedApi } from '../../account/account.js';
   import { appState } from '../../app-state.svelte.js';
   import FeedbackCard from './FeedbackCard.svelte';
@@ -8,11 +8,13 @@
   import { loadProfileCache, refreshProfile, type ProfileStatus } from './profile-cache.js';
 
   /** The student's own email, cohort and mentors: the copy on the phone, then refreshed. */
+  /** Bumped by Sync now: the card asks the server again, so a new cohort shows at once. */
+  let { refresh = 0 }: { refresh?: number } = $props();
   let card = $state<ProfileResponse | null>(null);
   let status = $state<ProfileStatus>('offline');
   const lang = $derived(appState.lang);
 
-  onMount(async () => {
+  async function load(): Promise<void> {
     const { runtime, profile } = appState;
     if (!runtime || !profile) return;
     card = await loadProfileCache(runtime, profile.id);
@@ -20,6 +22,11 @@
     if (appState.profile?.id !== profile.id) return; // the student changed while it loaded
     card = fresh.card;
     status = fresh.status;
+  }
+
+  $effect(() => {
+    void refresh; // runs on open, then again after every Sync now
+    untrack(() => void load());
   });
 </script>
 

@@ -1,82 +1,95 @@
 /* The admin setup screen: one card per area, a lab with its cohorts inside, staff as rows. */
-.setup {
+.admin.setup {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.setup .panel {
-  padding: 16px;
+.admin.setup .panel {
+  padding: 20px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-m);
   background: var(--color-card);
 }
 
-.setup h2 {
-  margin: 0 0 12px;
+.admin.setup h2 {
+  margin: 0 0 16px;
   font-size: 18px;
 }
 
-.setup ul {
+.admin.setup ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.setup .group {
-  margin-bottom: 12px;
+/* The shared admin styles (StaffApp) put a rule under every li and margins on every form; the
+   setup cards draw their own borders and spacing, so these win by being one class more specific. */
+.admin.setup li {
+  padding: 0;
+  border-bottom: none;
+}
+
+.admin.setup form {
+  margin: 0;
+}
+
+.admin.setup .group {
+  margin-bottom: 16px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-s);
   overflow: hidden;
 }
 
-.setup .group > header,
-.setup .item,
-.setup .person {
+.admin.setup .group > header,
+.admin.setup .item,
+.admin.setup .person {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 8px 16px;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 12px 16px;
 }
 
-.setup .group > header {
+.admin.setup .group > header {
   background: var(--color-primary-soft);
 }
 
-.setup .item,
-.setup .person {
+.admin.setup .item,
+.admin.setup .person {
+  min-height: 56px;
+  padding: 12px 16px;
   border-top: 1px solid var(--color-line);
 }
 
-.setup .person:first-child {
+.admin.setup .person:first-child {
   border-top: none;
 }
 
-.setup .who {
+.admin.setup .who {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.setup .who > span {
+.admin.setup .who > span {
   overflow-wrap: anywhere;
 }
 
-.setup .actions {
+.admin.setup .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
 }
 
-.setup .muted {
+.admin.setup .muted {
   color: var(--color-muted);
   font-size: 14px;
 }
 
-.setup .badge {
+.admin.setup .badge {
   padding: 2px 10px;
   border-radius: 999px;
   background: var(--color-primary-soft);
@@ -85,23 +98,25 @@
   font-weight: 600;
 }
 
-.setup .forms {
+.admin.setup .forms {
   display: grid;
-  gap: 12px;
+  gap: 16px;
+  align-items: start;
+  margin-top: 8px;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
-.setup form {
+.admin.setup form {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
   align-items: end;
-  padding: 12px;
+  padding: 16px;
   border-radius: var(--radius-s);
   background: var(--color-bg);
 }
 
-.setup label {
+.admin.setup label {
   display: flex;
   flex: 1 1 160px;
   flex-direction: column;
@@ -109,15 +124,15 @@
   font-size: 14px;
 }
 
-.setup label.check {
+.admin.setup label.check {
   flex: 0 0 auto;
   flex-direction: row;
   align-items: center;
   min-height: var(--tap-min);
 }
 
-.setup input:not([type='checkbox']),
-.setup select {
+.admin.setup input:not([type='checkbox']),
+.admin.setup select {
   min-height: var(--tap-min);
   padding: 0 10px;
   border: 1px solid var(--color-line);
@@ -126,7 +141,7 @@
   font: inherit;
 }
 
-.setup button {
+.admin.setup button {
   min-height: var(--tap-min);
   padding: 0 14px;
   border: 1px solid var(--color-primary);
@@ -137,22 +152,22 @@
   font-weight: 600;
 }
 
-.setup button.quiet {
+.admin.setup button.quiet {
   background: var(--color-card);
   color: var(--color-primary-dark);
 }
 
-.setup button.danger {
+.admin.setup button.danger {
   border-color: var(--color-wrong);
   background: var(--color-wrong);
 }
 
-.setup .sure {
+.admin.setup .sure {
   color: var(--color-wrong);
   font-size: 14px;
 }
 
-.setup .alert {
+.admin.setup .alert {
   flex-basis: 100%;
   margin: 0;
   padding: 8px 12px;
@@ -162,7 +177,7 @@
   font-size: 14px;
 }
 
-.setup .row {
+.admin.setup .row {
   display: flex;
   flex: 1 1 100%;
   flex-wrap: wrap;
@@ -171,16 +186,38 @@
   padding-top: 8px;
 }
 
-.setup .edit {
+.admin.setup .edit {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
   align-items: flex-end;
 }
 
-.setup .edit label {
+.admin.setup .edit label {
   display: flex;
   flex-direction: column;
   gap: 2px;
   font-size: 13px;
+}
+
+/* The invite form sits under the staff list with room, and its cohort ticks wrap in a row. */
+.admin.setup .person + form,
+.admin.setup ul + form {
+  margin-top: 16px;
+}
+
+.admin.setup .row {
+  flex: 1 1 100%;
+  padding-top: 8px;
+  margin: 0;
+}
+
+.admin.setup button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin.setup button.loading:disabled {
+  opacity: 0.85;
+  cursor: progress;
 }

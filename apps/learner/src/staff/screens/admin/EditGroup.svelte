@@ -93,7 +93,7 @@
         </select>
       </label>
     {/if}
-    <button type="submit" disabled={busy}>{at('save', lang)}</button>
+    <button type="submit" class:loading={busy} disabled={busy}>{at('save', lang)}</button>
     <button type="button" class="quiet" disabled={busy} onclick={close}>
       {st('cancel', lang)}
     </button>

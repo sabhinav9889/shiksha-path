@@ -4,11 +4,13 @@
   import type { Lang } from '../../../i18n/index.js';
   import { at, FEATURE_NAMES } from '../../admin-i18n.js';
   import { st } from '../../i18n.js';
+  import { createBusy } from '../../busy.svelte.js';
   import { staffState } from '../../staff-state.svelte.js';
 
   /** Each feature for all students; a student's own setting is on the students page. */
   let { lang }: { lang: Lang } = $props();
   let values = $state<Record<FeatureKey, boolean> | null>(null);
+  const switching = createBusy();
   let saved = $state(false);
   let failed = $state(false);
 
@@ -19,11 +21,13 @@
   }
 
   async function change(key: FeatureKey, enabledForAll: boolean): Promise<void> {
-    saved = false;
-    const result = await staffState.auth?.api.setSwitch({ key, enabledForAll });
-    failed = !result?.ok;
-    saved = !failed;
-    await load(); // shows the server's value, also after a failure
+    await switching.run(async () => {
+      saved = false;
+      const result = await staffState.auth?.api.setSwitch({ key, enabledForAll });
+      failed = !result?.ok;
+      saved = !failed;
+      await load(); // shows the server's value, also after a failure
+    });
   }
 
   onMount(load);
@@ -37,6 +41,7 @@
         <input
           type="checkbox"
           checked={values[key]}
+          disabled={switching.busy}
           onchange={(e) => change(key, e.currentTarget.checked)}
         />
         {FEATURE_NAMES[key][lang]}

@@ -4,6 +4,7 @@
   import { at } from '../../admin-i18n.js';
   import { st } from '../../i18n.js';
   import type { StaffApi } from '../../staff-api.js';
+  import { createBusy } from '../../busy.svelte.js';
   import { staffState } from '../../staff-state.svelte.js';
   import DeleteGroup from './DeleteGroup.svelte';
   import EditGroup from './EditGroup.svelte';
@@ -14,6 +15,8 @@
     lang,
     reload,
   }: { setup: AdminSetup; lang: Lang; reload: () => Promise<void> } = $props();
+  const lab$ = createBusy();
+  const cohort$ = createBusy();
   let failed = $state(false);
   let labName = $state('');
   let cohortName = $state('');
@@ -36,13 +39,17 @@
 
   async function addLab(event: Event): Promise<void> {
     event.preventDefault();
-    if (await run((api) => api.saveLab({ name: labName }))) labName = '';
+    await lab$.run(async () => {
+      if (await run((api) => api.saveLab({ name: labName }))) labName = '';
+    });
   }
 
   async function addCohort(event: Event): Promise<void> {
     event.preventDefault();
     const body = { name: cohortName, labId: cohortLab || null };
-    if (await run((api) => api.saveCohort(body))) cohortName = '';
+    await cohort$.run(async () => {
+      if (await run((api) => api.saveCohort(body))) cohortName = '';
+    });
   }
 </script>
 
@@ -107,7 +114,9 @@
   <div class="forms">
     <form onsubmit={addLab}>
       <label>{at('newLab', lang)} <input required maxlength="80" bind:value={labName} /></label>
-      <button type="submit">{at('addLab', lang)}</button>
+      <button type="submit" class:loading={lab$.busy} disabled={lab$.busy}>
+        {at('addLab', lang)}
+      </button>
     </form>
     <form onsubmit={addCohort}>
       <label>
@@ -120,7 +129,9 @@
           {#each setup.labs as lab (lab.id)}<option value={lab.id}>{lab.name}</option>{/each}
         </select>
       </label>
-      <button type="submit">{at('addCohort', lang)}</button>
+      <button type="submit" class:loading={cohort$.busy} disabled={cohort$.busy}>
+        {at('addCohort', lang)}
+      </button>
     </form>
   </div>
 </section>

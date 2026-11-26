@@ -36,6 +36,8 @@
   let data = $state<MeData | null>(null);
   let busy = $state(false);
   let message = $state('');
+  /** Counts finished syncs, so the cohort card asks the server again. */
+  let synced = $state(0);
 
   const lang = $derived(appState.lang);
   const name = $derived(appState.profile?.name ?? '');
@@ -70,6 +72,7 @@
       await reloadSwitches();
       await reloadBranding();
       await load();
+      synced += 1;
     } catch {
       message = t('status.savedLater', lang); // nothing is lost: it all waits on the phone
     } finally {
@@ -115,7 +118,7 @@
     <SyncCard {lang} sync={data.sync} {busy} {message} onsync={syncNow} />
     <StorageCard {lang} {data} />
     {#if data.linked}
-      {#await import('./ProfileCard.svelte') then profile}<profile.default />{/await}
+      {#await import('./ProfileCard.svelte') then profile}<profile.default refresh={synced} />{/await}
       <RecordingsCard {lang} />
     {/if}
   {/if}
