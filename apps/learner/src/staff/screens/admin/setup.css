@@ -185,27 +185,28 @@
   font-size: 13px;
 }
 
-/* ---- Admin Setup page only (class "admin setup"): overrides the shared admin styles. ---- */
+/* ---- Admin Setup page only (class "admin setup"). The shared admin styles in StaffApp are scoped,
+   which adds a class to their selectors, so each rule here starts with .staff and repeats .setup to win. ---- */
 
-.admin.setup {
+.staff .admin.setup.setup {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.admin.setup .panel {
+.staff .admin.setup.setup .panel {
   padding: 20px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-m);
   background: var(--color-card);
 }
 
-.admin.setup h2 {
+.staff .admin.setup.setup h2 {
   margin: 0 0 16px;
   font-size: 18px;
 }
 
-.admin.setup ul {
+.staff .admin.setup.setup ul {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -213,25 +214,24 @@
 
 /* The shared admin styles (StaffApp) put a rule under every li and margins on every form; the
    setup cards draw their own borders and spacing, so these win by being one class more specific. */
-.admin.setup li {
-  padding: 0;
+.staff .admin.setup.setup li {
   border-bottom: none;
 }
 
-.admin.setup form {
+.staff .admin.setup.setup form {
   margin: 0;
 }
 
-.admin.setup .group {
+.staff .admin.setup.setup .group {
   margin-bottom: 16px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-s);
   overflow: hidden;
 }
 
-.admin.setup .group > header,
-.admin.setup .item,
-.admin.setup .person {
+.staff .admin.setup.setup .group > header,
+.staff .admin.setup.setup .item,
+.staff .admin.setup.setup .person {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
@@ -240,44 +240,44 @@
   padding: 12px 16px;
 }
 
-.admin.setup .group > header {
+.staff .admin.setup.setup .group > header {
   background: var(--color-primary-soft);
 }
 
-.admin.setup .item,
-.admin.setup .person {
+.staff .admin.setup.setup .item,
+.staff .admin.setup.setup .person {
   min-height: 56px;
   padding: 12px 16px;
   border-top: 1px solid var(--color-line);
 }
 
-.admin.setup .person:first-child {
+.staff .admin.setup.setup .person:first-child {
   border-top: none;
 }
 
-.admin.setup .who {
+.staff .admin.setup.setup .who {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.admin.setup .who > span {
+.staff .admin.setup.setup .who > span {
   overflow-wrap: anywhere;
 }
 
-.admin.setup .actions {
+.staff .admin.setup.setup .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
 }
 
-.admin.setup .muted {
+.staff .admin.setup.setup .muted {
   color: var(--color-muted);
   font-size: 14px;
 }
 
-.admin.setup .badge {
+.staff .admin.setup.setup .badge {
   padding: 2px 10px;
   border-radius: 999px;
   background: var(--color-primary-soft);
@@ -286,7 +286,7 @@
   font-weight: 600;
 }
 
-.admin.setup .forms {
+.staff .admin.setup.setup .forms {
   display: grid;
   gap: 16px;
   align-items: start;
@@ -294,7 +294,7 @@
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
-.admin.setup form {
+.staff .admin.setup.setup form {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -304,7 +304,7 @@
   background: var(--color-bg);
 }
 
-.admin.setup label {
+.staff .admin.setup.setup label {
   display: flex;
   flex: 1 1 160px;
   flex-direction: column;
@@ -312,15 +312,15 @@
   font-size: 14px;
 }
 
-.admin.setup label.check {
+.staff .admin.setup.setup label.check {
   flex: 0 0 auto;
   flex-direction: row;
   align-items: center;
   min-height: var(--tap-min);
 }
 
-.admin.setup input:not([type='checkbox']),
-.admin.setup select {
+.staff .admin.setup.setup input:not([type='checkbox']),
+.staff .admin.setup.setup select {
   min-height: var(--tap-min);
   padding: 0 10px;
   border: 1px solid var(--color-line);
@@ -329,7 +329,7 @@
   font: inherit;
 }
 
-.admin.setup button {
+.staff .admin.setup.setup button {
   min-height: var(--tap-min);
   padding: 0 14px;
   border: 1px solid var(--color-primary);
@@ -340,22 +340,22 @@
   font-weight: 600;
 }
 
-.admin.setup button.quiet {
+.staff .admin.setup.setup button.quiet {
   background: var(--color-card);
   color: var(--color-primary-dark);
 }
 
-.admin.setup button.danger {
+.staff .admin.setup.setup button.danger {
   border-color: var(--color-wrong);
   background: var(--color-wrong);
 }
 
-.admin.setup .sure {
+.staff .admin.setup.setup .sure {
   color: var(--color-wrong);
   font-size: 14px;
 }
 
-.admin.setup .alert {
+.staff .admin.setup.setup .alert {
   flex-basis: 100%;
   margin: 0;
   padding: 8px 12px;
@@ -365,7 +365,7 @@
   font-size: 14px;
 }
 
-.admin.setup .row {
+.staff .admin.setup.setup .row {
   display: flex;
   flex: 1 1 100%;
   flex-wrap: wrap;
@@ -374,14 +374,14 @@
   padding-top: 8px;
 }
 
-.admin.setup .edit {
+.staff .admin.setup.setup .edit {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
   align-items: flex-end;
 }
 
-.admin.setup .edit label {
+.staff .admin.setup.setup .edit label {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -389,23 +389,46 @@
 }
 
 /* The invite form sits under the staff list with room, and its cohort ticks wrap in a row. */
-.admin.setup .person + form,
-.admin.setup ul + form {
+.staff .admin.setup.setup .person + form,
+.staff .admin.setup.setup ul + form {
   margin-top: 16px;
 }
 
-.admin.setup .row {
+.staff .admin.setup.setup .row {
   flex: 1 1 100%;
   padding-top: 8px;
   margin: 0;
 }
 
-.admin.setup button:disabled {
+.staff .admin.setup.setup button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.admin.setup button.loading:disabled {
+.staff .admin.setup.setup button.loading:disabled {
   opacity: 0.85;
   cursor: progress;
+}
+
+/* The lab table: a lab is a header row, its cohorts sit under it, indented, one row each. */
+.staff .admin.setup.setup .group > header {
+  min-height: 56px;
+  padding: 12px 20px;
+}
+
+.staff .admin.setup.setup .group > ul > .item {
+  padding: 12px 20px 12px 36px;
+}
+
+.staff .admin.setup.setup .group > ul > .item:hover {
+  background: var(--color-bg);
+}
+
+.staff .admin.setup.setup .group > ul > .item.muted {
+  padding-block: 16px;
+  font-style: italic;
+}
+
+.staff .admin.setup.setup .person {
+  padding-inline: 20px;
 }
